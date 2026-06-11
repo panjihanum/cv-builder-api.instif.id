@@ -8,6 +8,7 @@ import { HttpError } from "@/lib/httpError.js";
 import { authRoutes } from "@/routes/auth.js";
 import { cvRoutes } from "@/routes/cv.js";
 import { adminRoutes } from "@/routes/admin/index.js";
+import { billingRoutes } from "@/routes/billing.js";
 
 const app = new Hono();
 
@@ -35,6 +36,7 @@ app.get("/health", (c) => c.json({ status: "ok" }));
 
 app.route("/auth", authRoutes);
 app.route("/cv", cvRoutes);
+app.route("/billing", billingRoutes);
 app.route("/admin", adminRoutes);
 
 app.notFound((c) => c.json({ error: "Route tidak ditemukan" }, 404));
