@@ -1,0 +1,97 @@
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "linux-musl-openssl-3.0.x"]
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  name      String
+  email     String   @unique
+  phone     String?  @unique
+  password  String
+  role      String   @default("USER")
+  status    String   @default("ACTIVE")
+  cvs       Cv[]
+  orders    Order[]
+  credit    Credit?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@map("users")
+}
+
+model Cv {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  title      String   @default("Untitled CV")
+  templateId String   @default("classic-ats")
+  data       Json
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  @@map("cvs")
+}
+
+model Credit {
+  id            String @id @default(cuid())
+  userId        String @unique
+  user          User   @relation(fields: [userId], references: [id])
+  exportLeft    Int    @default(0)
+  aiUploadsLeft Int    @default(0)
+
+  @@map("credits")
+}
+
+model Order {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id])
+  method    String
+  amount    Int
+  packs     Int       @default(1)
+  status    String    @default("PENDING")
+  reference String?
+  proofUrl  String?
+  paidAt    DateTime?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  @@map("orders")
+}
+
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String
+  encrypted Boolean  @default(true)
+  updatedAt DateTime @updatedAt
+
+  @@map("settings")
+}
+
+model OtpCode {
+  id        String   @id @default(cuid())
+  phone     String
+  codeHash  String
+  purpose   String
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@map("otp_codes")
+}
+
+model WhatsAppSession {
+  id          String   @id @default(cuid())
+  status      String   @default("DISCONNECTED")
+  sessionData Json?
+  updatedAt   DateTime @updatedAt
+
+  @@map("whatsapp_sessions")
+}

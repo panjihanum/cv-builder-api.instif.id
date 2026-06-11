@@ -1,0 +1,28 @@
+# dependencies
+/node_modules
+
+# build
+/dist
+tsconfig.tsbuildinfo
+
+# testing
+/coverage
+
+# prisma
+prisma/*.db
+
+# whatsapp-web.js session
+.wwebjs_auth/
+.wwebjs_cache/
+
+# user uploads (proof of payment, etc.)
+uploads/
+
+# env — never commit real env, keep .env.example only
+.env
+.env.*
+!.env.example
+
+# misc
+.DS_Store
+*.log
