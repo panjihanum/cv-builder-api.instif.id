@@ -1,4 +1,5 @@
 import { serve } from "@hono/node-server";
+import { serveStatic } from "@hono/node-server/serve-static";
 import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
@@ -33,6 +34,8 @@ app.get("/", (c) =>
 );
 
 app.get("/health", (c) => c.json({ status: "ok" }));
+
+app.use("/uploads/*", serveStatic({ root: "./" }));
 
 app.route("/auth", authRoutes);
 app.route("/cv", cvRoutes);
