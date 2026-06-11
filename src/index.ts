@@ -10,6 +10,7 @@ import { authRoutes } from "@/routes/auth.js";
 import { cvRoutes } from "@/routes/cv.js";
 import { adminRoutes } from "@/routes/admin/index.js";
 import { billingRoutes } from "@/routes/billing.js";
+import { aiRoutes } from "@/routes/ai.js";
 
 const app = new Hono();
 
@@ -39,6 +40,7 @@ app.use("/uploads/*", serveStatic({ root: "./" }));
 
 app.route("/auth", authRoutes);
 app.route("/cv", cvRoutes);
+app.route("/ai", aiRoutes);
 app.route("/billing", billingRoutes);
 app.route("/admin", adminRoutes);
 
