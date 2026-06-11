@@ -5,6 +5,7 @@ import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { env } from "@/lib/env.js";
 import { HttpError } from "@/lib/httpError.js";
+import { authRoutes } from "@/routes/auth.js";
 
 const app = new Hono();
 
@@ -29,6 +30,8 @@ app.get("/", (c) =>
 );
 
 app.get("/health", (c) => c.json({ status: "ok" }));
+
+app.route("/auth", authRoutes);
 
 app.notFound((c) => c.json({ error: "Route tidak ditemukan" }, 404));
 
