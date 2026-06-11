@@ -1,0 +1,59 @@
+import { describe, it, expect, beforeEach, vi } from "vitest";
+import puppeteer from "puppeteer";
+import * as pdfService from "@/services/pdf.service.js";
+
+const { pageMock, browserMock } = vi.hoisted(() => {
+  const pageMock = {
+    setContent: vi.fn(),
+    pdf: vi.fn(),
+    close: vi.fn(),
+  };
+  const browserMock = {
+    newPage: vi.fn(async () => pageMock),
+    close: vi.fn(),
+  };
+  return { pageMock, browserMock };
+});
+
+vi.mock("puppeteer", () => ({
+  default: { launch: vi.fn(async () => browserMock) },
+}));
+
+beforeEach(async () => {
+  await pdfService.closeBrowser();
+  vi.clearAllMocks();
+  pageMock.pdf.mockResolvedValue(new Uint8Array([37, 80, 68, 70]));
+});
+
+describe("pdf.service renderPdf", () => {
+  it("merender html menjadi pdf a4 dengan background", async () => {
+    const result = await pdfService.renderPdf("<html></html>");
+    expect(result).toBeInstanceOf(Uint8Array);
+    expect(pageMock.setContent).toHaveBeenCalledWith("<html></html>", {
+      waitUntil: "load",
+    });
+    const pdfArgs = pageMock.pdf.mock.calls[0][0];
+    expect(pdfArgs.format).toBe("A4");
+    expect(pdfArgs.printBackground).toBe(true);
+  });
+
+  it("menutup page setelah render sukses", async () => {
+    await pdfService.renderPdf("<html></html>");
+    expect(pageMock.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("menutup page meski render gagal", async () => {
+    pageMock.pdf.mockRejectedValue(new Error("render gagal"));
+    await expect(pdfService.renderPdf("<html></html>")).rejects.toThrow(
+      "render gagal"
+    );
+    expect(pageMock.close).toHaveBeenCalledTimes(1);
+  });
+
+  it("memakai satu browser singleton untuk banyak render", async () => {
+    await pdfService.renderPdf("<html>1</html>");
+    await pdfService.renderPdf("<html>2</html>");
+    expect(vi.mocked(puppeteer.launch)).toHaveBeenCalledTimes(1);
+    expect(browserMock.newPage).toHaveBeenCalledTimes(2);
+  });
+});
