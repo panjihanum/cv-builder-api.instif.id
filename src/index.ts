@@ -5,7 +5,9 @@ import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
 import { env } from "@/lib/env.js";
+import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
+import { closeBrowser } from "@/services/pdf.service.js";
 import { authRoutes } from "@/routes/auth.js";
 import { cvRoutes } from "@/routes/cv.js";
 import { adminRoutes } from "@/routes/admin/index.js";
@@ -58,8 +60,18 @@ app.onError((err, c) => {
   return c.json({ error: "Terjadi kesalahan pada server" }, 500);
 });
 
-serve({ fetch: app.fetch, port: env.PORT }, (info) => {
+const server = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(`CV Builder API berjalan di http://localhost:${info.port}`);
 });
+
+function shutdown(): void {
+  server.close();
+  void Promise.allSettled([closeBrowser(), db.$disconnect()]).then(() =>
+    process.exit(0)
+  );
+}
+
+process.on("SIGINT", shutdown);
+process.on("SIGTERM", shutdown);
 
 export default app;
