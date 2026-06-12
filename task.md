@@ -269,7 +269,7 @@ model WhatsAppSession {
 
 ## 6. Generate PDF (Puppeteer)
 
-- `template.service` menghasilkan **HTML + CSS** untuk 5 template (ATS-safe: teks asli, heading standar) dari `CvData`.
+- `template.service` menghasilkan **HTML + CSS** per template (ATS-safe: teks asli, heading standar) dari `CvData`. 5 template awal hanyalah **permulaan** — registry `services/templates/index.ts` wajib tetap map-driven; menambah template = 1 file renderer + 1 entri registry (id sama dengan registry FE). Jangan hardcode jumlah template di logic/test.
 - `pdf.service`: launch Puppeteer (singleton browser, reuse), `setContent(html)`, `page.pdf({ format: 'A4', printBackground: true })`.
 - Generate **hanya di BE** & **setelah cek kredit** → user tak bisa bypass paywall.
 - Pastikan teks ter-select (jangan rasterize) demi ATS.

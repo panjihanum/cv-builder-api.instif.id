@@ -58,18 +58,17 @@ const sampleData = cvDataSchema.parse({
   ],
 });
 
-const allTemplateIds = [
-  "classic-ats",
-  "modern-professional",
-  "two-column-compact",
-  "minimalist-creative",
-  "executive-senior",
-];
+const allTemplateIds = templateService.listTemplateIds();
 
 describe("template.service", () => {
-  it("mendaftarkan lima template", () => {
-    expect(templateService.listTemplateIds().sort()).toEqual(
-      [...allTemplateIds].sort()
+  it("mendaftarkan minimal satu template dengan id unik", () => {
+    expect(allTemplateIds.length).toBeGreaterThanOrEqual(1);
+    expect(new Set(allTemplateIds).size).toBe(allTemplateIds.length);
+  });
+
+  it("masih mendaftarkan template bawaan", () => {
+    expect(allTemplateIds).toEqual(
+      expect.arrayContaining(["classic-ats", "modern-professional"])
     );
   });
 

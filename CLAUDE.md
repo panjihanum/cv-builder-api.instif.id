@@ -2,9 +2,16 @@
 
 Aturan ini WAJIB dipatuhi setiap kali bekerja di repo ini. Spesifikasi fitur ada di `task.md`.
 
-## Auto-commit (WAJIB)
+## Auto-commit & Auto-push (WAJIB)
 
-Setelah **setiap** unit pekerjaan selesai (satu perintah / satu task tuntas), **langsung buat commit**. Jangan menumpuk banyak perubahan dalam satu commit.
+Setelah **setiap** unit pekerjaan selesai (satu perintah / satu task tuntas), **langsung buat commit**, lalu **langsung push** ke remote. Jangan menumpuk banyak perubahan dalam satu commit.
+
+Urutan wajib tiap selesai perintah:
+
+1. Pastikan lint/format/type-check/test hijau (lefthook akan memverifikasi).
+2. `git add` + `git commit` dengan format di bawah.
+3. `git push origin main` — otomatis, tanpa menunggu diminta.
+4. Jika push ditolak (remote lebih baru): `git pull --rebase origin main` lalu push ulang. **Dilarang** `git push --force`.
 
 Format pesan commit — selalu persis seperti ini:
 
@@ -24,7 +31,7 @@ Tipe Pekerjaan yang dipakai: `feat` · `fix` · `refactor` · `test` · `chore` 
 Aturan commit:
 - Deskripsi singkat, jelas, bahasa Indonesia, huruf kecil di awal kata pertama.
 - Satu commit = satu perubahan logis.
-- Jika di branch default (`main`), boleh commit langsung sesuai instruksi user. Jangan push kecuali diminta.
+- Commit langsung di branch `main` lalu **push otomatis** setiap selesai perintah — ini instruksi tetap dari user, tidak perlu konfirmasi ulang.
 
 ## Lefthook & Linter (WAJIB lolos sebelum commit)
 
