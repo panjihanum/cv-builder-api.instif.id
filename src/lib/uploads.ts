@@ -10,6 +10,7 @@ export interface AllowedFileRule {
   mimeTypes: string[];
   extensions: string[];
   label: string;
+  maxBytes?: number;
 }
 
 export function assertUploadedFile(
@@ -22,8 +23,12 @@ export function assertUploadedFile(
   if (value.size === 0) {
     throw new HttpError(400, "File kosong");
   }
-  if (value.size > MAX_UPLOAD_BYTES) {
-    throw new HttpError(400, "Ukuran file maksimal 5MB");
+  const maxBytes = allowed.maxBytes ?? MAX_UPLOAD_BYTES;
+  if (value.size > maxBytes) {
+    throw new HttpError(
+      400,
+      `Ukuran file maksimal ${Math.floor(maxBytes / (1024 * 1024))}MB`
+    );
   }
   const extension = extname(value.name).toLowerCase();
   const mimeAllowed = allowed.mimeTypes.includes(value.type);

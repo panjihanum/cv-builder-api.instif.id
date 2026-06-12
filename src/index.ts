@@ -14,6 +14,7 @@ import { adminRoutes } from "@/routes/admin/index.js";
 import { billingRoutes } from "@/routes/billing.js";
 import { aiRoutes } from "@/routes/ai.js";
 import { exportRoutes } from "@/routes/export.js";
+import { uploadRoutes } from "@/routes/upload.js";
 import { otpRoutes } from "@/routes/otp.js";
 
 const app = new Hono();
@@ -46,6 +47,7 @@ app.route("/auth", authRoutes);
 app.route("/cv", cvRoutes);
 app.route("/ai", aiRoutes);
 app.route("/export", exportRoutes);
+app.route("/upload", uploadRoutes);
 app.route("/billing", billingRoutes);
 app.route("/otp", otpRoutes);
 app.route("/admin", adminRoutes);

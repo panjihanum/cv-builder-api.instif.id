@@ -4,9 +4,13 @@ import {
   renderBodySections,
   renderHeader,
 } from "@/services/templates/sections.js";
+import { renderPhoto } from "@/services/templates/photo.js";
 
 const css = `
 body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #262626; font-size: 10pt; line-height: 1.7; margin: 0; padding: 10px 6px; }
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; }
+.header-row .header { flex: 1; }
+.photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; flex-shrink: 0; }
 .header { margin-bottom: 28px; }
 .header h1 { font-size: 24pt; font-weight: 300; letter-spacing: 3px; text-transform: uppercase; margin: 0 0 6px; }
 .header .role { margin: 0 0 8px; font-size: 11pt; letter-spacing: 1.5px; text-transform: uppercase; color: #737373; }
@@ -24,6 +28,7 @@ ul { margin: 0; padding-left: 16px; }
 `;
 
 export function renderMinimalistCreative(data: CvData): string {
-  const body = `<main>${renderHeader(data)}${renderBodySections(data)}</main>`;
+  const headerRow = `<div class="header-row">${renderHeader(data)}${renderPhoto(data.personal.photoUrl)}</div>`;
+  const body = `<main>${headerRow}${renderBodySections(data)}</main>`;
   return documentShell(data.personal.fullName, css, body);
 }

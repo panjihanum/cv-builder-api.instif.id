@@ -113,3 +113,60 @@ describe("template.service", () => {
     expect(html).toContain("2021-03 - Present");
   });
 });
+
+describe("template.service biaya kredit", () => {
+  it("menggratiskan classic-ats dan menarik tiga kredit untuk lainnya", () => {
+    expect(templateService.getTemplateCreditCost("classic-ats")).toBe(0);
+    for (const id of allTemplateIds.filter((t) => t !== "classic-ats")) {
+      expect(templateService.getTemplateCreditCost(id)).toBe(3);
+    }
+  });
+
+  it("melempar 400 untuk template id tidak dikenal", () => {
+    try {
+      templateService.getTemplateCreditCost("tidak-ada");
+      expect.unreachable();
+    } catch (error) {
+      expect(error).toMatchObject({ status: 400 });
+    }
+  });
+});
+
+describe("template.service aurora dan foto", () => {
+  const photoData = cvDataSchema.parse({
+    ...sampleData,
+    personal: {
+      ...sampleData.personal,
+      photoUrl: "https://cdn.instif.id/foto.png",
+    },
+  });
+
+  it("mendaftarkan aurora dengan sidebar gradien dan heading indonesia", () => {
+    expect(allTemplateIds).toContain("aurora");
+    const html = templateService.renderTemplate("aurora", sampleData);
+    expect(html).toContain("linear-gradient(160deg, #4f46e5, #7c3aed)");
+    expect(html).toContain("Ringkasan");
+    expect(html).toContain("Pengalaman");
+    expect(html).toContain("Keahlian");
+  });
+
+  it.each([
+    "aurora",
+    "two-column-compact",
+    "minimalist-creative",
+    "executive-senior",
+  ])("merender foto pada template %s saat photoUrl terisi", (id) => {
+    expect(templateService.renderTemplate(id, photoData)).toContain(
+      '<img class="photo"'
+    );
+  });
+
+  it.each(["classic-ats", "modern-professional"])(
+    "tidak merender foto pada template %s",
+    (id) => {
+      expect(templateService.renderTemplate(id, photoData)).not.toContain(
+        "<img"
+      );
+    }
+  );
+});

@@ -4,10 +4,15 @@ import {
   renderBodySections,
   renderHeader,
 } from "@/services/templates/sections.js";
+import { renderPhoto } from "@/services/templates/photo.js";
 
 const css = `
 body { font-family: Georgia, "Times New Roman", serif; color: #1c2434; font-size: 10.5pt; line-height: 1.55; margin: 0; }
+.header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 3px double #1c2434; margin-bottom: 16px; }
+.header-row .header { flex: 1; }
+.photo { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; flex-shrink: 0; margin-bottom: 12px; }
 .header { border-bottom: 3px double #1c2434; padding-bottom: 12px; margin-bottom: 16px; }
+.header-row .header { border-bottom: none; margin-bottom: 0; }
 .header h1 { font-size: 21pt; margin: 0 0 2px; letter-spacing: 0.5px; }
 .header .role { margin: 0 0 5px; font-size: 12pt; font-style: italic; color: #344054; }
 .header .contact { margin: 0; font-size: 9.5pt; color: #475467; }
@@ -24,6 +29,7 @@ ul { margin: 0; padding-left: 18px; }
 `;
 
 export function renderExecutiveSenior(data: CvData): string {
-  const body = `<main>${renderHeader(data)}${renderBodySections(data)}</main>`;
+  const headerRow = `<div class="header-row">${renderHeader(data)}${renderPhoto(data.personal.photoUrl)}</div>`;
+  const body = `<main>${headerRow}${renderBodySections(data)}</main>`;
   return documentShell(data.personal.fullName, css, body);
 }

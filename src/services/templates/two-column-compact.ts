@@ -11,11 +11,13 @@ import {
   renderSkillItems,
   renderSummarySection,
 } from "@/services/templates/sections.js";
+import { renderPhoto } from "@/services/templates/photo.js";
 
 const css = `
 body { font-family: Helvetica, Arial, sans-serif; color: #1f2937; font-size: 9.5pt; line-height: 1.45; margin: 0; }
 .layout { display: grid; grid-template-columns: 32% 68%; column-gap: 14px; }
 .sidebar { background: #f3f4f6; padding: 12px; border-radius: 4px; }
+.sidebar .photo { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 10px; }
 .sidebar h2 { font-size: 9.5pt; text-transform: uppercase; letter-spacing: 0.8px; margin: 12px 0 4px; color: #111827; }
 .sidebar h2:first-child { margin-top: 0; }
 .sidebar ul { margin: 0; padding-left: 14px; }
@@ -39,7 +41,8 @@ function renderSidebar(data: CvData): string {
   const languagesBlock = languageItems
     ? `<h2>Languages</h2><ul>${languageItems}</ul>`
     : "";
-  return `<aside class="sidebar">${contactBlock}${skillsBlock}${languagesBlock}</aside>`;
+  const photo = renderPhoto(data.personal.photoUrl);
+  return `<aside class="sidebar">${photo}${contactBlock}${skillsBlock}${languagesBlock}</aside>`;
 }
 
 function renderMain(data: CvData): string {

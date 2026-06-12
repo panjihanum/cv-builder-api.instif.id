@@ -5,6 +5,7 @@ import { renderModernProfessional } from "@/services/templates/modern-profession
 import { renderTwoColumnCompact } from "@/services/templates/two-column-compact.js";
 import { renderMinimalistCreative } from "@/services/templates/minimalist-creative.js";
 import { renderExecutiveSenior } from "@/services/templates/executive-senior.js";
+import { renderAurora } from "@/services/templates/aurora.js";
 
 export type TemplateRenderer = (data: CvData) => string;
 
@@ -29,6 +30,10 @@ export const templates: Record<string, TemplateEntry> = {
   },
   "executive-senior": {
     render: renderExecutiveSenior,
+    creditCost: CREDIT_COSTS.premiumTemplate,
+  },
+  aurora: {
+    render: renderAurora,
     creditCost: CREDIT_COSTS.premiumTemplate,
   },
 };
