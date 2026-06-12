@@ -115,9 +115,13 @@ describe("template.service", () => {
 });
 
 describe("template.service biaya kredit", () => {
-  it("menggratiskan classic-ats dan menarik tiga kredit untuk lainnya", () => {
+  it("menggratiskan classic-ats, designer-studio 5 kredit, sisanya 3", () => {
     expect(templateService.getTemplateCreditCost("classic-ats")).toBe(0);
-    for (const id of allTemplateIds.filter((t) => t !== "classic-ats")) {
+    expect(templateService.getTemplateCreditCost("designer-studio")).toBe(5);
+    const standard = allTemplateIds.filter(
+      (t) => t !== "classic-ats" && t !== "designer-studio"
+    );
+    for (const id of standard) {
       expect(templateService.getTemplateCreditCost(id)).toBe(3);
     }
   });

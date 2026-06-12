@@ -4,6 +4,7 @@ const linkSchema = z.object({
   id: z.string().default(""),
   label: z.string().default(""),
   url: z.string().default(""),
+  icon: z.string().default(""),
 });
 
 const personalSchema = z.object({

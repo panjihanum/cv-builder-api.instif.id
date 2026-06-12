@@ -3,6 +3,7 @@ export const DEFAULT_CREDITS_PER_PACK = 15;
 
 export const CREDIT_COSTS = {
   premiumTemplate: 3,
+  designerTemplate: 5,
   aiParse: 2,
   aiSectionImprove: 1,
   aiPolish: 5,

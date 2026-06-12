@@ -6,6 +6,9 @@ import { renderTwoColumnCompact } from "@/services/templates/two-column-compact.
 import { renderMinimalistCreative } from "@/services/templates/minimalist-creative.js";
 import { renderExecutiveSenior } from "@/services/templates/executive-senior.js";
 import { renderAurora } from "@/services/templates/aurora.js";
+import { renderVibrant } from "@/services/templates/vibrant.js";
+import { renderEditorial } from "@/services/templates/editorial.js";
+import { renderDesignerStudio } from "@/services/templates/designer-studio.js";
 
 export type TemplateRenderer = (data: CvData) => string;
 
@@ -35,5 +38,17 @@ export const templates: Record<string, TemplateEntry> = {
   aurora: {
     render: renderAurora,
     creditCost: CREDIT_COSTS.premiumTemplate,
+  },
+  vibrant: {
+    render: renderVibrant,
+    creditCost: CREDIT_COSTS.premiumTemplate,
+  },
+  editorial: {
+    render: renderEditorial,
+    creditCost: CREDIT_COSTS.premiumTemplate,
+  },
+  "designer-studio": {
+    render: renderDesignerStudio,
+    creditCost: CREDIT_COSTS.designerTemplate,
   },
 };
