@@ -19,6 +19,7 @@ model User {
   cvs       Cv[]
   orders    Order[]
   credit    Credit?
+  wishlist  TemplateWishlist[]
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
@@ -93,4 +94,16 @@ model WhatsAppSession {
   updatedAt   DateTime @updatedAt
 
   @@map("whatsapp_sessions")
+}
+
+model TemplateWishlist {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  templateId String
+  createdAt  DateTime @default(now())
+
+  @@unique([userId, templateId])
+  @@index([templateId])
+  @@map("template_wishlists")
 }
