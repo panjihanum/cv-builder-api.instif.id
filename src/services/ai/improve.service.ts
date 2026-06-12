@@ -1,0 +1,41 @@
+import { z } from "zod";
+import { cvDataSchema } from "@/lib/cvData.js";
+import { HttpError } from "@/lib/httpError.js";
+import { requestStructured } from "@/services/ai/structured.service.js";
+
+export const IMPROVABLE_SECTIONS = [
+  "summary",
+  "experience",
+  "education",
+  "projects",
+  "certifications",
+  "languages",
+  "customSections",
+] as const;
+
+export type ImprovableSection = (typeof IMPROVABLE_SECTIONS)[number];
+
+const SYSTEM_PROMPT =
+  "Kamu adalah editor CV profesional. Perbaiki wording bagian CV agar profesional dan ringkas dalam bahasa yang sama dengan input. JANGAN menambah fakta, angka, atau skill baru. Pertahankan struktur, id, dan tanggal apa adanya. Kembalikan bentuk data yang sama pada field data.";
+
+function getSectionSchema(section: ImprovableSection): z.ZodType {
+  return cvDataSchema.shape[section];
+}
+
+export async function improveSection(
+  section: ImprovableSection,
+  data: unknown
+): Promise<unknown> {
+  const parsed = getSectionSchema(section).safeParse(data);
+  if (!parsed.success) {
+    throw new HttpError(400, `data tidak sesuai bentuk section ${section}`);
+  }
+  const result = await requestStructured({
+    system: SYSTEM_PROMPT,
+    userContent: JSON.stringify({ section, data: parsed.data }),
+    toolName: "improve_cv_section",
+    toolDescription: `Simpan hasil perbaikan wording bagian ${section}`,
+    schema: z.object({ data: getSectionSchema(section) }),
+  });
+  return result.data;
+}
