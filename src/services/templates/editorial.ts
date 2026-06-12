@@ -7,6 +7,7 @@ import {
   renderBullets,
 } from "@/services/templates/shared.js";
 import {
+  formatLinkText,
   linkIconSvg,
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
@@ -17,16 +18,16 @@ import {
 
 const css = `
 * { box-sizing: border-box; }
-body { font-family: Georgia, "Times New Roman", serif; color: #292524; font-size: 10pt; line-height: 1.55; margin: 0; background: #fcfaf6; }
+body { font-family: Georgia, "Times New Roman", serif; color: #292524; font-size: 10pt; line-height: 1.55; margin: 0; background: #fcfaf6; border-top: 5px solid #b45309; }
 .page { padding: 28px 40px; }
 .head { text-align: center; border-bottom: 2px solid #292524; padding-bottom: 16px; }
-.head h1 { margin: 0; font-size: 26pt; font-weight: 700; letter-spacing: -0.5px; color: #1c1917; }
-.head .role { margin: 6px 0 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 4px; color: #92400e; }
+.head h1 { margin: 0; font-size: 28pt; font-weight: 700; letter-spacing: -0.5px; color: #1c1917; }
+.head .role { margin: 7px 0 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 4px; color: #b45309; }
 .contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin-top: 11px; font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #57534e; }
 .chip { display: inline-flex; align-items: center; gap: 5px; }
-.sec-h { display: flex; align-items: center; gap: 9px; margin: 18px 0 9px; color: #92400e; }
+.sec-h { display: flex; align-items: center; gap: 9px; margin: 18px 0 9px; color: #b45309; }
 .sec-h .t { font-size: 9.5pt; font-weight: 600; text-transform: uppercase; letter-spacing: 3px; white-space: nowrap; }
-.sec-h .rule { height: 1px; flex: 1; background: #fcd9a5; }
+.sec-h .rule { height: 1px; flex: 1; background: linear-gradient(90deg,#fbbf24,rgba(251,191,36,0)); }
 .entry { margin-bottom: 11px; }
 .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .entry h3 { margin: 0; font-size: 11pt; color: #1c1917; }
@@ -62,7 +63,7 @@ function renderHead(data: CvData): string {
     chip(linkIconSvg("phone", 12), data.personal.phone),
     chip(linkIconSvg("location", 12), data.personal.address),
     ...data.personal.links.map((link) =>
-      chip(linkIconSvg(resolveLinkIcon(link), 12), link.label || link.url)
+      chip(linkIconSvg(resolveLinkIcon(link), 12), formatLinkText(link))
     ),
   ].join("");
   return `<header class="head"><h1>${escapeHtml(

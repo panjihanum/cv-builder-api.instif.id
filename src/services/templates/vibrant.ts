@@ -7,6 +7,7 @@ import {
   renderBullets,
 } from "@/services/templates/shared.js";
 import {
+  formatLinkText,
   linkIconSvg,
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
@@ -20,11 +21,11 @@ const css = `
 * { box-sizing: border-box; }
 body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.5; margin: 0; }
 .layout { display: grid; grid-template-columns: 33% 67%; min-height: 100vh; }
-.sidebar { background: linear-gradient(165deg,#059669 0%,#0d9488 100%); color: #ffffff; padding: 22px 18px; }
-.sidebar .photo { width: 90px; height: 90px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 14px; border: 3px solid rgba(255,255,255,0.45); }
+.sidebar { background: linear-gradient(165deg,#10b981 0%,#0d9488 50%,#0891b2 100%); color: #ffffff; padding: 24px 18px; }
+.sidebar .photo { width: 94px; height: 94px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 14px; border: 3px solid rgba(255,255,255,0.4); }
 .sidebar h1 { margin: 0; font-size: 17pt; font-weight: 800; line-height: 1.15; }
 .sidebar .role { margin: 3px 0 0; font-size: 9.5pt; font-weight: 500; color: #d1fae5; }
-.s-h { display: flex; align-items: center; gap: 6px; margin: 16px 0 7px; font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #ecfdf5; }
+.s-h { display: flex; align-items: center; gap: 6px; margin: 16px 0 8px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.18); font-size: 8pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1.5px; color: #ecfdf5; }
 .s-list { list-style: none; margin: 0; padding: 0; font-size: 8.5pt; }
 .s-list li { margin-bottom: 5px; display: flex; align-items: center; gap: 5px; }
 .s-list li span.txt { word-break: break-word; }
@@ -35,7 +36,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5
 .main { padding: 24px 22px; }
 .sec { margin-bottom: 15px; }
 .sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 9px; font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; color: #047857; }
-.sec-h .ic { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; background: #d1fae5; color: #047857; }
+.sec-h .ic { display: flex; align-items: center; justify-content: center; width: 20px; height: 20px; border-radius: 6px; background: linear-gradient(135deg,#10b981,#0d9488); color: #ffffff; }
 .entry { margin-bottom: 10px; }
 .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .entry h3 { margin: 0; font-size: 10pt; color: #0f172a; }
@@ -90,7 +91,7 @@ function renderSidebar(data: CvData): string {
       ? `<li>${linkIconSvg("location", 12)}<span class="txt">${escapeHtml(data.personal.address)}</span></li>`
       : "",
     ...data.personal.links.map((link) => {
-      const text = link.label || link.url;
+      const text = formatLinkText(link);
       return text.trim()
         ? `<li>${linkIconSvg(resolveLinkIcon(link), 12)}<span class="txt">${escapeHtml(text)}</span></li>`
         : "";

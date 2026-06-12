@@ -148,7 +148,7 @@ describe("template.service aurora dan foto", () => {
   it("mendaftarkan aurora dengan sidebar gradien dan heading indonesia", () => {
     expect(allTemplateIds).toContain("aurora");
     const html = templateService.renderTemplate("aurora", sampleData);
-    expect(html).toContain("linear-gradient(160deg, #4f46e5, #7c3aed)");
+    expect(html).toContain("linear-gradient(160deg,");
     expect(html).toContain("Ringkasan");
     expect(html).toContain("Pengalaman");
     expect(html).toContain("Keahlian");

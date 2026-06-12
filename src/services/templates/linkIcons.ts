@@ -146,6 +146,26 @@ export function resolveLinkIcon(link: {
   return detectLinkIcon(link.url, link.label);
 }
 
+/** Strip protocol, mailto/tel, leading www, and trailing slash for display. */
+export function formatLinkUrl(url: string): string {
+  return url
+    .trim()
+    .replace(/^https?:\/\//i, "")
+    .replace(/^mailto:/i, "")
+    .replace(/^tel:/i, "")
+    .replace(/^www\./i, "")
+    .replace(/\/+$/, "");
+}
+
+/**
+ * Display text for a personal link in icon-based templates. The icon already
+ * conveys the platform, so we show the actual URL (cleaned up) — not the label.
+ * Falls back to the label only when there is no URL.
+ */
+export function formatLinkText(link: { label: string; url: string }): string {
+  return formatLinkUrl(link.url) || link.label;
+}
+
 export function linkIconSvg(
   key: LinkIconKey,
   size = 13,

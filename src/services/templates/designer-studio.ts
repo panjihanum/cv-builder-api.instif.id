@@ -7,6 +7,7 @@ import {
   renderBullets,
 } from "@/services/templates/shared.js";
 import {
+  formatLinkText,
   linkIconSvg,
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
@@ -23,6 +24,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5
 .hero .photo { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.45); }
 .hero h1 { margin: 0; font-size: 22pt; font-weight: 800; letter-spacing: -0.5px; }
 .hero .role { margin: 3px 0 0; font-size: 12pt; font-weight: 500; color: #fbcfe8; }
+.accent { height: 5px; background: linear-gradient(90deg,#6366f1,#d946ef,#ec4899); }
 .contact-row { display: flex; flex-wrap: wrap; gap: 5px 16px; margin-top: 10px; font-size: 8.5pt; }
 .chip { display: inline-flex; align-items: center; gap: 5px; }
 .body { display: grid; grid-template-columns: 1fr 36%; }
@@ -79,7 +81,7 @@ function header(data: CvData): string {
     chip(linkIconSvg("phone", 12), data.personal.phone),
     chip(linkIconSvg("location", 12), data.personal.address),
     ...data.personal.links.map((link) =>
-      chip(linkIconSvg(resolveLinkIcon(link), 12), link.label || link.url)
+      chip(linkIconSvg(resolveLinkIcon(link), 12), formatLinkText(link))
     ),
   ].join("");
   return `<header class="hero">${photo}<div><h1>${escapeHtml(
@@ -268,6 +270,6 @@ export function renderDesignerStudio(data: CvData): string {
     renderCertifications(data),
     "</div>",
   ].join("");
-  const body = `${header(data)}<div class="body">${main}${aside}</div>`;
+  const body = `${header(data)}<div class="accent"></div><div class="body">${main}${aside}</div>`;
   return documentShell(data.personal.fullName, css, body);
 }
