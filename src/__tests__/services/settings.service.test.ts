@@ -133,10 +133,10 @@ describe("settings.service getAllSettingsMasked", () => {
 });
 
 describe("settings.service pricing helpers", () => {
-  it("mengembalikan angka harga paket dan kuota ai", async () => {
+  it("mengembalikan angka harga paket dan kredit per pack", async () => {
     vi.mocked(db.setting.findUnique).mockResolvedValue(null);
     expect(await settingsService.getPackPrice()).toBe(10000);
-    expect(await settingsService.getAiPerPack()).toBe(3);
+    expect(await settingsService.getCreditsPerPack()).toBe(15);
   });
 
   it("fallback ke default saat nilai tidak valid", async () => {

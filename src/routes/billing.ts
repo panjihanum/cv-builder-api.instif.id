@@ -29,8 +29,8 @@ const proofFileRule = {
 export const billingRoutes = new Hono<AuthEnv>();
 
 billingRoutes.get("/credit", requireAuth, async (c) => {
-  const credit = await creditService.getCredit(c.get("user").sub);
-  return c.json(credit);
+  const credits = await creditService.ensureCredit(c.get("user").sub);
+  return c.json({ credits });
 });
 
 billingRoutes.get("/orders", requireAuth, async (c) => {

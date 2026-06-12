@@ -1,7 +1,6 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { cvDataSchema } from "@/lib/cvData.js";
-import { HttpError } from "@/lib/httpError.js";
 import { validate } from "@/lib/validation.js";
 import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import * as creditService from "@/services/credit.service.js";
@@ -28,15 +27,17 @@ exportRoutes.post(
   async (c) => {
     const userId = c.get("user").sub;
     const { cvId, templateId } = c.req.valid("json");
-    const credit = await creditService.getCredit(userId);
-    if (credit.exportLeft <= 0) {
-      throw new HttpError(402, "Kredit export habis, silakan beli paket");
+    const creditCost = templateService.getTemplateCreditCost(templateId);
+    if (creditCost > 0) {
+      await creditService.assertCreditBalance(userId, creditCost);
     }
     const cv = await cvService.getOwnedCv(userId, cvId);
     const data = cvDataSchema.parse(cv.data);
     const html = templateService.renderTemplate(templateId, data);
     const pdf = await pdfService.renderPdf(html);
-    await creditService.consumeExportCredit(userId);
+    if (creditCost > 0) {
+      await creditService.consumeCredits(userId, creditCost);
+    }
     const pdfBuffer = pdf.buffer.slice(
       pdf.byteOffset,
       pdf.byteOffset + pdf.byteLength

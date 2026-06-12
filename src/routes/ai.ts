@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { HttpError } from "@/lib/httpError.js";
+import { CREDIT_COSTS } from "@/config/pricing.js";
 import { assertUploadedFile } from "@/lib/uploads.js";
 import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import * as creditService from "@/services/credit.service.js";
@@ -21,10 +21,7 @@ export const aiRoutes = new Hono<AuthEnv>();
 
 aiRoutes.post("/parse-cv", requireAuth, async (c) => {
   const userId = c.get("user").sub;
-  const credit = await creditService.getCredit(userId);
-  if (credit.aiUploadsLeft <= 0) {
-    throw new HttpError(402, "Kuota upload AI habis, silakan beli paket");
-  }
+  await creditService.assertCreditBalance(userId, CREDIT_COSTS.aiParse);
   const body = await c.req.parseBody();
   const file = assertUploadedFile(body.file, cvFileRule);
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -34,6 +31,9 @@ aiRoutes.post("/parse-cv", requireAuth, async (c) => {
     file.type
   );
   const data = await claudeService.extractCvData(text);
-  const aiUploadsLeft = await creditService.consumeAiUploadCredit(userId);
-  return c.json({ data, aiUploadsLeft });
+  const credits = await creditService.consumeCredits(
+    userId,
+    CREDIT_COSTS.aiParse
+  );
+  return c.json({ data, credits });
 });

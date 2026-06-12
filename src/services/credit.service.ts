@@ -1,69 +1,47 @@
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
-import { EXPORT_PER_PACK } from "@/config/pricing.js";
-import { getAiPerPack } from "@/services/settings.service.js";
+import { getCreditsPerPack } from "@/services/settings.service.js";
 
-export interface CreditBalance {
-  exportLeft: number;
-  aiUploadsLeft: number;
+const INSUFFICIENT_MESSAGE = "Kredit tidak cukup, silakan beli paket";
+
+export async function ensureCredit(userId: string): Promise<number> {
+  const credit = await db.credit.upsert({
+    where: { userId },
+    update: {},
+    create: { userId },
+  });
+  return credit.balance;
 }
 
-export async function getCredit(userId: string): Promise<CreditBalance> {
+export async function getCreditBalance(userId: string): Promise<number> {
   const credit = await db.credit.findUnique({ where: { userId } });
-  return {
-    exportLeft: credit?.exportLeft ?? 0,
-    aiUploadsLeft: credit?.aiUploadsLeft ?? 0,
-  };
+  return credit?.balance ?? 0;
 }
 
-export async function consumeExportCredit(userId: string): Promise<number> {
-  return db.$transaction(async (tx) => {
-    const result = await tx.credit.updateMany({
-      where: { userId, exportLeft: { gt: 0 } },
-      data: { exportLeft: { decrement: 1 } },
-    });
-    if (result.count === 0) {
-      throw new HttpError(402, "Kredit export habis, silakan beli paket");
-    }
-    const credit = await tx.credit.findUnique({ where: { userId } });
-    return credit?.exportLeft ?? 0;
-  });
-}
-
-export async function consumeAiUploadCredit(userId: string): Promise<number> {
-  return db.$transaction(async (tx) => {
-    const result = await tx.credit.updateMany({
-      where: { userId, aiUploadsLeft: { gt: 0 } },
-      data: { aiUploadsLeft: { decrement: 1 } },
-    });
-    if (result.count === 0) {
-      throw new HttpError(402, "Kuota upload AI habis, silakan beli paket");
-    }
-    const credit = await tx.credit.findUnique({ where: { userId } });
-    return credit?.aiUploadsLeft ?? 0;
-  });
-}
-
-export async function topUpCredits(
+export async function assertCreditBalance(
   userId: string,
-  packs: number
+  cost: number
 ): Promise<void> {
-  const aiPerPack = await getAiPerPack();
-  const exportAmount = packs * EXPORT_PER_PACK;
-  const aiAmount = packs * aiPerPack;
-  await db.$transaction(async (tx) => {
-    await tx.credit.upsert({
-      where: { userId },
-      update: {
-        exportLeft: { increment: exportAmount },
-        aiUploadsLeft: { increment: aiAmount },
-      },
-      create: {
-        userId,
-        exportLeft: exportAmount,
-        aiUploadsLeft: aiAmount,
-      },
+  const balance = await getCreditBalance(userId);
+  if (balance < cost) {
+    throw new HttpError(402, INSUFFICIENT_MESSAGE);
+  }
+}
+
+export async function consumeCredits(
+  userId: string,
+  cost: number
+): Promise<number> {
+  return db.$transaction(async (tx) => {
+    const result = await tx.credit.updateMany({
+      where: { userId, balance: { gte: cost } },
+      data: { balance: { decrement: cost } },
     });
+    if (result.count === 0) {
+      throw new HttpError(402, INSUFFICIENT_MESSAGE);
+    }
+    const credit = await tx.credit.findUnique({ where: { userId } });
+    return credit?.balance ?? 0;
   });
 }
 
@@ -77,9 +55,8 @@ export async function settleOrderPaid(
   if (order.status === "PAID") {
     return { alreadyPaid: true };
   }
-  const aiPerPack = await getAiPerPack();
-  const exportAmount = order.packs * EXPORT_PER_PACK;
-  const aiAmount = order.packs * aiPerPack;
+  const creditsPerPack = await getCreditsPerPack();
+  const creditAmount = order.packs * creditsPerPack;
   await db.$transaction(async (tx) => {
     const updated = await tx.order.updateMany({
       where: { id: orderId, status: { not: "PAID" } },
@@ -90,15 +67,8 @@ export async function settleOrderPaid(
     }
     await tx.credit.upsert({
       where: { userId: order.userId },
-      update: {
-        exportLeft: { increment: exportAmount },
-        aiUploadsLeft: { increment: aiAmount },
-      },
-      create: {
-        userId: order.userId,
-        exportLeft: exportAmount,
-        aiUploadsLeft: aiAmount,
-      },
+      update: { balance: { increment: creditAmount } },
+      create: { userId: order.userId, balance: creditAmount },
     });
   });
   return { alreadyPaid: false };

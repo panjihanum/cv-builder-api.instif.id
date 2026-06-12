@@ -39,11 +39,10 @@ model Cv {
 }
 
 model Credit {
-  id            String @id @default(cuid())
-  userId        String @unique
-  user          User   @relation(fields: [userId], references: [id])
-  exportLeft    Int    @default(0)
-  aiUploadsLeft Int    @default(0)
+  id      String @id @default(cuid())
+  userId  String @unique
+  user    User   @relation(fields: [userId], references: [id])
+  balance Int    @default(0)
 
   @@map("credits")
 }

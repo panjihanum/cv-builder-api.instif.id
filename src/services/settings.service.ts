@@ -1,7 +1,10 @@
 import { db } from "@/lib/db.js";
 import { encrypt, decrypt } from "@/lib/crypto.js";
 import { HttpError } from "@/lib/httpError.js";
-import { DEFAULT_AI_PER_PACK, DEFAULT_PACK_PRICE } from "@/config/pricing.js";
+import {
+  DEFAULT_CREDITS_PER_PACK,
+  DEFAULT_PACK_PRICE,
+} from "@/config/pricing.js";
 
 export const SENSITIVE_KEYS = new Set(["duitku.apiKey", "anthropic.apiKey"]);
 
@@ -13,12 +16,12 @@ export const SETTING_KEYS = [
   "anthropic.model",
   "bank.accounts",
   "pricing.packPrice",
-  "pricing.aiPerPack",
+  "pricing.creditsPerPack",
 ] as const;
 
 const DEFAULT_SETTINGS: Record<string, string> = {
   "pricing.packPrice": String(DEFAULT_PACK_PRICE),
-  "pricing.aiPerPack": String(DEFAULT_AI_PER_PACK),
+  "pricing.creditsPerPack": String(DEFAULT_CREDITS_PER_PACK),
   "anthropic.model": "claude-opus-4-8",
   "duitku.env": "sandbox",
   "bank.accounts": "[]",
@@ -105,8 +108,10 @@ export async function getPackPrice(): Promise<number> {
   return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_PACK_PRICE;
 }
 
-export async function getAiPerPack(): Promise<number> {
-  const raw = await getSetting("pricing.aiPerPack");
+export async function getCreditsPerPack(): Promise<number> {
+  const raw = await getSetting("pricing.creditsPerPack");
   const parsed = Number(raw);
-  return Number.isFinite(parsed) && parsed > 0 ? parsed : DEFAULT_AI_PER_PACK;
+  return Number.isFinite(parsed) && parsed > 0
+    ? parsed
+    : DEFAULT_CREDITS_PER_PACK;
 }

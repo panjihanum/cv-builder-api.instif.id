@@ -1,0 +1,1 @@
+ALTER TABLE "credits" DROP COLUMN "exportLeft", DROP COLUMN "aiUploadsLeft", ADD COLUMN "balance" INTEGER NOT NULL DEFAULT 0;
