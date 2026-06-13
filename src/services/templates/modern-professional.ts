@@ -6,7 +6,7 @@ import {
 } from "@/services/templates/sections.js";
 
 const css = `
-body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 10pt; line-height: 1.5; margin: 0; padding: 44px 48px; }
+body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 10pt; line-height: 1.5; margin: 0; box-sizing: border-box; min-height: 100vh; padding: 44px 48px; }
 .header { border-bottom: 2px solid #4f46e5; padding-bottom: 11px; margin-bottom: 16px; }
 .header h1 { font-size: 22pt; margin: 0 0 3px; color: #0f172a; font-weight: 800; letter-spacing: -0.3px; }
 .header .role { margin: 0 0 6px; font-size: 11.5pt; color: #4338ca; font-weight: 600; }

@@ -7,7 +7,7 @@ import {
 import { renderPhoto } from "@/services/templates/photo.js";
 
 const css = `
-body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #404040; font-size: 10pt; line-height: 1.7; margin: 0; padding: 56px 64px; }
+body { font-family: "Helvetica Neue", Helvetica, Arial, sans-serif; color: #404040; font-size: 10pt; line-height: 1.7; margin: 0; box-sizing: border-box; min-height: 100vh; padding: 56px 64px; }
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; border-bottom: 1px solid #e5e5e5; padding-bottom: 18px; margin-bottom: 24px; }
 .header-row .header { flex: 1; }
 .photo { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; flex-shrink: 0; filter: grayscale(1); }

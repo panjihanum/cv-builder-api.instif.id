@@ -20,7 +20,7 @@ import { photoToDataUrl } from "@/services/templates/photo.js";
 
 const css = `
 * { box-sizing: border-box; }
-body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.5; margin: 0; }
+body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.5; margin: 0; min-height: 100vh; display: flex; flex-direction: column; }
 .hero { display: flex; align-items: center; gap: 18px; padding: 26px 30px; color: #ffffff; background: linear-gradient(120deg,#4338ca 0%,#7c3aed 45%,#db2777 100%); }
 .hero .photo { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; border: 3px solid rgba(255,255,255,0.45); }
 .hero h1 { margin: 0; font-size: 22pt; font-weight: 800; letter-spacing: -0.5px; }
@@ -28,7 +28,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5
 .accent { height: 5px; background: linear-gradient(90deg,#6366f1,#d946ef,#ec4899); }
 .contact-row { display: flex; flex-wrap: wrap; gap: 5px 16px; margin-top: 10px; font-size: 8.5pt; }
 .chip { display: inline-flex; align-items: center; gap: 5px; }
-.body { display: grid; grid-template-columns: 1fr 36%; }
+.body { display: grid; grid-template-columns: 1fr 36%; flex: 1; }
 .main { padding: 22px 22px; }
 .aside { padding: 20px 18px; background: #f8fafc; border-left: 1px solid #e2e8f0; }
 .sec { margin-bottom: 16px; }

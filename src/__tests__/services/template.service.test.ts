@@ -93,6 +93,17 @@ describe("template.service", () => {
     expect(html).toContain("Organisasi");
   });
 
+  it.each(allTemplateIds)(
+    "template %s mengisi penuh tinggi halaman (min-height: 100vh)",
+    (id) => {
+      // Setiap template harus memenuhi minimal satu halaman penuh agar
+      // background/sidebar tidak menyisakan area putih saat konten pendek —
+      // sama seperti preview A4 di frontend.
+      const html = templateService.renderTemplate(id, sampleData);
+      expect(html).toContain("min-height: 100vh");
+    }
+  );
+
   it.each(allTemplateIds)("meng-escape input user pada template %s", (id) => {
     const maliciousData = cvDataSchema.parse({
       personal: {
@@ -115,15 +126,32 @@ describe("template.service", () => {
 });
 
 describe("template.service biaya kredit", () => {
-  it("menggratiskan classic-ats, designer-studio 5 kredit, sisanya 3", () => {
-    expect(templateService.getTemplateCreditCost("classic-ats")).toBe(0);
-    expect(templateService.getTemplateCreditCost("designer-studio")).toBe(5);
-    const standard = allTemplateIds.filter(
-      (t) => t !== "classic-ats" && t !== "designer-studio"
-    );
-    for (const id of standard) {
-      expect(templateService.getTemplateCreditCost(id)).toBe(3);
+  // Tier visual: makin menonjol/kreatif makin mahal (4–12 kredit), classic-ats gratis.
+  const expectedCosts: Record<string, number> = {
+    "classic-ats": 0,
+    "modern-professional": 4,
+    "executive-senior": 4,
+    "two-column-compact": 6,
+    "minimalist-creative": 6,
+    aurora: 8,
+    graphite: 8,
+    vibrant: 10,
+    editorial: 10,
+    onyx: 10,
+    bloom: 12,
+    "designer-studio": 12,
+  };
+
+  it("memberi biaya berjenjang per template (gratis, lalu 4–12 kredit)", () => {
+    for (const id of allTemplateIds) {
+      expect(templateService.getTemplateCreditCost(id)).toBe(expectedCosts[id]);
     }
+  });
+
+  it("mencakup setiap template terdaftar dalam tabel biaya", () => {
+    expect(Object.keys(expectedCosts).sort()).toEqual(
+      [...allTemplateIds].sort()
+    );
   });
 
   it("melempar 400 untuk template id tidak dikenal", () => {

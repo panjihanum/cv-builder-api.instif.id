@@ -8,7 +8,7 @@ import { renderPhoto } from "@/services/templates/photo.js";
 
 const css = `
 * { box-sizing: border-box; }
-body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 10pt; line-height: 1.55; margin: 0; padding: 44px 48px; }
+body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 10pt; line-height: 1.55; margin: 0; min-height: 100vh; padding: 44px 48px; }
 .header-row { display: flex; justify-content: space-between; align-items: flex-start; gap: 18px; border-bottom: 3px solid #064e3b; padding-bottom: 12px; margin-bottom: 16px; }
 .header-row .header { flex: 1; }
 .photo { width: 84px; height: 84px; border-radius: 50%; object-fit: cover; flex-shrink: 0; border: 2px solid #064e3b; }
