@@ -6,7 +6,7 @@ import {
 } from "@/services/templates/sections.js";
 
 const css = `
-body { font-family: Georgia, "Times New Roman", serif; color: #1a1a1a; font-size: 10.5pt; line-height: 1.55; margin: 0; }
+body { font-family: Georgia, "Times New Roman", serif; color: #1a1a1a; font-size: 10.5pt; line-height: 1.55; margin: 0; padding: 48px 56px; }
 .header { text-align: center; border-bottom: 1.5pt solid #1a1a1a; padding-bottom: 12px; margin-bottom: 16px; }
 .header h1 { font-size: 21pt; margin: 0 0 5px; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; }
 .header .role { margin: 0 0 6px; font-size: 10.5pt; text-transform: uppercase; letter-spacing: 3px; color: #555; }

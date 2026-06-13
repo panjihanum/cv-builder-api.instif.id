@@ -1,4 +1,4 @@
-import puppeteer, { type Browser } from "puppeteer";
+import puppeteer, { type Browser, type PaperFormat } from "puppeteer";
 
 let browserPromise: Promise<Browser> | null = null;
 
@@ -16,15 +16,22 @@ async function getBrowser(): Promise<Browser> {
   return browserPromise;
 }
 
-export async function renderPdf(html: string): Promise<Uint8Array> {
+export async function renderPdf(
+  html: string,
+  format: PaperFormat = "A4"
+): Promise<Uint8Array> {
   const browser = await getBrowser();
   const page = await browser.newPage();
   try {
     await page.setContent(html, { waitUntil: "load" });
+    // No page margin: each template renders edge-to-edge and supplies its own
+    // padding, exactly like the on-screen preview. A Puppeteer margin here would
+    // add whitespace around the whole document (a white border around full-bleed
+    // sidebars) that the preview never shows.
     return await page.pdf({
-      format: "A4",
+      format,
       printBackground: true,
-      margin: { top: "16mm", bottom: "16mm", left: "14mm", right: "14mm" },
+      margin: { top: "0", bottom: "0", left: "0", right: "0" },
     });
   } finally {
     await page.close();

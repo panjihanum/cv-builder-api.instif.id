@@ -11,6 +11,7 @@ import * as pdfService from "@/services/pdf.service.js";
 const exportPdfSchema = z.object({
   cvId: z.string().min(1),
   templateId: z.string().min(1),
+  pageSize: z.enum(["a4", "letter"]).optional().default("a4"),
 });
 
 function toFilename(title: string): string {
@@ -26,7 +27,7 @@ exportRoutes.post(
   validate("json", exportPdfSchema),
   async (c) => {
     const userId = c.get("user").sub;
-    const { cvId, templateId } = c.req.valid("json");
+    const { cvId, templateId, pageSize } = c.req.valid("json");
     const creditCost = templateService.getTemplateCreditCost(templateId);
     if (creditCost > 0) {
       await creditService.assertCreditBalance(userId, creditCost);
@@ -34,7 +35,8 @@ exportRoutes.post(
     const cv = await cvService.getOwnedCv(userId, cvId);
     const data = cvDataSchema.parse(cv.data);
     const html = templateService.renderTemplate(templateId, data);
-    const pdf = await pdfService.renderPdf(html);
+    const format = pageSize === "letter" ? "Letter" : "A4";
+    const pdf = await pdfService.renderPdf(html, format);
     if (creditCost > 0) {
       await creditService.consumeCredits(userId, creditCost);
     }
