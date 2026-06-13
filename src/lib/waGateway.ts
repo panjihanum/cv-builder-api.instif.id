@@ -1,31 +1,69 @@
 import { env } from "@/lib/env.js";
 import { HttpError } from "@/lib/httpError.js";
 
-const BASE = env.WA_GATEWAY_URL;
-const SECRET = env.WA_GATEWAY_SECRET;
+interface Gateway {
+  url: string;
+  secret: string;
+}
 
-async function call(
+/**
+ * Parses WA_GATEWAYS env var ("url1|secret1,url2|secret2") into an ordered list.
+ * Falls back to WA_GATEWAY_URL + WA_GATEWAY_SECRET for backward compatibility.
+ */
+function loadGateways(): Gateway[] {
+  const multi = env.WA_GATEWAYS?.trim();
+  if (multi) {
+    return multi.split(",").flatMap((pair) => {
+      const sep = pair.lastIndexOf("|");
+      if (sep === -1) return [];
+      const url = pair.slice(0, sep).trim();
+      const secret = pair.slice(sep + 1).trim();
+      return url ? [{ url, secret }] : [];
+    });
+  }
+  return [{ url: env.WA_GATEWAY_URL, secret: env.WA_GATEWAY_SECRET }];
+}
+
+const GATEWAYS = loadGateways();
+
+async function callOne(
+  gw: Gateway,
   path: string,
   body: unknown
 ): Promise<{ ok: boolean; error?: string }> {
   let res: Response;
   try {
-    res = await fetch(`${BASE}${path}`, {
+    res = await fetch(`${gw.url}${path}`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${SECRET}`,
+        Authorization: `Bearer ${gw.secret}`,
       },
       body: JSON.stringify(body),
+      signal: AbortSignal.timeout(10_000),
     });
   } catch {
-    throw new HttpError(503, "Gateway WhatsApp tidak merespons");
+    return { ok: false, error: "Gateway tidak merespons" };
   }
   const data = (await res.json().catch(() => ({}))) as {
     ok?: boolean;
     error?: string;
   };
   return { ok: res.ok && data.ok !== false, error: data.error };
+}
+
+/** Tries each gateway in priority order; returns on first success. */
+async function call(
+  path: string,
+  body: unknown
+): Promise<{ ok: boolean; error?: string }> {
+  let lastError = "Gateway WhatsApp tidak tersedia";
+  for (const gw of GATEWAYS) {
+    const result = await callOne(gw, path, body);
+    if (result.ok) return result;
+    lastError = result.error ?? lastError;
+  }
+  return { ok: false, error: lastError };
 }
 
 export async function requestOtp(

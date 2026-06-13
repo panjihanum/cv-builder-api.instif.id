@@ -13,6 +13,7 @@ import {
 } from "@/services/templates/linkIcons.js";
 import {
   sectionIconSvg,
+  resolveSectionIcon,
   type SectionIconKey,
 } from "@/services/templates/sectionIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
@@ -164,7 +165,11 @@ function renderCustom(data: CvData): string {
           return `<div class="blk">${heading}${renderBullets(item.body)}</div>`;
         })
         .join("");
-      return mainSection("custom", custom.title || "Lainnya", items);
+      return mainSection(
+        resolveSectionIcon(custom.icon, "custom"),
+        custom.title || "Lainnya",
+        items
+      );
     })
     .join("");
 }

@@ -74,6 +74,7 @@ const customSectionItemSchema = z.object({
 const customSectionSchema = z.object({
   id: z.string().default(""),
   title: z.string().default(""),
+  icon: z.string().default(""),
   items: z.array(customSectionItemSchema).default([]),
 });
 

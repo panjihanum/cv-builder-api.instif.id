@@ -1,6 +1,7 @@
 import bcryptjs from "bcryptjs";
 import { db } from "@/lib/db.js";
 import { signToken } from "@/lib/jwt.js";
+import { verifySSOToken } from "@/lib/sso.js";
 import { HttpError } from "@/lib/httpError.js";
 import { normalizePhone } from "@/lib/phone.js";
 import * as waGateway from "@/lib/waGateway.js";
@@ -107,6 +108,26 @@ export async function verifyPhoneOtp(input: {
     throw new HttpError(403, "Akun tidak aktif");
   }
   return createAuthResult(user);
+}
+
+/**
+ * Exchanges a hub-issued SSO token for a local admin session. The hub only
+ * signs tokens for its own ADMIN users, so a valid token grants access to the
+ * first active local ADMIN account.
+ */
+export async function ssoLogin(ssoToken: string) {
+  const payload = verifySSOToken(ssoToken);
+  if (!payload) {
+    throw new HttpError(401, "Token SSO tidak valid atau kadaluarsa");
+  }
+  const admin = await db.user.findFirst({
+    where: { role: "ADMIN", status: "ACTIVE" },
+    orderBy: { createdAt: "asc" },
+  });
+  if (!admin) {
+    throw new HttpError(404, "Akun admin tidak ditemukan");
+  }
+  return createAuthResult(admin);
 }
 
 export async function getMe(userId: string): Promise<PublicUser> {

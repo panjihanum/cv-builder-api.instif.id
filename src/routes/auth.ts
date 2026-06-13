@@ -25,6 +25,10 @@ const verifyOtpSchema = z.object({
   name: z.string().min(1).optional(),
 });
 
+const ssoSchema = z.object({
+  token: z.string().min(1),
+});
+
 export const authRoutes = new Hono<AuthEnv>();
 
 authRoutes.post("/register", validate("json", registerSchema), async (c) => {
@@ -49,6 +53,12 @@ authRoutes.post(
 
 authRoutes.post("/verify-otp", validate("json", verifyOtpSchema), async (c) => {
   const result = await authService.verifyPhoneOtp(c.req.valid("json"));
+  return c.json(result);
+});
+
+// Exchange an instif.id hub SSO token for a local admin JWT.
+authRoutes.post("/sso", validate("json", ssoSchema), async (c) => {
+  const result = await authService.ssoLogin(c.req.valid("json").token);
   return c.json(result);
 });
 

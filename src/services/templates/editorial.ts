@@ -13,6 +13,7 @@ import {
 } from "@/services/templates/linkIcons.js";
 import {
   sectionIconSvg,
+  resolveSectionIcon,
   type SectionIconKey,
 } from "@/services/templates/sectionIcons.js";
 
@@ -199,7 +200,7 @@ function renderCustom(data: CvData): string {
         .join("");
       if (!items) return "";
       return `<section>${sectionTitle(
-        "custom",
+        resolveSectionIcon(custom.icon, "custom"),
         custom.title || "Lainnya"
       )}${items}</section>`;
     })
