@@ -15,6 +15,16 @@ const loginSchema = z.object({
   password: z.string().min(1),
 });
 
+const requestOtpSchema = z.object({
+  phone: z.string().min(8),
+});
+
+const verifyOtpSchema = z.object({
+  phone: z.string().min(8),
+  code: z.string().length(6),
+  name: z.string().min(1).optional(),
+});
+
 export const authRoutes = new Hono<AuthEnv>();
 
 authRoutes.post("/register", validate("json", registerSchema), async (c) => {
@@ -24,6 +34,21 @@ authRoutes.post("/register", validate("json", registerSchema), async (c) => {
 
 authRoutes.post("/login", validate("json", loginSchema), async (c) => {
   const result = await authService.login(c.req.valid("json"));
+  return c.json(result);
+});
+
+authRoutes.post(
+  "/request-otp",
+  validate("json", requestOtpSchema),
+  async (c) => {
+    const { phone } = c.req.valid("json");
+    const result = await authService.requestPhoneOtp(phone);
+    return c.json(result);
+  }
+);
+
+authRoutes.post("/verify-otp", validate("json", verifyOtpSchema), async (c) => {
+  const result = await authService.verifyPhoneOtp(c.req.valid("json"));
   return c.json(result);
 });
 

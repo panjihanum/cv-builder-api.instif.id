@@ -3,6 +3,12 @@ import bcryptjs from "bcryptjs";
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
 import * as authService from "@/services/auth.service.js";
+import * as waGateway from "@/lib/waGateway.js";
+
+vi.mock("@/lib/waGateway.js", () => ({
+  requestOtp: vi.fn(),
+  verifyOtp: vi.fn(),
+}));
 
 const mockUser = {
   id: "user-1",
@@ -91,6 +97,62 @@ describe("auth.service login", () => {
     expect(result.token).toBeTruthy();
     expect(result.user).not.toHaveProperty("password");
     expect(result.user.email).toBe("budi@instif.id");
+  });
+});
+
+describe("auth.service requestPhoneOtp", () => {
+  it("menormalkan nomor dan meminta OTP LOGIN ke gateway", async () => {
+    const result = await authService.requestPhoneOtp("08123456789");
+    expect(result).toEqual({ ok: true });
+    expect(waGateway.requestOtp).toHaveBeenCalledWith("628123456789", "LOGIN");
+  });
+});
+
+describe("auth.service verifyPhoneOtp", () => {
+  it("masuk untuk user lama tanpa membuat user baru", async () => {
+    vi.mocked(waGateway.verifyOtp).mockResolvedValue(undefined);
+    vi.mocked(db.user.findUnique).mockResolvedValue({
+      ...mockUser,
+      phone: "628123456789",
+    } as never);
+    const result = await authService.verifyPhoneOtp({
+      phone: "08123456789",
+      code: "123456",
+    });
+    expect(waGateway.verifyOtp).toHaveBeenCalledWith("628123456789", "123456");
+    expect(db.user.create).not.toHaveBeenCalled();
+    expect(result.token).toBeTruthy();
+  });
+
+  it("membuat user baru dengan phone ter-normalisasi dan credit kosong", async () => {
+    vi.mocked(waGateway.verifyOtp).mockResolvedValue(undefined);
+    vi.mocked(db.user.findUnique).mockResolvedValue(null);
+    vi.mocked(db.user.create).mockResolvedValue({
+      id: "user-2",
+      name: "User 6789",
+      email: null,
+      phone: "628123456789",
+      role: "USER",
+      status: "ACTIVE",
+    } as never);
+    const result = await authService.verifyPhoneOtp({
+      phone: "08123456789",
+      code: "123456",
+    });
+    const createArgs = vi.mocked(db.user.create).mock.calls[0][0];
+    expect(createArgs.data.phone).toBe("628123456789");
+    expect(createArgs.data.credit).toEqual({ create: {} });
+    expect(result.user.phone).toBe("628123456789");
+    expect(result.token).toBeTruthy();
+  });
+
+  it("menolak kode salah dari gateway", async () => {
+    vi.mocked(waGateway.verifyOtp).mockRejectedValue(
+      new HttpError(400, "Kode OTP salah atau kedaluwarsa")
+    );
+    await expect(
+      authService.verifyPhoneOtp({ phone: "08123456789", code: "999999" })
+    ).rejects.toMatchObject({ status: 400 });
   });
 });
 

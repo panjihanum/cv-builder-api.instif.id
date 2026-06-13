@@ -5,6 +5,8 @@ process.env.DATABASE_URL ??= "postgresql://test:test@localhost:5432/test";
 process.env.JWT_SECRET ??= "test-jwt-secret";
 process.env.ENCRYPTION_KEY ??= `base64:${randomBytes(32).toString("base64")}`;
 process.env.CORS_ORIGIN ??= "http://localhost:3010";
+process.env.WA_GATEWAY_URL ??= "http://127.0.0.1:4100";
+process.env.WA_GATEWAY_SECRET ??= "test-wa-gateway-secret";
 
 function createModelMock() {
   return {

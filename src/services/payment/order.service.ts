@@ -75,7 +75,7 @@ export async function createCheckout(
     amount: order.amount,
     productDetails: `${packs} paket kredit CV Builder`,
     customerName: user.name,
-    email: user.email,
+    email: user.email ?? `${user.phone ?? user.id}@noemail.instif.id`,
     callbackUrl: urls.callbackUrl,
     returnUrl: urls.returnUrl,
   });
