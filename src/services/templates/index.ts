@@ -20,50 +20,52 @@ export interface TemplateEntry {
   creditCost: number;
 }
 
+const tierCost = CREDIT_COSTS.templateTier;
+
 export const templates: Record<string, TemplateEntry> = {
-  "classic-ats": { render: renderClassicAts, creditCost: 0 },
+  "classic-ats": { render: renderClassicAts, creditCost: tierCost.free },
   "modern-professional": {
     render: renderModernProfessional,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.basic,
   },
   "two-column-compact": {
     render: renderTwoColumnCompact,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.standard,
   },
   "minimalist-creative": {
     render: renderMinimalistCreative,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.standard,
   },
   "executive-senior": {
     render: renderExecutiveSenior,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.basic,
   },
   aurora: {
     render: renderAurora,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.premium,
   },
   vibrant: {
     render: renderVibrant,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.elite,
   },
   editorial: {
     render: renderEditorial,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.elite,
   },
   "designer-studio": {
     render: renderDesignerStudio,
-    creditCost: CREDIT_COSTS.designerTemplate,
+    creditCost: tierCost.flagship,
   },
   graphite: {
     render: renderGraphite,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.premium,
   },
   onyx: {
     render: renderOnyx,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.elite,
   },
   bloom: {
     render: renderBloom,
-    creditCost: CREDIT_COSTS.premiumTemplate,
+    creditCost: tierCost.flagship,
   },
 };

@@ -61,16 +61,16 @@ describe("routes/export pdf", () => {
     expect(db.credit.updateMany).not.toHaveBeenCalled();
   });
 
-  it("export template premium memotong tiga kredit", async () => {
+  it("export template premium memotong biaya tier-nya (modern-professional = 4 kredit)", async () => {
     vi.mocked(db.credit.findUnique)
       .mockResolvedValueOnce({ balance: 5 } as never)
-      .mockResolvedValueOnce({ balance: 2 } as never);
+      .mockResolvedValueOnce({ balance: 1 } as never);
     vi.mocked(db.credit.updateMany).mockResolvedValue({ count: 1 } as never);
     const res = await requestExport("modern-professional");
     expect(res.status).toBe(200);
     const args = vi.mocked(db.credit.updateMany).mock.calls[0][0];
-    expect(args.where).toEqual({ userId: "user-1", balance: { gte: 3 } });
-    expect(args.data).toEqual({ balance: { decrement: 3 } });
+    expect(args.where).toEqual({ userId: "user-1", balance: { gte: 4 } });
+    expect(args.data).toEqual({ balance: { decrement: 4 } });
   });
 
   it("melempar 402 saat saldo kurang untuk template premium", async () => {
