@@ -2,9 +2,25 @@ import { db } from "@/lib/db.js";
 import { encrypt, decrypt } from "@/lib/crypto.js";
 import { HttpError } from "@/lib/httpError.js";
 import {
+  CREDIT_COSTS,
   DEFAULT_CREDITS_PER_PACK,
+  DEFAULT_MAX_PACKS_PER_ORDER,
+  DEFAULT_ORIGINAL_PACK_PRICE,
   DEFAULT_PACK_PRICE,
+  TEMPLATE_TIERS,
+  type TemplateTier,
 } from "@/config/pricing.js";
+
+/** Setting key untuk biaya kredit satu tier template. */
+export function templateTierSettingKey(tier: TemplateTier): string {
+  return `pricing.cost.template.${tier}`;
+}
+
+const AI_COST_KEYS = {
+  aiParse: "pricing.cost.aiParse",
+  aiSectionImprove: "pricing.cost.aiSectionImprove",
+  aiPolish: "pricing.cost.aiPolish",
+} as const;
 
 export const SENSITIVE_KEYS = new Set([
   "duitku.apiKey",
@@ -24,12 +40,29 @@ export const SETTING_KEYS = [
   "anthropic.model",
   "bank.accounts",
   "pricing.packPrice",
+  "pricing.originalPackPrice",
   "pricing.creditsPerPack",
+  "pricing.maxPacksPerOrder",
+  ...TEMPLATE_TIERS.map(templateTierSettingKey),
+  AI_COST_KEYS.aiParse,
+  AI_COST_KEYS.aiSectionImprove,
+  AI_COST_KEYS.aiPolish,
 ] as const;
 
 const DEFAULT_SETTINGS: Record<string, string> = {
   "pricing.packPrice": String(DEFAULT_PACK_PRICE),
+  "pricing.originalPackPrice": String(DEFAULT_ORIGINAL_PACK_PRICE),
   "pricing.creditsPerPack": String(DEFAULT_CREDITS_PER_PACK),
+  "pricing.maxPacksPerOrder": String(DEFAULT_MAX_PACKS_PER_ORDER),
+  ...Object.fromEntries(
+    TEMPLATE_TIERS.map((tier) => [
+      templateTierSettingKey(tier),
+      String(CREDIT_COSTS.templateTier[tier]),
+    ])
+  ),
+  [AI_COST_KEYS.aiParse]: String(CREDIT_COSTS.aiParse),
+  [AI_COST_KEYS.aiSectionImprove]: String(CREDIT_COSTS.aiSectionImprove),
+  [AI_COST_KEYS.aiPolish]: String(CREDIT_COSTS.aiPolish),
   "anthropic.model": "claude-opus-4-8",
   "duitku.env": "sandbox",
   "bank.accounts": "[]",
@@ -124,4 +157,101 @@ export async function getCreditsPerPack(): Promise<number> {
   return Number.isFinite(parsed) && parsed > 0
     ? parsed
     : DEFAULT_CREDITS_PER_PACK;
+}
+
+/**
+ * Baca setting bernilai angka, jatuh ke `fallback` bila kosong/tidak valid.
+ * `allowZero` dipakai untuk biaya yang boleh 0 (mis. template gratis / AI gratis).
+ */
+async function getNumberSetting(
+  key: string,
+  fallback: number,
+  { allowZero = false }: { allowZero?: boolean } = {}
+): Promise<number> {
+  const raw = await getSetting(key);
+  const parsed = Number(raw);
+  const min = allowZero ? 0 : 1;
+  return Number.isFinite(parsed) && parsed >= min ? parsed : fallback;
+}
+
+export interface CreditCosts {
+  templateTier: Record<TemplateTier, number>;
+  aiParse: number;
+  aiSectionImprove: number;
+  aiPolish: number;
+}
+
+export interface PricingConfig {
+  packPrice: number;
+  originalPackPrice: number;
+  creditsPerPack: number;
+  maxPacksPerOrder: number;
+  costs: CreditCosts;
+}
+
+/** Biaya kredit per fitur (template per tier + aksi AI), resolusi dari DB. */
+export async function getCreditCosts(): Promise<CreditCosts> {
+  const [tierEntries, aiParse, aiSectionImprove, aiPolish] = await Promise.all([
+    Promise.all(
+      TEMPLATE_TIERS.map(
+        async (tier) =>
+          [
+            tier,
+            await getNumberSetting(
+              templateTierSettingKey(tier),
+              CREDIT_COSTS.templateTier[tier],
+              { allowZero: true }
+            ),
+          ] as const
+      )
+    ),
+    getNumberSetting(AI_COST_KEYS.aiParse, CREDIT_COSTS.aiParse, {
+      allowZero: true,
+    }),
+    getNumberSetting(
+      AI_COST_KEYS.aiSectionImprove,
+      CREDIT_COSTS.aiSectionImprove,
+      { allowZero: true }
+    ),
+    getNumberSetting(AI_COST_KEYS.aiPolish, CREDIT_COSTS.aiPolish, {
+      allowZero: true,
+    }),
+  ]);
+  return {
+    templateTier: Object.fromEntries(tierEntries) as Record<
+      TemplateTier,
+      number
+    >,
+    aiParse,
+    aiSectionImprove,
+    aiPolish,
+  };
+}
+
+/**
+ * Konfigurasi harga lengkap untuk frontend (paket + semua biaya kredit).
+ * Dipakai endpoint publik `GET /billing/pricing` agar tampilan harga di web
+ * selalu mengikuti pengaturan admin, bukan nilai hardcode.
+ */
+export async function getPricingConfig(): Promise<PricingConfig> {
+  const [
+    packPrice,
+    originalPackPrice,
+    creditsPerPack,
+    maxPacksPerOrder,
+    costs,
+  ] = await Promise.all([
+    getPackPrice(),
+    getNumberSetting("pricing.originalPackPrice", DEFAULT_ORIGINAL_PACK_PRICE),
+    getCreditsPerPack(),
+    getNumberSetting("pricing.maxPacksPerOrder", DEFAULT_MAX_PACKS_PER_ORDER),
+    getCreditCosts(),
+  ]);
+  return {
+    packPrice,
+    originalPackPrice,
+    creditsPerPack,
+    maxPacksPerOrder,
+    costs,
+  };
 }

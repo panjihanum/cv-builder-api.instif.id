@@ -191,3 +191,58 @@ describe("settings.service pricing helpers", () => {
     expect(await settingsService.getPackPrice()).toBe(10000);
   });
 });
+
+describe("settings.service biaya kredit fleksibel", () => {
+  it("getCreditCosts mengembalikan default saat DB kosong", async () => {
+    vi.mocked(db.setting.findUnique).mockResolvedValue(null);
+    const costs = await settingsService.getCreditCosts();
+    expect(costs.templateTier).toEqual({
+      free: 0,
+      basic: 4,
+      standard: 6,
+      premium: 8,
+      elite: 10,
+      flagship: 12,
+    });
+    expect(costs.aiParse).toBe(2);
+    expect(costs.aiSectionImprove).toBe(1);
+    expect(costs.aiPolish).toBe(5);
+  });
+
+  it("getPricingConfig menyusun seluruh harga default", async () => {
+    vi.mocked(db.setting.findUnique).mockResolvedValue(null);
+    const pricing = await settingsService.getPricingConfig();
+    expect(pricing).toMatchObject({
+      packPrice: 10000,
+      originalPackPrice: 20000,
+      creditsPerPack: 15,
+      maxPacksPerOrder: 10,
+    });
+    expect(pricing.costs.templateTier.flagship).toBe(12);
+  });
+
+  it("memakai nilai admin dari DB dan mengizinkan biaya 0", async () => {
+    vi.mocked(db.setting.findUnique).mockImplementation((async (args: {
+      where: { key: string };
+    }) => {
+      const overrides: Record<string, string> = {
+        "pricing.cost.template.premium": "20",
+        "pricing.cost.aiPolish": "0",
+      };
+      const value = overrides[args.where.key];
+      return value === undefined
+        ? null
+        : {
+            id: "x",
+            key: args.where.key,
+            value,
+            encrypted: false,
+            updatedAt: new Date(),
+          };
+    }) as never);
+    const costs = await settingsService.getCreditCosts();
+    expect(costs.templateTier.premium).toBe(20);
+    expect(costs.aiPolish).toBe(0);
+    expect(costs.templateTier.basic).toBe(4);
+  });
+});

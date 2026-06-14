@@ -28,7 +28,7 @@ exportRoutes.post(
   async (c) => {
     const userId = c.get("user").sub;
     const { cvId, templateId, pageSize } = c.req.valid("json");
-    const creditCost = templateService.getTemplateCreditCost(templateId);
+    const creditCost = await templateService.getTemplateCreditCost(templateId);
     if (creditCost > 0) {
       await creditService.assertCreditBalance(userId, creditCost);
     }

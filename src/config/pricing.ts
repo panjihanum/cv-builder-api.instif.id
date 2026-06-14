@@ -1,5 +1,7 @@
 export const DEFAULT_PACK_PRICE = 10000;
+export const DEFAULT_ORIGINAL_PACK_PRICE = 20000;
 export const DEFAULT_CREDITS_PER_PACK = 15;
+export const DEFAULT_MAX_PACKS_PER_ORDER = 10;
 
 export const CREDIT_COSTS = {
   // Biaya kredit template per tier visual — makin menonjol/kreatif makin mahal.
@@ -16,3 +18,15 @@ export const CREDIT_COSTS = {
   aiSectionImprove: 1,
   aiPolish: 5,
 } as const;
+
+/** Nama tier biaya template (urut termurah → termahal). */
+export const TEMPLATE_TIERS = [
+  "free",
+  "basic",
+  "standard",
+  "premium",
+  "elite",
+  "flagship",
+] as const;
+
+export type TemplateTier = (typeof TEMPLATE_TIERS)[number];

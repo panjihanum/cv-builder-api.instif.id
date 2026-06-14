@@ -146,9 +146,12 @@ describe("template.service biaya kredit", () => {
     "designer-studio": 12,
   };
 
-  it("memberi biaya berjenjang per template (gratis, lalu 4–12 kredit)", () => {
+  it("memberi biaya berjenjang per template (gratis, lalu 4–12 kredit) dari default", async () => {
+    // Tanpa setting tersimpan, biaya jatuh ke default tier (DB di-mock kosong).
     for (const id of allTemplateIds) {
-      expect(templateService.getTemplateCreditCost(id)).toBe(expectedCosts[id]);
+      expect(await templateService.getTemplateCreditCost(id)).toBe(
+        expectedCosts[id]
+      );
     }
   });
 
@@ -158,13 +161,10 @@ describe("template.service biaya kredit", () => {
     );
   });
 
-  it("melempar 400 untuk template id tidak dikenal", () => {
-    try {
-      templateService.getTemplateCreditCost("tidak-ada");
-      expect.unreachable();
-    } catch (error) {
-      expect(error).toMatchObject({ status: 400 });
-    }
+  it("melempar 400 untuk template id tidak dikenal", async () => {
+    await expect(
+      templateService.getTemplateCreditCost("tidak-ada")
+    ).rejects.toMatchObject({ status: 400 });
   });
 });
 

@@ -7,6 +7,7 @@ import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import * as creditService from "@/services/credit.service.js";
 import * as orderService from "@/services/payment/order.service.js";
 import * as gatewayService from "@/services/payment/gateway.service.js";
+import { getPricingConfig } from "@/services/settings.service.js";
 import { getBankAccounts } from "@/services/payment/manual.service.js";
 import type { WebhookRequest } from "@/services/payment/providers/types.js";
 
@@ -22,6 +23,14 @@ const proofFileRule = {
 };
 
 export const billingRoutes = new Hono<AuthEnv>();
+
+/**
+ * Konfigurasi harga publik (harga paket + biaya kredit fitur). Tanpa auth agar
+ * landing page bisa menampilkan harga sesuai pengaturan admin tiap web.
+ */
+billingRoutes.get("/pricing", async (c) => {
+  return c.json(await getPricingConfig());
+});
 
 billingRoutes.get("/credit", requireAuth, async (c) => {
   const credits = await creditService.ensureCredit(c.get("user").sub);

@@ -1,11 +1,11 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { CREDIT_COSTS } from "@/config/pricing.js";
 import { cvDataSchema } from "@/lib/cvData.js";
 import { HttpError } from "@/lib/httpError.js";
 import { assertUploadedFile } from "@/lib/uploads.js";
 import { validate } from "@/lib/validation.js";
 import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
+import { getCreditCosts } from "@/services/settings.service.js";
 import * as creditService from "@/services/credit.service.js";
 import * as cvService from "@/services/cv.service.js";
 import * as parserService from "@/services/ai/parser.service.js";
@@ -37,7 +37,8 @@ export const aiRoutes = new Hono<AuthEnv>();
 
 aiRoutes.post("/parse-cv", requireAuth, async (c) => {
   const userId = c.get("user").sub;
-  await creditService.assertCreditBalance(userId, CREDIT_COSTS.aiParse);
+  const cost = (await getCreditCosts()).aiParse;
+  await creditService.assertCreditBalance(userId, cost);
   const body = await c.req.parseBody();
   const file = assertUploadedFile(body.file, cvFileRule);
   const buffer = Buffer.from(await file.arrayBuffer());
@@ -47,10 +48,7 @@ aiRoutes.post("/parse-cv", requireAuth, async (c) => {
     file.type
   );
   const data = await claudeService.extractCvData(text);
-  const credits = await creditService.consumeCredits(
-    userId,
-    CREDIT_COSTS.aiParse
-  );
+  const credits = await creditService.consumeCredits(userId, cost);
   return c.json({ data, credits });
 });
 
@@ -61,15 +59,10 @@ aiRoutes.post(
   async (c) => {
     const userId = c.get("user").sub;
     const { section, data } = c.req.valid("json");
-    await creditService.assertCreditBalance(
-      userId,
-      CREDIT_COSTS.aiSectionImprove
-    );
+    const cost = (await getCreditCosts()).aiSectionImprove;
+    await creditService.assertCreditBalance(userId, cost);
     const improved = await improveService.improveSection(section, data);
-    const credits = await creditService.consumeCredits(
-      userId,
-      CREDIT_COSTS.aiSectionImprove
-    );
+    const credits = await creditService.consumeCredits(userId, cost);
     return c.json({ data: improved, credits });
   }
 );
@@ -87,13 +80,11 @@ aiRoutes.post(
     if (missing.length > 0) {
       throw new HttpError(400, `Lengkapi dulu: ${missing.join(", ")}`);
     }
-    await creditService.assertCreditBalance(userId, CREDIT_COSTS.aiPolish);
+    const cost = (await getCreditCosts()).aiPolish;
+    await creditService.assertCreditBalance(userId, cost);
     const polished = await polishService.polishCv(data);
     await cvService.updateCv(userId, cvId, { data: polished });
-    const credits = await creditService.consumeCredits(
-      userId,
-      CREDIT_COSTS.aiPolish
-    );
+    const credits = await creditService.consumeCredits(userId, cost);
     return c.json({ data: polished, credits });
   }
 );

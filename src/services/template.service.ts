@@ -1,6 +1,8 @@
 import type { CvData } from "@/lib/cvData.js";
+import type { TemplateTier } from "@/config/pricing.js";
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
+import { getCreditCosts } from "@/services/settings.service.js";
 import { templates, type TemplateEntry } from "@/services/templates/index.js";
 
 export function listTemplateIds(): string[] {
@@ -22,8 +24,20 @@ function assertTemplateExists(templateId: string): void {
   getTemplate(templateId);
 }
 
-export function getTemplateCreditCost(templateId: string): number {
-  return getTemplate(templateId).creditCost;
+export function getTemplateTier(templateId: string): TemplateTier {
+  return getTemplate(templateId).tier;
+}
+
+/**
+ * Biaya kredit template, diresolusi dari pengaturan harga admin (DB). Tier-nya
+ * tetap di kode, tapi nominal kredit per tier bisa diubah admin tiap web.
+ */
+export async function getTemplateCreditCost(
+  templateId: string
+): Promise<number> {
+  const tier = getTemplate(templateId).tier;
+  const costs = await getCreditCosts();
+  return costs.templateTier[tier];
 }
 
 export function renderTemplate(templateId: string, data: CvData): string {
