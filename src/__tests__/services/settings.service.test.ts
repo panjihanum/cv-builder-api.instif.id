@@ -132,6 +132,47 @@ describe("settings.service getAllSettingsMasked", () => {
   });
 });
 
+describe("settings.service payment gateway keys", () => {
+  it("mengenkripsi kredensial xendit yang sensitif", async () => {
+    vi.mocked(db.setting.upsert).mockResolvedValue({} as never);
+    await settingsService.setSettings({
+      "xendit.apiKey": "xnd_secret",
+      "xendit.callbackToken": "cb-token",
+    });
+    for (const call of vi.mocked(db.setting.upsert).mock.calls) {
+      const args = call[0];
+      expect(args.create.encrypted).toBe(true);
+      expect(args.create.value).not.toBe("xnd_secret");
+    }
+  });
+
+  it("menyimpan payment.provider sebagai plaintext biasa", async () => {
+    vi.mocked(db.setting.upsert).mockResolvedValue({} as never);
+    await settingsService.setSettings({ "payment.provider": "xendit" });
+    const args = vi.mocked(db.setting.upsert).mock.calls[0][0];
+    expect(args.create.value).toBe("xendit");
+    expect(args.create.encrypted).toBe(false);
+  });
+
+  it("getAllSettingsMasked menampilkan default provider kosong dan memask xendit", async () => {
+    vi.mocked(db.setting.findMany).mockResolvedValue([
+      {
+        id: "s1",
+        key: "xendit.apiKey",
+        value: encrypt("xnd_secret_1234"),
+        encrypted: true,
+        updatedAt: new Date(),
+      },
+    ] as never);
+    const settings = await settingsService.getAllSettingsMasked();
+    expect(settings["payment.provider"]).toEqual({ value: "", masked: false });
+    expect(settings["xendit.apiKey"]).toEqual({
+      value: "••••1234",
+      masked: true,
+    });
+  });
+});
+
 describe("settings.service pricing helpers", () => {
   it("mengembalikan angka harga paket dan kredit per pack", async () => {
     vi.mocked(db.setting.findUnique).mockResolvedValue(null);

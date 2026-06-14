@@ -22,6 +22,10 @@ const envSchema = z.object({
   WA_GATEWAYS: z.string().optional(),
   /** Shared HMAC secret with the instif.id hub for admin SSO. Empty = SSO disabled. */
   SSO_SECRET: z.string().optional(),
+  /** Public API origin used to build gateway webhook URLs. Falls back to the request origin. */
+  PUBLIC_API_URL: z.string().optional(),
+  /** Public app URL users return to after paying. Falls back to the first CORS origin. */
+  PUBLIC_APP_URL: z.string().optional(),
 });
 
 export const env = envSchema.parse(process.env);

@@ -6,12 +6,20 @@ import {
   DEFAULT_PACK_PRICE,
 } from "@/config/pricing.js";
 
-export const SENSITIVE_KEYS = new Set(["duitku.apiKey", "anthropic.apiKey"]);
+export const SENSITIVE_KEYS = new Set([
+  "duitku.apiKey",
+  "xendit.apiKey",
+  "xendit.callbackToken",
+  "anthropic.apiKey",
+]);
 
 export const SETTING_KEYS = [
+  "payment.provider",
   "duitku.merchantCode",
   "duitku.apiKey",
   "duitku.env",
+  "xendit.apiKey",
+  "xendit.callbackToken",
   "anthropic.apiKey",
   "anthropic.model",
   "bank.accounts",
@@ -25,6 +33,8 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   "anthropic.model": "claude-opus-4-8",
   "duitku.env": "sandbox",
   "bank.accounts": "[]",
+  // "" = no automatic gateway (manual transfer only)
+  "payment.provider": "",
 };
 
 const cache = new Map<string, string>();
