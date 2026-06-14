@@ -7,6 +7,7 @@ const MIME_BY_EXTENSION: Record<string, string> = {
   ".jpg": "image/jpeg",
   ".jpeg": "image/jpeg",
   ".png": "image/png",
+  ".webp": "image/webp",
 };
 
 export function photoToDataUrl(photoUrl: string): string | null {

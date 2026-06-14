@@ -29,6 +29,7 @@ describe("templates/photo photoToDataUrl", () => {
       `data:image/png;base64,${Buffer.from("isi-foto").toString("base64")}`
     );
     expect(photoToDataUrl("/uploads/foto.jpg")).toContain("data:image/jpeg;");
+    expect(photoToDataUrl("/uploads/foto.webp")).toContain("data:image/webp;");
   });
 
   it("menetralkan path traversal dengan hanya memakai basename", () => {
