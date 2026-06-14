@@ -59,6 +59,56 @@ describe("manual.service approvePayment", () => {
   });
 });
 
+describe("manual.service listPaymentsForAdmin", () => {
+  it("mengembalikan bentuk paginasi dengan skip/take", async () => {
+    vi.mocked(db.order.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.order.count).mockResolvedValue(35 as never);
+    const result = await manualService.listPaymentsForAdmin("PENDING", 2, 20);
+    const args = vi.mocked(db.order.findMany).mock.calls[0][0];
+    expect(args?.skip).toBe(20);
+    expect(args?.take).toBe(20);
+    expect(args?.where).toEqual({ status: "PENDING" });
+    expect(result.total).toBe(35);
+    expect(result.page).toBe(2);
+    expect(result.totalPages).toBe(2);
+  });
+});
+
+describe("manual.service bulk actions", () => {
+  it("approvePayments mengumpulkan sukses dan gagal", async () => {
+    vi.mocked(db.order.findUnique)
+      .mockResolvedValueOnce({
+        id: "order-1",
+        userId: "user-1",
+        packs: 1,
+        status: "PENDING",
+      } as never)
+      .mockResolvedValueOnce(null);
+    vi.mocked(db.setting.findUnique).mockResolvedValue(null);
+    vi.mocked(db.order.updateMany).mockResolvedValue({ count: 1 } as never);
+    vi.mocked(db.credit.upsert).mockResolvedValue({} as never);
+
+    const result = await manualService.approvePayments(["order-1", "order-2"]);
+    expect(result.succeeded).toEqual(["order-1"]);
+    expect(result.failed).toHaveLength(1);
+    expect(result.failed[0].id).toBe("order-2");
+  });
+
+  it("rejectPayments melewati order yang sudah paid", async () => {
+    vi.mocked(db.order.findUnique)
+      .mockResolvedValueOnce({ id: "order-1", status: "PENDING" } as never)
+      .mockResolvedValueOnce({ id: "order-2", status: "PAID" } as never);
+    vi.mocked(db.order.update).mockResolvedValue({
+      id: "order-1",
+      status: "REJECTED",
+    } as never);
+
+    const result = await manualService.rejectPayments(["order-1", "order-2"]);
+    expect(result.succeeded).toEqual(["order-1"]);
+    expect(result.failed[0]).toMatchObject({ id: "order-2" });
+  });
+});
+
 describe("manual.service rejectPayment", () => {
   it("melempar 404 saat order tidak ada", async () => {
     vi.mocked(db.order.findUnique).mockResolvedValue(null);

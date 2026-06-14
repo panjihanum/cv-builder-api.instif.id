@@ -20,17 +20,31 @@ describe("admin-user.service listUsers", () => {
         credit: { balance: 7 },
       },
     ] as never);
-    const users = await adminUserService.listUsers();
-    expect(users[0].credit).toBe(7);
+    vi.mocked(db.user.count).mockResolvedValue(1 as never);
+    const result = await adminUserService.listUsers();
+    expect(result.items[0].credit).toBe(7);
+    expect(result.total).toBe(1);
+    expect(result.totalPages).toBe(1);
     const args = vi.mocked(db.user.findMany).mock.calls[0][0];
     expect(args?.where).toEqual({});
   });
 
   it("membuat filter OR saat ada search", async () => {
     vi.mocked(db.user.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.user.count).mockResolvedValue(0 as never);
     await adminUserService.listUsers("budi");
     const args = vi.mocked(db.user.findMany).mock.calls[0][0];
     expect(args?.where).toHaveProperty("OR");
+  });
+
+  it("menerapkan skip/take sesuai halaman", async () => {
+    vi.mocked(db.user.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.user.count).mockResolvedValue(45 as never);
+    const result = await adminUserService.listUsers(undefined, 3, 20);
+    const args = vi.mocked(db.user.findMany).mock.calls[0][0];
+    expect(args?.skip).toBe(40);
+    expect(args?.take).toBe(20);
+    expect(result.totalPages).toBe(3);
   });
 });
 

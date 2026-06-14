@@ -1,10 +1,11 @@
 import { Hono } from "hono";
 import { z } from "zod";
 import { validate } from "@/lib/validation.js";
+import { paginationQuerySchema } from "@/lib/pagination.js";
 import type { AuthEnv } from "@/middleware/requireAuth.js";
 import * as adminUserService from "@/services/admin-user.service.js";
 
-const listSchema = z.object({
+const listSchema = paginationQuerySchema.extend({
   search: z.string().optional(),
 });
 
@@ -21,9 +22,9 @@ const updateSchema = z.object({
 export const adminUsersRoutes = new Hono<AuthEnv>();
 
 adminUsersRoutes.get("/", validate("query", listSchema), async (c) => {
-  const { search } = c.req.valid("query");
-  const users = await adminUserService.listUsers(search);
-  return c.json({ users });
+  const { search, page, pageSize } = c.req.valid("query");
+  const result = await adminUserService.listUsers(search, page, pageSize);
+  return c.json(result);
 });
 
 adminUsersRoutes.post(

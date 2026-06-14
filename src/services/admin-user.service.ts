@@ -1,5 +1,6 @@
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
+import { paginate, paginationArgs, type Paginated } from "@/lib/pagination.js";
 
 export interface AdminUserView {
   id: string;
@@ -12,7 +13,11 @@ export interface AdminUserView {
   createdAt: Date;
 }
 
-export async function listUsers(search?: string): Promise<AdminUserView[]> {
+export async function listUsers(
+  search?: string,
+  page = 1,
+  pageSize = 20
+): Promise<Paginated<AdminUserView>> {
   const where = search
     ? {
         OR: [
@@ -22,22 +27,25 @@ export async function listUsers(search?: string): Promise<AdminUserView[]> {
         ],
       }
     : {};
-  const users = await db.user.findMany({
-    where,
-    orderBy: { createdAt: "desc" },
-    take: 200,
-    select: {
-      id: true,
-      name: true,
-      email: true,
-      phone: true,
-      role: true,
-      status: true,
-      createdAt: true,
-      credit: { select: { balance: true } },
-    },
-  });
-  return users.map((u) => ({
+  const [users, total] = await Promise.all([
+    db.user.findMany({
+      where,
+      orderBy: { createdAt: "desc" },
+      ...paginationArgs(page, pageSize),
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        phone: true,
+        role: true,
+        status: true,
+        createdAt: true,
+        credit: { select: { balance: true } },
+      },
+    }),
+    db.user.count({ where }),
+  ]);
+  const items = users.map((u) => ({
     id: u.id,
     name: u.name,
     email: u.email,
@@ -47,6 +55,7 @@ export async function listUsers(search?: string): Promise<AdminUserView[]> {
     credit: u.credit?.balance ?? 0,
     createdAt: u.createdAt,
   }));
+  return paginate(items, total, page, pageSize);
 }
 
 export async function adjustCredit(
