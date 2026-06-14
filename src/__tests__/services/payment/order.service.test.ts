@@ -56,10 +56,7 @@ describe("order.service createCheckout manual", () => {
       amount: 30000,
       packs: 2,
     } as never);
-    const result = await orderService.createCheckout("user-1", "MANUAL", 2, {
-      callbackUrl: "https://api.example.com/cb",
-      returnUrl: "https://example.com",
-    });
+    const result = await orderService.createCheckout("user-1", "MANUAL", 2);
     const createArgs = vi.mocked(db.order.create).mock.calls[0][0];
     expect(createArgs.data).toMatchObject({
       userId: "user-1",
@@ -113,23 +110,5 @@ describe("order.service attachProof", () => {
       orderService.attachProof("user-1", "order-1", "/uploads/bukti.png")
     ).rejects.toMatchObject({ status: 400 });
     expect(db.order.update).not.toHaveBeenCalled();
-  });
-});
-
-describe("order.service createCheckout duitku", () => {
-  it("melempar 503 sebelum membuat order saat duitku belum dikonfigurasi", async () => {
-    vi.mocked(db.setting.findUnique).mockResolvedValue(null);
-    vi.mocked(db.user.findUnique).mockResolvedValue({
-      id: "user-1",
-      name: "Budi",
-      email: "budi@instif.id",
-    } as never);
-    await expect(
-      orderService.createCheckout("user-1", "DUITKU", 1, {
-        callbackUrl: "https://api.example.com/cb",
-        returnUrl: "https://example.com",
-      })
-    ).rejects.toMatchObject({ status: 503 });
-    expect(db.order.create).not.toHaveBeenCalled();
   });
 });

@@ -1,23 +1,14 @@
 import { Hono } from "hono";
 import { z } from "zod";
-import { env } from "@/lib/env.js";
 import { validate } from "@/lib/validation.js";
 import { assertUploadedFile, saveUploadedFile } from "@/lib/uploads.js";
 import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import * as creditService from "@/services/credit.service.js";
 import * as orderService from "@/services/payment/order.service.js";
-import * as duitkuService from "@/services/payment/duitku.service.js";
 
 const createOrderSchema = z.object({
-  method: z.enum(["DUITKU", "MANUAL"]),
+  method: z.literal("MANUAL"),
   packs: z.number().int().min(1),
-});
-
-const duitkuCallbackSchema = z.object({
-  merchantOrderId: z.string().min(1),
-  amount: z.string().min(1),
-  signature: z.string().min(1),
-  resultCode: z.string().min(1),
 });
 
 const proofFileRule = {
@@ -44,13 +35,10 @@ billingRoutes.post(
   validate("json", createOrderSchema),
   async (c) => {
     const { method, packs } = c.req.valid("json");
-    const callbackUrl = `${new URL(c.req.url).origin}/billing/callback/duitku`;
-    const returnUrl = env.CORS_ORIGIN.split(",")[0];
     const result = await orderService.createCheckout(
       c.get("user").sub,
       method,
-      packs,
-      { callbackUrl, returnUrl }
+      packs
     );
     return c.json(result);
   }
@@ -76,11 +64,6 @@ billingRoutes.post("/order/:id/proof", requireAuth, async (c) => {
   return c.json({ order });
 });
 
-billingRoutes.post(
-  "/callback/duitku",
-  validate("form", duitkuCallbackSchema),
-  async (c) => {
-    const result = await duitkuService.handleCallback(c.req.valid("form"));
-    return c.json(result);
-  }
-);
+billingRoutes.post("/callback/duitku", (c) => {
+  return c.json({ error: "Pembayaran otomatis tidak aktif" }, 503);
+});
