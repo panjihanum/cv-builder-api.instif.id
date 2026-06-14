@@ -2,6 +2,10 @@ import type { CvData } from "@/lib/cvData.js";
 import { CREDIT_COSTS } from "@/config/pricing.js";
 import { renderClassicAts } from "@/services/templates/classic-ats.js";
 import { renderModernProfessional } from "@/services/templates/modern-professional.js";
+import { renderAtsProfessional } from "@/services/templates/ats-professional.js";
+import { renderAtsRecruiterFocus } from "@/services/templates/ats-recruiter-focus.js";
+import { renderAtsExecutive } from "@/services/templates/ats-executive.js";
+import { renderAtsCompact } from "@/services/templates/ats-compact.js";
 import { renderTwoColumnCompact } from "@/services/templates/two-column-compact.js";
 import { renderMinimalistCreative } from "@/services/templates/minimalist-creative.js";
 import { renderExecutiveSenior } from "@/services/templates/executive-senior.js";
@@ -26,6 +30,22 @@ export const templates: Record<string, TemplateEntry> = {
   "classic-ats": { render: renderClassicAts, creditCost: tierCost.free },
   "modern-professional": {
     render: renderModernProfessional,
+    creditCost: tierCost.basic,
+  },
+  "ats-professional": {
+    render: renderAtsProfessional,
+    creditCost: tierCost.basic,
+  },
+  "ats-recruiter-focus": {
+    render: renderAtsRecruiterFocus,
+    creditCost: tierCost.standard,
+  },
+  "ats-executive": {
+    render: renderAtsExecutive,
+    creditCost: tierCost.standard,
+  },
+  "ats-compact": {
+    render: renderAtsCompact,
     creditCost: tierCost.basic,
   },
   "two-column-compact": {

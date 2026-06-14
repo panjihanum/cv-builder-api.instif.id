@@ -130,6 +130,10 @@ describe("template.service biaya kredit", () => {
   const expectedCosts: Record<string, number> = {
     "classic-ats": 0,
     "modern-professional": 4,
+    "ats-professional": 4,
+    "ats-recruiter-focus": 6,
+    "ats-executive": 6,
+    "ats-compact": 4,
     "executive-senior": 4,
     "two-column-compact": 6,
     "minimalist-creative": 6,
