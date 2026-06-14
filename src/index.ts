@@ -21,6 +21,22 @@ import { templateRoutes } from "@/routes/templates.js";
 const app = new Hono();
 
 app.use("*", logger());
+
+// Serve uploaded files (e.g. payment proofs) BEFORE secureHeaders(). Hono's
+// secureHeaders() defaults to `Cross-Origin-Resource-Policy: same-origin`,
+// which lets a direct browser navigation work but blocks the admin dashboard
+// (a different origin) from embedding the file in <img>/<iframe>. serveStatic
+// short-circuits without calling next() when the file exists, so registering
+// it first means secureHeaders never overwrites our headers below.
+app.use("/uploads/*", async (c, next) => {
+  await next();
+  // Allow cross-origin embedding (proof images/PDFs in the admin modal).
+  c.res.headers.set("Cross-Origin-Resource-Policy", "cross-origin");
+  // Uploads are user-controlled, so keep MIME sniffing disabled.
+  c.res.headers.set("X-Content-Type-Options", "nosniff");
+});
+app.use("/uploads/*", serveStatic({ root: "./" }));
+
 app.use("*", secureHeaders());
 app.use(
   "*",
@@ -41,8 +57,6 @@ app.get("/", (c) =>
 );
 
 app.get("/health", (c) => c.json({ status: "ok" }));
-
-app.use("/uploads/*", serveStatic({ root: "./" }));
 
 app.route("/auth", authRoutes);
 app.route("/cv", cvRoutes);
