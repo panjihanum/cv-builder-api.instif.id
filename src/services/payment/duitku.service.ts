@@ -3,8 +3,8 @@ import { HttpError } from "@/lib/httpError.js";
 import { getRequiredSetting, getSetting } from "@/services/settings.service.js";
 import { settleOrderPaid } from "@/services/credit.service.js";
 
-const SANDBOX_BASE_URL = "https://sandbox.duitku.com/webapi/api/merchant";
-const PRODUCTION_BASE_URL = "https://passport.duitku.com/webapi/api/merchant";
+const SANDBOX_BASE_URL = "https://api-sandbox.duitku.com/api/merchant";
+const PRODUCTION_BASE_URL = "https://api-prod.duitku.com/api/merchant";
 const CONFIG_MISSING_MESSAGE =
   "Duitku belum dikonfigurasi, isi duitku.merchantCode dan duitku.apiKey di halaman admin settings";
 
@@ -33,14 +33,20 @@ function md5(input: string): string {
   return createHash("md5").update(input).digest("hex");
 }
 
-export function createInvoiceSignature(
+function sha256(input: string): string {
+  return createHash("sha256").update(input).digest("hex");
+}
+
+/**
+ * Duitku POP request signature for createInvoice:
+ * SHA256(merchantCode + timestamp + apiKey). `timestamp` is epoch milliseconds
+ * and must be sent in the `x-duitku-timestamp` header alongside the signature.
+ */
+export function createRequestSignature(
   config: Pick<DuitkuConfig, "merchantCode" | "apiKey">,
-  merchantOrderId: string,
-  amount: number
+  timestamp: number | string
 ): string {
-  return md5(
-    `${config.merchantCode}${merchantOrderId}${amount}${config.apiKey}`
-  );
+  return sha256(`${config.merchantCode}${timestamp}${config.apiKey}`);
 }
 
 export function verifyCallbackSignature(
@@ -77,11 +83,9 @@ export async function createInvoice(
   input: CreateInvoiceInput
 ): Promise<CreateInvoiceResult> {
   const config = await getDuitkuConfig();
-  const signature = createInvoiceSignature(
-    config,
-    input.merchantOrderId,
-    input.amount
-  );
+  const timestamp = Date.now();
+  const signature = createRequestSignature(config, timestamp);
+  // POP carries the signature in headers, not the body.
   const body = {
     merchantCode: config.merchantCode,
     paymentAmount: input.amount,
@@ -95,12 +99,16 @@ export async function createInvoice(
     },
     callbackUrl: input.callbackUrl,
     returnUrl: input.returnUrl,
-    signature,
     expiryPeriod: 60,
   };
-  const response = await fetch(`${config.baseUrl}/v2/inquiry`, {
+  const response = await fetch(`${config.baseUrl}/createInvoice`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "x-duitku-signature": signature,
+      "x-duitku-timestamp": String(timestamp),
+      "x-duitku-merchantcode": config.merchantCode,
+    },
     body: JSON.stringify(body),
   });
   if (!response.ok) {

@@ -37,14 +37,16 @@ beforeEach(() => {
   invalidateSettingsCache();
 });
 
+function sha256(input: string): string {
+  return createHash("sha256").update(input).digest("hex");
+}
+
 describe("duitku.service signature", () => {
-  it("membuat signature invoice md5 merchantCode+orderId+amount+apiKey", () => {
-    const signature = duitkuService.createInvoiceSignature(
-      config,
-      "order-1",
-      20000
-    );
-    expect(signature).toBe(md5("DM001order-120000api-key-rahasia"));
+  it("membuat signature request POP sha256 merchantCode+timestamp+apiKey", () => {
+    const timestamp = 1700000000000;
+    const signature = duitkuService.createRequestSignature(config, timestamp);
+    expect(signature).toBe(sha256("DM0011700000000000api-key-rahasia"));
+    expect(signature).toMatch(/^[a-f0-9]{64}$/);
   });
 
   it("memverifikasi signature callback yang valid", () => {
@@ -90,7 +92,7 @@ describe("duitku.service getDuitkuConfig", () => {
   it("memakai base url sandbox atau production sesuai setting", async () => {
     mockSettings({ ...duitkuSettings, "duitku.env": "production" });
     const result = await duitkuService.getDuitkuConfig();
-    expect(result.baseUrl).toContain("passport.duitku.com");
+    expect(result.baseUrl).toContain("api-prod.duitku.com");
   });
 });
 
@@ -122,10 +124,17 @@ describe("duitku.service createInvoice", () => {
     });
     const [url, init] = fetchMock.mock.calls[0];
     expect(url).toBe(
-      "https://sandbox.duitku.com/webapi/api/merchant/v2/inquiry"
+      "https://api-sandbox.duitku.com/api/merchant/createInvoice"
     );
+    const headers = (init as { headers: Record<string, string> }).headers;
+    const timestamp = headers["x-duitku-timestamp"];
+    // POP signs in the header, not the body.
+    expect(headers["x-duitku-signature"]).toBe(
+      sha256(`DM001${timestamp}api-key-rahasia`)
+    );
+    expect(headers["x-duitku-merchantcode"]).toBe("DM001");
     const body = JSON.parse((init as { body: string }).body);
-    expect(body.signature).toBe(md5("DM001order-120000api-key-rahasia"));
+    expect(body.signature).toBeUndefined();
     expect(body.paymentAmount).toBe(20000);
     vi.unstubAllGlobals();
   });

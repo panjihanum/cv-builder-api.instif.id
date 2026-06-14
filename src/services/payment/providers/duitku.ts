@@ -14,8 +14,9 @@ import type {
 } from "@/services/payment/providers/types.js";
 
 /**
- * Duitku provider — wraps the existing duitku.service inquiry/callback logic
- * (MD5 signatures) behind the generic PaymentProvider interface.
+ * Duitku provider — wraps the duitku.service POP createInvoice/callback logic
+ * behind the generic PaymentProvider interface. createInvoice is signed with a
+ * SHA256 header (POP); the callback is still verified with MD5.
  */
 export const duitkuProvider: PaymentProvider = {
   id: "duitku",
