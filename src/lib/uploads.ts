@@ -4,6 +4,7 @@ import sharp from "sharp";
 import { HttpError } from "@/lib/httpError.js";
 import { getStorageProvider } from "@/lib/storage.js";
 
+export const UPLOADS_DIR = process.env.UPLOADS_DIR ?? "uploads";
 export const MAX_UPLOAD_BYTES = 5 * 1024 * 1024;
 
 const MAX_IMAGE_DIMENSION = 1200;

@@ -15,7 +15,12 @@ export class LocalStorageProvider implements StorageProvider {
     this.dir = dir;
   }
 
-  async save(buffer: Buffer, filename: string): Promise<string> {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  async save(
+    buffer: Buffer,
+    filename: string,
+    _contentType?: string
+  ): Promise<string> {
     await mkdir(this.dir, { recursive: true });
     await writeFile(join(this.dir, filename), buffer);
     return `/uploads/${filename}`;
