@@ -1,5 +1,8 @@
 import { z } from "zod";
 
+const RICH_DESCRIPTION_HINT =
+  "HTML rich text (gunakan <ul><li> untuk poin-poin, <p> untuk paragraf, <strong>/<em>/<u> untuk penekanan). Boleh juga teks polos.";
+
 const linkSchema = z.object({
   id: z.string().default(""),
   label: z.string().default(""),
@@ -25,7 +28,7 @@ const experienceSchema = z.object({
   startDate: z.string().default(""),
   endDate: z.string().default(""),
   current: z.boolean().default(false),
-  description: z.string().default(""),
+  description: z.string().default("").describe(RICH_DESCRIPTION_HINT),
 });
 
 const educationSchema = z.object({
@@ -36,7 +39,7 @@ const educationSchema = z.object({
   startDate: z.string().default(""),
   endDate: z.string().default(""),
   gpa: z.string().default(""),
-  description: z.string().default(""),
+  description: z.string().default("").describe(RICH_DESCRIPTION_HINT),
 });
 
 const skillSchema = z.object({
@@ -49,7 +52,7 @@ const projectSchema = z.object({
   id: z.string().default(""),
   name: z.string().default(""),
   url: z.string().default(""),
-  description: z.string().default(""),
+  description: z.string().default("").describe(RICH_DESCRIPTION_HINT),
 });
 
 const certificationSchema = z.object({
@@ -68,7 +71,7 @@ const languageSchema = z.object({
 const customSectionItemSchema = z.object({
   id: z.string().default(""),
   heading: z.string().default(""),
-  body: z.string().default(""),
+  body: z.string().default("").describe(RICH_DESCRIPTION_HINT),
 });
 
 const customSectionSchema = z.object({
@@ -80,7 +83,7 @@ const customSectionSchema = z.object({
 
 export const cvDataSchema = z.object({
   personal: personalSchema.prefault({}),
-  summary: z.string().default(""),
+  summary: z.string().default("").describe(RICH_DESCRIPTION_HINT),
   experience: z.array(experienceSchema).default([]),
   education: z.array(educationSchema).default([]),
   skills: z.array(skillSchema).default([]),

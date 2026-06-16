@@ -123,6 +123,30 @@ describe("template.service", () => {
     const html = templateService.renderTemplate("classic-ats", sampleData);
     expect(html).toContain("2021-03 - Present");
   });
+
+  it("mempertahankan format rich text (poin, bold, italic, underline) dari deskripsi html", () => {
+    const richData = cvDataSchema.parse({
+      ...sampleData,
+      experience: [
+        {
+          ...sampleData.experience[0],
+          description:
+            "<ul><li><strong>Memimpin</strong> tim <em>backend</em></li><li><u>Menurunkan</u> latensi 40%</li></ul>",
+        },
+      ],
+    });
+    const html = templateService.renderTemplate("classic-ats", richData);
+    expect(html).toContain("<ul><li><strong>Memimpin</strong>");
+    expect(html).toContain("<em>backend</em>");
+    expect(html).toContain("<u>Menurunkan</u>");
+  });
+
+  it("mengubah deskripsi teks polos multibaris menjadi poin-poin", () => {
+    // Deskripsi lama (teks biasa, satu baris per poin) tetap tampil sebagai bullet list.
+    const html = templateService.renderTemplate("classic-ats", sampleData);
+    expect(html).toContain("<li>Memimpin tim backend.</li>");
+    expect(html).toContain("<li>Menurunkan latensi 40%.</li>");
+  });
 });
 
 describe("template.service biaya kredit", () => {

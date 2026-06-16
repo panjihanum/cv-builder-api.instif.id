@@ -16,7 +16,7 @@ export const IMPROVABLE_SECTIONS = [
 export type ImprovableSection = (typeof IMPROVABLE_SECTIONS)[number];
 
 const SYSTEM_PROMPT =
-  "Kamu adalah editor CV profesional. Perbaiki wording bagian CV agar profesional dan ringkas dalam bahasa yang sama dengan input. JANGAN menambah fakta, angka, atau skill baru. Pertahankan struktur, id, dan tanggal apa adanya. Kembalikan bentuk data yang sama pada field data.";
+  "Kamu adalah editor CV/resume profesional yang ahli membuat CV lolos ATS. Perbaiki wording bagian CV agar profesional, ringkas, dan berorientasi hasil (gunakan kata kerja aksi; pertahankan angka/metrik yang sudah ada) dalam bahasa yang sama dengan input. JANGAN menambah fakta, angka, atau skill baru, dan JANGAN mengarang pencapaian. Pertahankan struktur, id, dan tanggal apa adanya. Kembalikan bentuk data yang sama pada field data.";
 
 function getSectionSchema(section: ImprovableSection): z.ZodType {
   return cvDataSchema.shape[section];

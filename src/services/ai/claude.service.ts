@@ -5,8 +5,17 @@ import { cvDataSchema, type CvData } from "@/lib/cvData.js";
 import { requestStructured } from "@/services/ai/structured.service.js";
 
 const EXTRACT_TOOL_NAME = "extract_cv_data";
-const SYSTEM_PROMPT =
-  "Kamu adalah parser dokumen CV. Ekstrak data CV terstruktur dari teks dokumen yang diberikan. Jangan mengarang informasi yang tidak ada di dokumen. Kosongkan field yang tidak diketahui dengan string kosong atau array kosong. Tulis tanggal dalam format YYYY-MM.";
+const SYSTEM_PROMPT = [
+  "Kamu adalah parser dokumen CV/resume profesional. Ekstrak data CV terstruktur dari teks dokumen yang diberikan secara akurat.",
+  "Jangan mengarang informasi yang tidak ada di dokumen. Kosongkan field yang tidak diketahui dengan string kosong atau array kosong.",
+  "Tulis tanggal dalam format YYYY-MM. Pertahankan bahasa asli dokumen.",
+  "Untuk setiap field deskripsi (summary, experience.description, education.description, projects.description, dan customSections.items.body), keluarkan HTML rapi yang kompatibel dengan editor rich text, bukan teks polos:",
+  "- Bila isinya daftar tugas/pencapaian atau lebih dari satu poin, ubah menjadi <ul><li>...</li></ul> dengan satu <li> per poin (rapikan, buang bullet manual seperti '-' atau '•').",
+  "- Bila isinya naratif, bungkus tiap paragraf dengan <p>...</p>.",
+  "- Tebalkan istilah, nama perusahaan/produk, atau metrik penting dengan <strong>, beri penekanan dengan <em>, dan gunakan <u> hanya bila dokumen aslinya memang menggarisbawahi.",
+  "- Hanya gunakan tag <p>, <ul>, <ol>, <li>, <strong>, <em>, <u>. Jangan pakai heading, tabel, gambar, style, atau script.",
+  "- Jangan menambah atau mengubah fakta; hanya rapikan struktur dan formatnya.",
+].join(" ");
 
 export function buildCvDataJsonSchema(): Anthropic.Tool.InputSchema {
   return z.toJSONSchema(cvDataSchema) as Anthropic.Tool.InputSchema;

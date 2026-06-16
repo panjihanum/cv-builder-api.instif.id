@@ -115,6 +115,31 @@ describe("claude.service extractCvData", () => {
     expect(request.tools[0].input_schema.type).toBe("object");
   });
 
+  it("menginstruksikan format html (poin, bold, italic, underline) di system prompt", async () => {
+    anthropicSettings();
+    createMock.mockResolvedValue(toolUseResponse(validInput));
+    await claudeService.extractCvData("teks cv");
+    const system = createMock.mock.calls[0][0].system as string;
+    expect(system).toContain("<ul><li>");
+    expect(system).toContain("<strong>");
+    expect(system).toContain("<em>");
+    expect(system).toContain("<u>");
+  });
+
+  it("mempertahankan deskripsi html rich text hasil parse apa adanya", async () => {
+    anthropicSettings();
+    const html =
+      "<ul><li><strong>Memimpin</strong> tim <em>backend</em></li><li><u>Menurunkan</u> latensi 40%</li></ul>";
+    createMock.mockResolvedValue(
+      toolUseResponse({
+        ...validInput,
+        experience: [{ ...validInput.experience[0], description: html }],
+      })
+    );
+    const data = await claudeService.extractCvData("teks cv");
+    expect(data.experience[0].description).toBe(html);
+  });
+
   it("retry sekali saat output pertama tidak valid", async () => {
     anthropicSettings();
     createMock

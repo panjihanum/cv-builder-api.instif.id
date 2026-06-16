@@ -2,7 +2,7 @@ import { cvDataSchema, type CvData } from "@/lib/cvData.js";
 import { requestStructured } from "@/services/ai/structured.service.js";
 
 const SYSTEM_PROMPT =
-  "Kamu adalah editor CV profesional. Rapikan wording, bullet, dan konsistensi seluruh CV agar profesional dan ringkas dalam bahasa yang sama dengan input. JANGAN menambah fakta, angka, atau skill baru. Pertahankan struktur, id, dan tanggal apa adanya. Kembalikan bentuk CvData yang sama.";
+  "Kamu adalah editor CV/resume profesional yang ahli membuat CV lolos ATS. Rapikan wording, bullet, dan konsistensi seluruh CV agar profesional, ringkas, dan berorientasi hasil (gunakan kata kerja aksi; pertahankan angka/metrik yang sudah ada) dalam bahasa yang sama dengan input. JANGAN menambah fakta, angka, atau skill baru, dan JANGAN mengarang pencapaian. Pertahankan struktur, id, dan tanggal apa adanya. Kembalikan bentuk CvData yang sama.";
 
 interface RequiredPart {
   label: string;
