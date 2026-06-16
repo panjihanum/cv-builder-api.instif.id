@@ -22,6 +22,7 @@ import type { WebhookRequest } from "@/services/payment/providers/types.js";
 const createOrderSchema = z.object({
   method: z.enum(["MANUAL", "GATEWAY"]),
   packs: z.number().int().min(1),
+  refCode: z.string().optional(),
 });
 
 const proofFileRule = {
@@ -82,16 +83,23 @@ billingRoutes.post(
   requireAuth,
   validate("json", createOrderSchema),
   async (c) => {
-    const { method, packs } = c.req.valid("json");
+    const { method, packs, refCode } = c.req.valid("json");
     const userId = c.get("user").sub;
+    const normalizedRef = refCode?.replace(/^@/, "").trim() || undefined;
     if (method === "GATEWAY") {
       const result = await gatewayService.createGatewayCheckout(userId, packs, {
         callbackBaseUrl: env.PUBLIC_API_URL || new URL(c.req.url).origin,
         returnUrl: env.PUBLIC_APP_URL || env.CORS_ORIGIN.split(",")[0],
+        refCode: normalizedRef,
       });
       return c.json(result);
     }
-    const result = await orderService.createCheckout(userId, "MANUAL", packs);
+    const result = await orderService.createCheckout(
+      userId,
+      "MANUAL",
+      packs,
+      normalizedRef
+    );
     return c.json(result);
   }
 );

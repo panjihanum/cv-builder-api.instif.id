@@ -37,3 +37,24 @@ export async function resolveExportLink(
 export async function readExportFile(filePath: string): Promise<Buffer> {
   return readFile(filePath);
 }
+
+export type ExportLinkItem = {
+  id: string;
+  cvTitle: string;
+  expiresAt: Date;
+  createdAt: Date;
+  expired: boolean;
+};
+
+export async function listUserExports(
+  userId: string
+): Promise<ExportLinkItem[]> {
+  const records = await db.exportLink.findMany({
+    where: { userId },
+    orderBy: { createdAt: "desc" },
+    take: 50,
+    select: { id: true, cvTitle: true, expiresAt: true, createdAt: true },
+  });
+  const now = new Date();
+  return records.map((r) => ({ ...r, expired: r.expiresAt < now }));
+}

@@ -10,7 +10,15 @@ export interface AdminUserView {
   role: string;
   status: string;
   credit: number;
+  referredBy: string | null;
   createdAt: Date;
+}
+
+export interface ReferralStat {
+  refCode: string;
+  registrations: number;
+  orders: number;
+  totalAmount: number;
 }
 
 export async function listUsers(
@@ -39,6 +47,7 @@ export async function listUsers(
         phone: true,
         role: true,
         status: true,
+        referredBy: true,
         createdAt: true,
         credit: { select: { balance: true } },
       },
@@ -53,6 +62,7 @@ export async function listUsers(
     role: u.role,
     status: u.status,
     credit: u.credit?.balance ?? 0,
+    referredBy: u.referredBy,
     createdAt: u.createdAt,
   }));
   return paginate(items, total, page, pageSize);
@@ -86,21 +96,72 @@ async function getBalance(userId: string): Promise<number> {
 
 export async function updateUser(
   userId: string,
-  data: { role?: string; status?: string }
+  data: { role?: string; status?: string; phone?: string | null }
 ): Promise<AdminUserView> {
   const user = await db.user.findUnique({ where: { id: userId } });
   if (!user) {
     throw new HttpError(404, "User tidak ditemukan");
+  }
+  if (data.phone !== undefined && data.phone !== null) {
+    const conflict = await db.user.findFirst({
+      where: { phone: data.phone, NOT: { id: userId } },
+    });
+    if (conflict) throw new HttpError(400, "Nomor HP sudah dipakai akun lain");
   }
   await db.user.update({
     where: { id: userId },
     data: {
       ...(data.role ? { role: data.role } : {}),
       ...(data.status ? { status: data.status } : {}),
+      ...(data.phone !== undefined ? { phone: data.phone } : {}),
     },
   });
   const [updated] = await listUsersById(userId);
   return updated;
+}
+
+export async function listReferrals(): Promise<ReferralStat[]> {
+  const [byUser, byOrder] = await Promise.all([
+    db.user.groupBy({
+      by: ["referredBy"],
+      where: { referredBy: { not: null } },
+      _count: { id: true },
+    }),
+    db.order.groupBy({
+      by: ["refCode"],
+      where: { refCode: { not: null } },
+      _count: { id: true },
+      _sum: { amount: true },
+    }),
+  ]);
+
+  const map = new Map<string, ReferralStat>();
+
+  for (const row of byUser) {
+    const code = row.referredBy!;
+    map.set(code, {
+      refCode: code,
+      registrations: row._count.id,
+      orders: 0,
+      totalAmount: 0,
+    });
+  }
+  for (const row of byOrder) {
+    const code = row.refCode!;
+    const existing = map.get(code) ?? {
+      refCode: code,
+      registrations: 0,
+      orders: 0,
+      totalAmount: 0,
+    };
+    existing.orders = row._count.id;
+    existing.totalAmount = row._sum.amount ?? 0;
+    map.set(code, existing);
+  }
+
+  return Array.from(map.values()).sort(
+    (a, b) => b.registrations - a.registrations
+  );
 }
 
 async function listUsersById(userId: string): Promise<AdminUserView[]> {
@@ -113,6 +174,7 @@ async function listUsersById(userId: string): Promise<AdminUserView[]> {
       phone: true,
       role: true,
       status: true,
+      referredBy: true,
       createdAt: true,
       credit: { select: { balance: true } },
     },
@@ -127,6 +189,7 @@ async function listUsersById(userId: string): Promise<AdminUserView[]> {
       role: u.role,
       status: u.status,
       credit: u.credit?.balance ?? 0,
+      referredBy: u.referredBy,
       createdAt: u.createdAt,
     },
   ];

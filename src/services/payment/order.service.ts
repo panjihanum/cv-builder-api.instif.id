@@ -10,6 +10,7 @@ const orderSelect = {
   packs: true,
   status: true,
   reference: true,
+  refCode: true,
   proofUrl: true,
   paidAt: true,
   createdAt: true,
@@ -36,10 +37,21 @@ export async function getOwnedOrder(userId: string, orderId: string) {
   return order;
 }
 
-async function createOrder(userId: string, method: OrderMethod, packs: number) {
+async function createOrder(
+  userId: string,
+  method: OrderMethod,
+  packs: number,
+  refCode?: string | null
+) {
   const packPrice = await getPackPrice();
   return db.order.create({
-    data: { userId, method, packs, amount: packs * packPrice },
+    data: {
+      userId,
+      method,
+      packs,
+      amount: packs * packPrice,
+      refCode: refCode ?? null,
+    },
     select: orderSelect,
   });
 }
@@ -47,9 +59,10 @@ async function createOrder(userId: string, method: OrderMethod, packs: number) {
 export async function createCheckout(
   userId: string,
   method: OrderMethod,
-  packs: number
+  packs: number,
+  refCode?: string | null
 ) {
-  const order = await createOrder(userId, method, packs);
+  const order = await createOrder(userId, method, packs, refCode);
   const manualMethods = await getActiveMethods();
   return { order, manualMethods };
 }

@@ -23,6 +23,7 @@ const verifyOtpSchema = z.object({
   phone: z.string().min(8),
   code: z.string().length(6),
   name: z.string().min(1).optional(),
+  referredBy: z.string().optional(),
 });
 
 const ssoSchema = z.object({

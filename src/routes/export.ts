@@ -12,6 +12,7 @@ import {
   createExportLink,
   resolveExportLink,
   readExportFile,
+  listUserExports,
 } from "@/services/exportLink.service.js";
 
 const exportPdfSchema = z.object({
@@ -31,6 +32,12 @@ exportRoutes.get("/quota", requireAuth, async (c) => {
   const userId = c.get("user").sub;
   const status = await exportQuotaService.getQuotaStatus(userId);
   return c.json(status);
+});
+
+exportRoutes.get("/history", requireAuth, async (c) => {
+  const userId = c.get("user").sub;
+  const items = await listUserExports(userId);
+  return c.json({ items });
 });
 
 exportRoutes.post(

@@ -16,6 +16,7 @@ model User {
   password    String?
   role        String         @default("USER")
   status      String         @default("ACTIVE")
+  referredBy  String?
   cvs         Cv[]
   orders      Order[]
   credit      Credit?
@@ -59,6 +60,7 @@ model Order {
   packs     Int       @default(1)
   status    String    @default("PENDING")
   reference String?
+  refCode   String?
   proofUrl  String?
   paidAt    DateTime?
   createdAt DateTime  @default(now())
@@ -131,6 +133,7 @@ model ExportLink {
   createdAt DateTime @default(now())
 
   @@index([expiresAt])
+  @@index([userId, createdAt(sort: Desc)])
   @@map("export_links")
 }
 

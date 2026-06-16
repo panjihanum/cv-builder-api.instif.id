@@ -17,6 +17,7 @@ const creditSchema = z.object({
 const updateSchema = z.object({
   role: z.enum(["USER", "ADMIN"]).optional(),
   status: z.enum(["ACTIVE", "INACTIVE", "BANNED"]).optional(),
+  phone: z.string().min(8).nullable().optional(),
 });
 
 export const adminUsersRoutes = new Hono<AuthEnv>();

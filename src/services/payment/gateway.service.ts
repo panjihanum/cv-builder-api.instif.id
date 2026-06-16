@@ -16,6 +16,7 @@ const orderSelect = {
   packs: true,
   status: true,
   reference: true,
+  refCode: true,
   proofUrl: true,
   paidAt: true,
   createdAt: true,
@@ -50,6 +51,8 @@ export interface GatewayCheckoutContext {
   callbackBaseUrl: string;
   /** App URL to return the user to after paying. */
   returnUrl: string;
+  /** Optional referral code to attach to the order. */
+  refCode?: string;
 }
 
 /**
@@ -78,7 +81,13 @@ export async function createGatewayCheckout(
   });
 
   const order = await db.order.create({
-    data: { userId, method: provider.id.toUpperCase(), packs, amount },
+    data: {
+      userId,
+      method: provider.id.toUpperCase(),
+      packs,
+      amount,
+      refCode: context.refCode ?? null,
+    },
     select: orderSelect,
   });
 

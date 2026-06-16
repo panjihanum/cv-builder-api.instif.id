@@ -90,16 +90,19 @@ export async function verifyPhoneOtp(input: {
   phone: string;
   code: string;
   name?: string;
+  referredBy?: string;
 }) {
   const phone = normalizePhone(input.phone);
   await waGateway.verifyOtp(phone, input.code);
 
   let user = await db.user.findUnique({ where: { phone } });
   if (!user) {
+    const ref = input.referredBy?.replace(/^@/, "").trim() || null;
     user = await db.user.create({
       data: {
         name: input.name?.trim() || `User ${phone.slice(-4)}`,
         phone,
+        referredBy: ref,
         credit: { create: {} },
       },
     });
