@@ -55,6 +55,20 @@ export function formatDateRange(
   return joinNonEmpty([startDate, end], " - ");
 }
 
+/**
+ * Shared print-pagination rules appended to every template so multi-page CVs
+ * break cleanly: an individual entry / list item / skill never splits across a
+ * page boundary, and a section heading is never orphaned at the foot of a page.
+ * Only small, indivisible items get `break-inside: avoid` — never sections,
+ * sidebars or columns, which must be allowed to flow across pages.
+ */
+const PAGINATION_CSS = [
+  "h1,h2,h3,h4,h5,h6,.sec-h,.s-h{break-after:avoid;page-break-after:avoid;}",
+  "header,.header,.namehead,.head,.hero,.profile{break-inside:avoid;page-break-inside:avoid;}",
+  ".entry,.blk,.bar-row,.si,article,li,.skill-item,.skill-grid .si,.cert,.lang{break-inside:avoid;page-break-inside:avoid;}",
+  "img{break-inside:avoid;page-break-inside:avoid;}",
+].join("");
+
 export function documentShell(
   title: string,
   css: string,
@@ -65,7 +79,7 @@ export function documentShell(
     '<html lang="id">',
     '<head><meta charset="utf-8" />',
     `<title>${escapeHtml(title || "CV")}</title>`,
-    `<style>${css}</style>`,
+    `<style>${css}\n${PAGINATION_CSS}</style>`,
     "</head>",
     `<body>${body}</body>`,
     "</html>",
