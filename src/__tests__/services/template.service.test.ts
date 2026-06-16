@@ -165,6 +165,8 @@ describe("template.service full-bleed & padding halaman", () => {
     "atlas",
     "monarch",
     "prism",
+    "silhouette",
+    "portrait",
   ];
   // Non-fullBleed = single-column + editorial/bloom decorative templates: Puppeteer
   // adds 12mm top/bottom per page; body vertical padding is reset to avoid doubling.
@@ -186,6 +188,7 @@ describe("template.service full-bleed & padding halaman", () => {
     "prestige",
     "spectrum",
     "canvas",
+    "ember",
   ];
 
   it.each(fullBleedIds)("menandai %s sebagai full-bleed", (id) => {
@@ -245,6 +248,9 @@ describe("template.service biaya kredit", () => {
     prism: 10,
     spectrum: 8,
     canvas: 2,
+    ember: 2,
+    silhouette: 5,
+    portrait: 8,
   };
 
   it("memberi biaya berjenjang per template (free/basic gratis, lalu 2–10 kredit) dari default", async () => {

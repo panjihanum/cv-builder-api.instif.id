@@ -14,9 +14,12 @@ import { renderAurora } from "@/services/templates/aurora.js";
 import { renderVibrant } from "@/services/templates/vibrant.js";
 import { renderEditorial } from "@/services/templates/editorial.js";
 import { renderDesignerStudio } from "@/services/templates/designer-studio.js";
+import { renderEmber } from "@/services/templates/ember.js";
 import { renderGraphite } from "@/services/templates/graphite.js";
 import { renderOnyx } from "@/services/templates/onyx.js";
 import { renderBloom } from "@/services/templates/bloom.js";
+import { renderPortrait } from "@/services/templates/portrait.js";
+import { renderSilhouette } from "@/services/templates/silhouette.js";
 import { renderSlate } from "@/services/templates/slate.js";
 import { renderMeridian } from "@/services/templates/meridian.js";
 import { renderNova } from "@/services/templates/nova.js";
@@ -85,4 +88,7 @@ export const templates: Record<string, TemplateEntry> = {
   prism: { render: renderPrism, tier: "flagship", fullBleed: true },
   spectrum: { render: renderSpectrum, tier: "elite" },
   canvas: { render: renderCanvas, tier: "standard" },
+  ember: { render: renderEmber, tier: "standard" },
+  silhouette: { render: renderSilhouette, tier: "premium", fullBleed: true },
+  portrait: { render: renderPortrait, tier: "elite", fullBleed: true },
 };
