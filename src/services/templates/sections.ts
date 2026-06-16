@@ -4,7 +4,7 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 
 function section(title: string, content: string, className = ""): string {
@@ -35,10 +35,7 @@ export function renderHeader(data: CvData): string {
 
 export function renderSummarySection(data: CvData): string {
   if (!data.summary.trim()) return "";
-  // Ringkasan adalah teks biasa (textarea), bukan rich text — render sebagai
-  // paragraf dengan baris baru dipertahankan agar konsisten dengan preview
-  // (whitespace-pre-line), bukan diubah menjadi daftar poin.
-  return section("Summary", `<p>${renderMultiline(data.summary)}</p>`);
+  return section("Summary", renderSummary(data.summary));
 }
 
 export function renderExperienceSection(data: CvData): string {

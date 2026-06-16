@@ -5,7 +5,7 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -259,7 +259,7 @@ export function renderDesignerStudio(data: CvData): string {
     ? mainSection(
         "summary",
         "Tentang Saya",
-        `<p class="muted">${renderMultiline(data.summary)}</p>`
+        renderSummary(data.summary, "muted")
       )
     : "";
   const main = [

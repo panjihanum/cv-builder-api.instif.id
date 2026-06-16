@@ -6,6 +6,7 @@ import {
   joinNonEmpty,
   renderDescription,
   renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 import { renderAuroraSidebar } from "@/services/templates/aurora-sidebar.js";
 
@@ -161,7 +162,7 @@ function renderMain(data: CvData): string {
     ? `<p class="role">${escapeHtml(data.personal.jobTitle)}</p>`
     : "";
   const summary = data.summary.trim()
-    ? section("Ringkasan", `<p>${renderMultiline(data.summary)}</p>`)
+    ? section("Ringkasan", renderSummary(data.summary))
     : "";
   return [
     `<div class="main"><h1>${escapeHtml(data.personal.fullName)}</h1>`,

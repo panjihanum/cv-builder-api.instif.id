@@ -5,7 +5,7 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -259,11 +259,7 @@ function renderHead(data: CvData): string {
 
 export function renderGraphite(data: CvData): string {
   const summary = data.summary.trim()
-    ? mainSection(
-        "summary",
-        "Tentang Saya",
-        `<p>${renderMultiline(data.summary)}</p>`
-      )
+    ? mainSection("summary", "Tentang Saya", renderSummary(data.summary))
     : "";
   const main = [
     '<div class="main">',

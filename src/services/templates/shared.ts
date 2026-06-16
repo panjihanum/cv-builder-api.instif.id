@@ -42,6 +42,27 @@ export function renderDescription(value: string): string {
   return renderBullets(trimmed);
 }
 
+/**
+ * Render the summary field which now accepts rich text (TipTap HTML) or legacy
+ * plain text. Unlike renderDescription, plain text is rendered as a paragraph
+ * with line breaks (not bullet points).
+ * Optional wrapperClass is applied to the outer element so callers can pass
+ * colour/spacing classes (e.g. "muted") without coupling to the tag name.
+ */
+export function renderSummary(value: string, wrapperClass?: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  const cls = wrapperClass ? ` class="${wrapperClass}"` : "";
+  if (/^<(p|ul|ol)[\s>]/i.test(trimmed)) {
+    const sanitized = trimmed
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/\bon\w+\s*=/gi, "data-removed=");
+    return wrapperClass ? `<div${cls}>${sanitized}</div>` : sanitized;
+  }
+  return `<p${cls}>${renderMultiline(trimmed)}</p>`;
+}
+
 export function joinNonEmpty(parts: string[], separator: string): string {
   return parts.filter((part) => part.trim().length > 0).join(separator);
 }

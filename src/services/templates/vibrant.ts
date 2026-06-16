@@ -5,7 +5,7 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -230,11 +230,7 @@ function renderCustom(data: CvData): string {
 
 export function renderVibrant(data: CvData): string {
   const summary = data.summary.trim()
-    ? mainSection(
-        "summary",
-        "Ringkasan",
-        `<p class="muted">${renderMultiline(data.summary)}</p>`
-      )
+    ? mainSection("summary", "Ringkasan", renderSummary(data.summary, "muted"))
     : "";
   const main = [
     '<div class="main">',

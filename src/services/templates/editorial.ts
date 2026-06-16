@@ -5,7 +5,7 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -73,11 +73,9 @@ function renderHead(data: CvData): string {
   )}</h1>${role}<div class="contact">${contacts}</div></header>`;
 }
 
-function renderSummary(data: CvData): string {
+function renderSummarySection(data: CvData): string {
   if (!data.summary.trim()) return "";
-  return `<section>${sectionTitle("summary", "Profil")}<p>${renderMultiline(
-    data.summary
-  )}</p></section>`;
+  return `<section>${sectionTitle("summary", "Profil")}${renderSummary(data.summary)}</section>`;
 }
 
 function renderExperience(data: CvData): string {
@@ -212,7 +210,7 @@ export function renderEditorial(data: CvData): string {
   const body = [
     '<div class="page">',
     renderHead(data),
-    renderSummary(data),
+    renderSummarySection(data),
     renderExperience(data),
     renderEducation(data),
     renderSkills(data),

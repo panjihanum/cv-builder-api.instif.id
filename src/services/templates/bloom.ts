@@ -5,7 +5,7 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -276,7 +276,7 @@ export function renderBloom(data: CvData): string {
         "summary",
         "Tentang Saya",
         "teal",
-        `<p class="muted">${renderMultiline(data.summary)}</p>`
+        renderSummary(data.summary, "muted")
       )
     : "";
   const left = [

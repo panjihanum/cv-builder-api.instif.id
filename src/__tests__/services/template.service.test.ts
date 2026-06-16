@@ -387,21 +387,36 @@ describe("template.service rich text deskripsi (semua template)", () => {
   });
 });
 
-describe("template.service ringkasan sebagai paragraf (semua template)", () => {
-  // Ringkasan adalah teks biasa (textarea). Harus jadi paragraf dengan baris
-  // baru dipertahankan (<br />), bukan daftar poin — agar konsisten dengan
-  // preview (whitespace-pre-line) di frontend.
+describe("template.service ringkasan (semua template)", () => {
+  // Ringkasan kini mendukung rich text (TipTap) DAN plain text lama.
+  // - Rich text (mulai dengan <p>/<ul>) → dipertahankan (sanitized).
+  // - Plain text → paragraf dengan <br /> per baris baru.
   const multilineSummary = cvDataSchema.parse({
     ...sampleData,
     summary: "Baris ringkasan satu\nBaris ringkasan dua",
   });
 
   it.each(allTemplateIds)(
-    "template %s merender ringkasan multibaris sebagai paragraf ber-<br />",
+    "template %s merender ringkasan plain text sebagai paragraf ber-<br />",
     (id) => {
       const html = templateService.renderTemplate(id, multilineSummary);
       expect(html).toContain("Baris ringkasan satu<br />Baris ringkasan dua");
       expect(html).not.toContain("<li>Baris ringkasan satu</li>");
+    }
+  );
+
+  it.each(allTemplateIds)(
+    "template %s mempertahankan rich text pada ringkasan (bold/italic)",
+    (id) => {
+      const richSummary = cvDataSchema.parse({
+        ...sampleData,
+        summary:
+          "<p>Frontend engineer dengan <strong>5 tahun</strong> pengalaman <em>web</em>.</p>",
+      });
+      const html = templateService.renderTemplate(id, richSummary);
+      expect(html).toContain("<strong>5 tahun</strong>");
+      expect(html).toContain("<em>web</em>");
+      expect(html).not.toContain("&lt;strong&gt;");
     }
   );
 });

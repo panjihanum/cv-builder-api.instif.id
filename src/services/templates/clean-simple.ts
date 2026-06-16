@@ -5,7 +5,7 @@ import {
   joinNonEmpty,
   formatDateRange,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 
 const css = `
@@ -59,7 +59,7 @@ export function renderCleanSimple(data: CvData): string {
 
   if (data.summary.trim()) {
     sections.push(
-      `<section><h2>Ringkasan</h2><p>${renderMultiline(data.summary)}</p></section>`
+      `<section><h2>Ringkasan</h2>${renderSummary(data.summary)}</section>`
     );
   }
 

@@ -5,7 +5,7 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
+  renderSummary,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -248,7 +248,7 @@ export function renderOnyx(data: CvData): string {
     ? mainSection(
         "summary",
         "Professional Statement",
-        `<p class="muted">${renderMultiline(data.summary)}</p>`
+        renderSummary(data.summary, "muted")
       )
     : "";
   const main = [
