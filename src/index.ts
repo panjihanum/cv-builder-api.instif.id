@@ -17,6 +17,7 @@ import { exportRoutes } from "@/routes/export.js";
 import { uploadRoutes } from "@/routes/upload.js";
 import { otpRoutes } from "@/routes/otp.js";
 import { templateRoutes } from "@/routes/templates.js";
+import { quickRoutes } from "@/routes/quick.js";
 
 const app = new Hono();
 
@@ -67,6 +68,7 @@ app.route("/billing", billingRoutes);
 app.route("/otp", otpRoutes);
 app.route("/templates", templateRoutes);
 app.route("/admin", adminRoutes);
+app.route("/quick", quickRoutes);
 
 app.notFound((c) => c.json({ error: "Route tidak ditemukan" }, 404));
 

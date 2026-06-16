@@ -4,6 +4,10 @@ import { validate } from "@/lib/validation.js";
 import { paginationQuerySchema } from "@/lib/pagination.js";
 import type { AuthEnv } from "@/middleware/requireAuth.js";
 import * as manualService from "@/services/payment/manual.service.js";
+import {
+  pushUserApproved,
+  pushUserRejected,
+} from "@/services/paymentNotification.service.js";
 
 const listPaymentsSchema = paginationQuerySchema.extend({
   status: z.string().optional(),
@@ -36,6 +40,7 @@ adminPaymentsRoutes.post(
   async (c) => {
     const { ids } = c.req.valid("json");
     const result = await manualService.approvePayments(ids);
+    for (const id of result.succeeded) void pushUserApproved(id);
     return c.json(result);
   }
 );
@@ -46,16 +51,21 @@ adminPaymentsRoutes.post(
   async (c) => {
     const { ids } = c.req.valid("json");
     const result = await manualService.rejectPayments(ids);
+    for (const id of result.succeeded) void pushUserRejected(id);
     return c.json(result);
   }
 );
 
 adminPaymentsRoutes.post("/:id/approve", async (c) => {
-  const order = await manualService.approvePayment(c.req.param("id"));
+  const id = c.req.param("id");
+  const order = await manualService.approvePayment(id);
+  void pushUserApproved(id);
   return c.json({ order });
 });
 
 adminPaymentsRoutes.post("/:id/reject", async (c) => {
-  const order = await manualService.rejectPayment(c.req.param("id"));
+  const id = c.req.param("id");
+  const order = await manualService.rejectPayment(id);
+  void pushUserRejected(id);
   return c.json({ order });
 });

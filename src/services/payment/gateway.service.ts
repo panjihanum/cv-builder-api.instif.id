@@ -2,6 +2,7 @@ import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
 import { getPackPrice, getSetting } from "@/services/settings.service.js";
 import { settleOrderPaid } from "@/services/credit.service.js";
+import { notifyGatewayPaid } from "@/services/paymentNotification.service.js";
 import {
   getPaymentProvider,
   paymentProviders,
@@ -113,6 +114,7 @@ export async function handleWebhook(
   const outcome = await provider.parseWebhook(request);
   if (outcome.status === "PAID") {
     await settleOrderPaid(outcome.orderId);
+    void notifyGatewayPaid(outcome.orderId);
   }
   return {
     ok: true as const,
