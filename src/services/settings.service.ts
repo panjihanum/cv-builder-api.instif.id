@@ -37,6 +37,8 @@ export const SENSITIVE_KEYS = new Set([
   "xendit.apiKey",
   "xendit.callbackToken",
   "anthropic.apiKey",
+  "storage.s3.accessKeyId",
+  "storage.s3.secretAccessKey",
 ]);
 
 export const SETTING_KEYS = [
@@ -60,9 +62,18 @@ export const SETTING_KEYS = [
   AI_COST_KEYS.aiPolish,
   "notification.phone",
   "template.default",
+  "storage.provider",
+  "storage.s3.bucket",
+  "storage.s3.region",
+  "storage.s3.accessKeyId",
+  "storage.s3.secretAccessKey",
+  "storage.s3.endpoint",
+  "storage.s3.publicUrl",
 ] as const;
 
 const DEFAULT_SETTINGS: Record<string, string> = {
+  "storage.provider": "local",
+  "storage.s3.region": "ap-southeast-1",
   "pricing.packPrice": String(DEFAULT_PACK_PRICE),
   "pricing.originalPackPrice": String(DEFAULT_ORIGINAL_PACK_PRICE),
   "pricing.creditsPerPack": String(DEFAULT_CREDITS_PER_PACK),

@@ -1,4 +1,5 @@
 import { Hono } from "hono";
+import { z } from "zod";
 import { db } from "@/lib/db.js";
 import { requireApiKey } from "@/middleware/requireApiKey.js";
 
@@ -26,78 +27,131 @@ function estimateCostUsd(
 
 adminAiStatsRoutes.get("/", requireApiKey, async (c) => {
   const days = Number(c.req.query("days") ?? "30");
+  const search = c.req.query("search") ?? "";
+  const orderBy = c.req.query("orderBy") ?? "time"; // "time" | "user"
   const since = new Date(Date.now() - days * 24 * 60 * 60 * 1000);
 
-  const [logs, endpointStats, modelStats, dailyRaw] = await Promise.all([
-    db.aiUsageLog.findMany({
-      where: { createdAt: { gte: since } },
-      orderBy: { createdAt: "desc" },
-      take: 100,
-      select: {
-        id: true,
-        endpoint: true,
-        model: true,
-        inputTokens: true,
-        outputTokens: true,
-        durationMs: true,
-        creditsUsed: true,
-        success: true,
-        createdAt: true,
-        user: { select: { name: true, email: true } },
-      },
-    }),
-    db.aiUsageLog.groupBy({
-      by: ["endpoint"],
-      where: { createdAt: { gte: since } },
-      _count: { _all: true },
-      _sum: {
-        inputTokens: true,
-        outputTokens: true,
-        creditsUsed: true,
-        durationMs: true,
-      },
-    }),
-    db.aiUsageLog.groupBy({
-      by: ["model"],
-      where: { createdAt: { gte: since } },
-      _count: { _all: true },
-      _sum: { inputTokens: true, outputTokens: true },
-    }),
-    db.$queryRaw<
-      {
-        day: string;
-        calls: bigint;
-        input_tokens: bigint;
-        output_tokens: bigint;
-        credits: bigint;
-      }[]
-    >`
-      SELECT
-        DATE("createdAt") AS day,
-        COUNT(*)           AS calls,
-        SUM("inputTokens") AS input_tokens,
-        SUM("outputTokens") AS output_tokens,
-        SUM("creditsUsed") AS credits
-      FROM ai_usage_logs
-      WHERE "createdAt" >= ${since}
-      GROUP BY DATE("createdAt")
-      ORDER BY day ASC
-    `,
-  ]);
+  const userFilter = search
+    ? {
+        user: {
+          OR: [
+            { name: { contains: search, mode: "insensitive" as const } },
+            { email: { contains: search, mode: "insensitive" as const } },
+          ],
+        },
+      }
+    : {};
 
-  const totals = logs.reduce(
-    (acc, l) => {
-      acc.calls++;
-      acc.inputTokens += l.inputTokens;
-      acc.outputTokens += l.outputTokens;
-      acc.creditsUsed += l.creditsUsed;
-      acc.failures += l.success ? 0 : 1;
-      return acc;
-    },
-    { calls: 0, inputTokens: 0, outputTokens: 0, creditsUsed: 0, failures: 0 }
-  );
+  const logsOrderBy =
+    orderBy === "user"
+      ? [{ user: { name: "asc" as const } }]
+      : [{ createdAt: "desc" as const }];
 
-  // Aggregate totals from groupBy for accurate totals (logs is limited to 100)
+  const [logs, endpointStats, modelStats, dailyRaw, userGroupRaw] =
+    await Promise.all([
+      db.aiUsageLog.findMany({
+        where: { createdAt: { gte: since }, ...userFilter },
+        orderBy: logsOrderBy,
+        take: 100,
+        select: {
+          id: true,
+          userId: true,
+          endpoint: true,
+          model: true,
+          inputTokens: true,
+          outputTokens: true,
+          durationMs: true,
+          creditsUsed: true,
+          success: true,
+          createdAt: true,
+          user: { select: { name: true, email: true } },
+        },
+      }),
+      db.aiUsageLog.groupBy({
+        by: ["endpoint"],
+        where: { createdAt: { gte: since } },
+        _count: { _all: true },
+        _sum: {
+          inputTokens: true,
+          outputTokens: true,
+          creditsUsed: true,
+          durationMs: true,
+        },
+      }),
+      db.aiUsageLog.groupBy({
+        by: ["model"],
+        where: { createdAt: { gte: since } },
+        _count: { _all: true },
+        _sum: { inputTokens: true, outputTokens: true },
+      }),
+      db.$queryRaw<
+        {
+          day: string;
+          calls: bigint;
+          input_tokens: bigint;
+          output_tokens: bigint;
+          credits: bigint;
+        }[]
+      >`
+        SELECT
+          DATE("createdAt") AS day,
+          COUNT(*)           AS calls,
+          SUM("inputTokens") AS input_tokens,
+          SUM("outputTokens") AS output_tokens,
+          SUM("creditsUsed") AS credits
+        FROM ai_usage_logs
+        WHERE "createdAt" >= ${since}
+        GROUP BY DATE("createdAt")
+        ORDER BY day ASC
+      `,
+      db.$queryRaw<
+        {
+          userId: string;
+          calls: bigint;
+          input_tokens: bigint;
+          output_tokens: bigint;
+          credits: bigint;
+        }[]
+      >`
+        SELECT
+          "userId",
+          COUNT(*)           AS calls,
+          SUM("inputTokens") AS input_tokens,
+          SUM("outputTokens") AS output_tokens,
+          SUM("creditsUsed") AS credits
+        FROM ai_usage_logs
+        WHERE "createdAt" >= ${since}
+        GROUP BY "userId"
+        ORDER BY calls DESC
+        LIMIT 20
+      `,
+    ]);
+
+  // Enrich byUser with user name, email, status
+  const userIds = userGroupRaw.map((u) => u.userId);
+  const users =
+    userIds.length > 0
+      ? await db.user.findMany({
+          where: { id: { in: userIds } },
+          select: { id: true, name: true, email: true, status: true },
+        })
+      : [];
+  const userMap = new Map(users.map((u) => [u.id, u]));
+
+  const byUser = userGroupRaw.map((u) => {
+    const user = userMap.get(u.userId);
+    return {
+      userId: u.userId,
+      userName: user?.name ?? null,
+      userEmail: user?.email ?? null,
+      userStatus: user?.status ?? "ACTIVE",
+      calls: Number(u.calls),
+      inputTokens: Number(u.input_tokens),
+      outputTokens: Number(u.output_tokens),
+      creditsUsed: Number(u.credits),
+    };
+  });
+
   const aggTotals = endpointStats.reduce(
     (acc, e) => {
       acc.calls += e._count._all;
@@ -108,6 +162,8 @@ adminAiStatsRoutes.get("/", requireApiKey, async (c) => {
     },
     { calls: 0, inputTokens: 0, outputTokens: 0, creditsUsed: 0 }
   );
+
+  const failures = logs.filter((l) => !l.success).length;
 
   const estimatedCostUsd = modelStats.reduce((sum, m) => {
     return (
@@ -161,11 +217,44 @@ adminAiStatsRoutes.get("/", requireApiKey, async (c) => {
       totalTokens: aggTotals.inputTokens + aggTotals.outputTokens,
       creditsUsed: aggTotals.creditsUsed,
       estimatedCostUsd,
-      failures: totals.failures,
+      failures,
     },
     byEndpoint,
     byModel,
     daily,
+    byUser,
     recentLogs: logs,
   });
+});
+
+// Block / unblock a cv-builder user (from the AI monitoring panel)
+adminAiStatsRoutes.patch("/users/:userId", requireApiKey, async (c) => {
+  const userId = c.req.param("userId");
+
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    return c.json({ error: "Body JSON tidak valid" }, 400);
+  }
+
+  const parsed = z
+    .object({ status: z.enum(["ACTIVE", "INACTIVE", "BANNED"]) })
+    .safeParse(body);
+  if (!parsed.success) {
+    return c.json({ error: "Status tidak valid" }, 400);
+  }
+
+  const existing = await db.user.findUnique({ where: { id: userId } });
+  if (!existing) {
+    return c.json({ error: "User tidak ditemukan" }, 404);
+  }
+
+  const user = await db.user.update({
+    where: { id: userId },
+    data: { status: parsed.data.status },
+    select: { id: true, name: true, email: true, status: true },
+  });
+
+  return c.json({ user });
 });

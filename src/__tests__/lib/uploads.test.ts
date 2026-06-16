@@ -1,10 +1,14 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
-import { mkdir, writeFile } from "node:fs/promises";
 import { saveUploadedFile } from "@/lib/uploads.js";
 
-vi.mock("node:fs/promises", () => ({
-  mkdir: vi.fn(async () => undefined),
-  writeFile: vi.fn(async () => undefined),
+// Stable mock save fn so we can assert calls
+const mockSave = vi.fn(
+  async (_buffer: Buffer, filename: string, _contentType: string) =>
+    `/uploads/${filename}`
+);
+
+vi.mock("@/lib/storage.js", () => ({
+  getStorageProvider: vi.fn(async () => ({ save: mockSave })),
 }));
 
 // 1x1 transparent PNG.
@@ -15,6 +19,11 @@ const PNG_1x1 = Buffer.from(
 
 beforeEach(() => {
   vi.clearAllMocks();
+  // Reset default mock return value
+  mockSave.mockImplementation(
+    async (_buffer: Buffer, filename: string, _contentType: string) =>
+      `/uploads/${filename}`
+  );
 });
 
 describe("lib/uploads saveUploadedFile", () => {
@@ -24,13 +33,14 @@ describe("lib/uploads saveUploadedFile", () => {
     );
 
     expect(url).toMatch(/^\/uploads\/[\w-]+\.webp$/);
-    expect(mkdir).toHaveBeenCalledTimes(1);
-    expect(writeFile).toHaveBeenCalledTimes(1);
+    expect(mockSave).toHaveBeenCalledTimes(1);
 
-    const written = vi.mocked(writeFile).mock.calls[0][1] as Buffer;
+    const [buffer, filename, contentType] = mockSave.mock.calls[0];
+    expect(filename).toMatch(/^[\w-]+\.webp$/);
+    expect(contentType).toBe("image/webp");
     // WebP magic bytes: "RIFF"<size>"WEBP".
-    expect(written.subarray(0, 4).toString("ascii")).toBe("RIFF");
-    expect(written.subarray(8, 12).toString("ascii")).toBe("WEBP");
+    expect((buffer as Buffer).subarray(0, 4).toString("ascii")).toBe("RIFF");
+    expect((buffer as Buffer).subarray(8, 12).toString("ascii")).toBe("WEBP");
   });
 
   it("menyimpan file non-gambar apa adanya", async () => {
@@ -39,7 +49,25 @@ describe("lib/uploads saveUploadedFile", () => {
     );
 
     expect(url).toMatch(/^\/uploads\/[\w-]+\.txt$/);
-    const written = vi.mocked(writeFile).mock.calls[0][1] as Buffer;
-    expect(written.toString("utf8")).toBe("halo");
+    expect(mockSave).toHaveBeenCalledTimes(1);
+
+    const [buffer, filename, contentType] = mockSave.mock.calls[0];
+    expect(filename).toMatch(/^[\w-]+\.txt$/);
+    expect(contentType).toBe("text/plain");
+    expect((buffer as Buffer).toString("utf8")).toBe("halo");
+  });
+
+  it("mengembalikan URL dari storage provider (mendukung URL S3 absolut)", async () => {
+    mockSave.mockResolvedValueOnce(
+      "https://bucket.s3.ap-southeast-1.amazonaws.com/photo.webp"
+    );
+
+    const url = await saveUploadedFile(
+      new File([PNG_1x1], "photo.png", { type: "image/png" })
+    );
+
+    expect(url).toBe(
+      "https://bucket.s3.ap-southeast-1.amazonaws.com/photo.webp"
+    );
   });
 });

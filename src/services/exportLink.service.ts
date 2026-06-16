@@ -1,9 +1,8 @@
 import { mkdir, writeFile, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { db } from "@/lib/db.js";
-import { UPLOADS_DIR } from "@/lib/uploads.js";
 
-const EXPORT_DIR = join(UPLOADS_DIR, "exports");
+const EXPORT_DIR = join(process.env.UPLOADS_DIR ?? "uploads", "exports");
 const EXPORT_TTL_DAYS = 7;
 
 function exportFilePath(token: string): string {
@@ -31,6 +30,10 @@ export async function resolveExportLink(
 ): Promise<{ cvTitle: string; filePath: string } | null> {
   const record = await db.exportLink.findUnique({ where: { id: token } });
   if (!record || record.expiresAt < new Date()) return null;
+  // Increment access count fire-and-forget — don't slow down or fail the download
+  db.exportLink
+    .update({ where: { id: token }, data: { accessCount: { increment: 1 } } })
+    .catch(console.error);
   return { cvTitle: record.cvTitle, filePath: exportFilePath(record.id) };
 }
 
@@ -43,6 +46,7 @@ export type ExportLinkItem = {
   cvTitle: string;
   expiresAt: Date;
   createdAt: Date;
+  accessCount: number;
   expired: boolean;
 };
 
@@ -53,7 +57,13 @@ export async function listUserExports(
     where: { userId },
     orderBy: { createdAt: "desc" },
     take: 50,
-    select: { id: true, cvTitle: true, expiresAt: true, createdAt: true },
+    select: {
+      id: true,
+      cvTitle: true,
+      expiresAt: true,
+      createdAt: true,
+      accessCount: true,
+    },
   });
   const now = new Date();
   return records.map((r) => ({ ...r, expired: r.expiresAt < now }));

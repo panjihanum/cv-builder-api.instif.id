@@ -1,7 +1,8 @@
 import { existsSync, readFileSync } from "node:fs";
 import { basename, extname, join } from "node:path";
-import { UPLOADS_DIR } from "@/lib/uploads.js";
 import { escapeHtml } from "@/services/templates/shared.js";
+
+const UPLOADS_DIR = process.env.UPLOADS_DIR ?? "uploads";
 
 const MIME_BY_EXTENSION: Record<string, string> = {
   ".jpg": "image/jpeg",

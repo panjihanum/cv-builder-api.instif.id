@@ -126,11 +126,12 @@ model ExportQuota {
 }
 
 model ExportLink {
-  id        String   @id @default(cuid())
-  userId    String
-  cvTitle   String
-  expiresAt DateTime
-  createdAt DateTime @default(now())
+  id          String   @id @default(cuid())
+  userId      String
+  cvTitle     String
+  expiresAt   DateTime
+  accessCount Int      @default(0)
+  createdAt   DateTime @default(now())
 
   @@index([expiresAt])
   @@index([userId, createdAt(sort: Desc)])
