@@ -8,6 +8,7 @@ import * as creditService from "@/services/credit.service.js";
 import * as orderService from "@/services/payment/order.service.js";
 import * as gatewayService from "@/services/payment/gateway.service.js";
 import { getPricingConfig } from "@/services/settings.service.js";
+import { getTemplateOverrides } from "@/services/template.service.js";
 import { getActiveMethods } from "@/services/payment/manual.service.js";
 import { notifyManualProofUploaded } from "@/services/paymentNotification.service.js";
 import type { WebhookRequest } from "@/services/payment/providers/types.js";
@@ -28,9 +29,17 @@ export const billingRoutes = new Hono<AuthEnv>();
 /**
  * Konfigurasi harga publik (harga paket + biaya kredit fitur). Tanpa auth agar
  * landing page bisa menampilkan harga sesuai pengaturan admin tiap web.
+ * Termasuk override harga per template jika admin mengaturnya.
  */
 billingRoutes.get("/pricing", async (c) => {
-  return c.json(await getPricingConfig());
+  const [config, templateOverride] = await Promise.all([
+    getPricingConfig(),
+    getTemplateOverrides(),
+  ]);
+  return c.json({
+    ...config,
+    costs: { ...config.costs, templateOverride },
+  });
 });
 
 billingRoutes.get("/credit", requireAuth, async (c) => {

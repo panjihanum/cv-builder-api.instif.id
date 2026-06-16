@@ -2,7 +2,11 @@ import type { CvData } from "@/lib/cvData.js";
 import type { TemplateTier } from "@/config/pricing.js";
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
-import { getCreditCosts } from "@/services/settings.service.js";
+import {
+  getCreditCosts,
+  getSetting,
+  templateOverrideSettingKey,
+} from "@/services/settings.service.js";
 import { templates, type TemplateEntry } from "@/services/templates/index.js";
 
 export function listTemplateIds(): string[] {
@@ -29,15 +33,40 @@ export function getTemplateTier(templateId: string): TemplateTier {
 }
 
 /**
- * Biaya kredit template, diresolusi dari pengaturan harga admin (DB). Tier-nya
- * tetap di kode, tapi nominal kredit per tier bisa diubah admin tiap web.
+ * Biaya kredit template, diresolusi dari pengaturan harga admin (DB).
+ * Override per-template dicek lebih dulu; jika tidak ada, gunakan biaya tier.
  */
 export async function getTemplateCreditCost(
   templateId: string
 ): Promise<number> {
-  const tier = getTemplate(templateId).tier;
+  const template = getTemplate(templateId);
+  const overrideRaw = await getSetting(templateOverrideSettingKey(templateId));
+  if (overrideRaw !== null) {
+    const parsed = Number(overrideRaw);
+    if (Number.isFinite(parsed) && parsed >= 0) return parsed;
+  }
   const costs = await getCreditCosts();
-  return costs.templateTier[tier];
+  return costs.templateTier[template.tier];
+}
+
+/**
+ * Override biaya kredit per template yang sudah diatur admin.
+ * Hanya template yang punya override yang muncul di sini.
+ */
+export async function getTemplateOverrides(): Promise<Record<string, number>> {
+  const entries = await Promise.all(
+    listTemplateIds().map(async (id) => {
+      const raw = await getSetting(templateOverrideSettingKey(id));
+      if (raw === null) return null;
+      const parsed = Number(raw);
+      return Number.isFinite(parsed) && parsed >= 0
+        ? ([id, parsed] as const)
+        : null;
+    })
+  );
+  return Object.fromEntries(
+    entries.filter((e): e is readonly [string, number] => e !== null)
+  );
 }
 
 export function renderTemplate(templateId: string, data: CvData): string {

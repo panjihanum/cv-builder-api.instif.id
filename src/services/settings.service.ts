@@ -16,6 +16,11 @@ export function templateTierSettingKey(tier: TemplateTier): string {
   return `pricing.cost.template.${tier}`;
 }
 
+/** Setting key untuk override harga kredit per template spesifik. */
+export function templateOverrideSettingKey(templateId: string): string {
+  return `pricing.cost.templateOverride.${templateId}`;
+}
+
 const AI_COST_KEYS = {
   aiParse: "pricing.cost.aiParse",
   aiSectionImprove: "pricing.cost.aiSectionImprove",
@@ -118,6 +123,12 @@ export async function setSettings(
     });
   }
   invalidateSettingsCache();
+}
+
+/** Hapus setting dari DB agar kembali ke default. No-op jika tidak ada. */
+export async function deleteSettingIfExists(key: string): Promise<void> {
+  await db.setting.deleteMany({ where: { key } });
+  cache.delete(key);
 }
 
 export function maskValue(value: string): string {
