@@ -29,6 +29,7 @@ vi.mock("@/lib/db.js", () => {
     cv: createModelMock(),
     credit: createModelMock(),
     order: createModelMock(),
+    exportQuota: createModelMock(),
     setting: createModelMock(),
     otpCode: createModelMock(),
     whatsAppSession: createModelMock(),

@@ -1,6 +1,7 @@
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
 import { getCreditsPerPack } from "@/services/settings.service.js";
+import { addPackExports } from "@/services/exportQuota.service.js";
 
 const INSUFFICIENT_MESSAGE = "Kredit tidak cukup, silakan beli paket";
 
@@ -71,5 +72,6 @@ export async function settleOrderPaid(
       create: { userId: order.userId, balance: creditAmount },
     });
   });
+  await addPackExports(order.userId, order.packs);
   return { alreadyPaid: false };
 }

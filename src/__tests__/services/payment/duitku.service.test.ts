@@ -35,6 +35,9 @@ const duitkuSettings = {
 beforeEach(() => {
   vi.clearAllMocks();
   invalidateSettingsCache();
+  vi.mocked(db.exportQuota.findUnique).mockResolvedValue(null);
+  vi.mocked(db.exportQuota.create).mockResolvedValue({} as never);
+  vi.mocked(db.exportQuota.update).mockResolvedValue({} as never);
 });
 
 function sha256(input: string): string {

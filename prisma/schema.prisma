@@ -19,6 +19,7 @@ model User {
   cvs         Cv[]
   orders      Order[]
   credit      Credit?
+  exportQuota ExportQuota?
   wishlist    TemplateWishlist[]
   aiUsageLogs AiUsageLog[]
   createdAt   DateTime       @default(now())
@@ -107,6 +108,19 @@ model TemplateWishlist {
   @@unique([userId, templateId])
   @@index([templateId])
   @@map("template_wishlists")
+}
+
+model ExportQuota {
+  id             String    @id @default(cuid())
+  userId         String    @unique
+  user           User      @relation(fields: [userId], references: [id])
+  freeDailyUsed  Int       @default(0)
+  freeDailyReset DateTime  @default(now())
+  packExports    Int       @default(0)
+  packExpiresAt  DateTime?
+  updatedAt      DateTime  @updatedAt
+
+  @@map("export_quotas")
 }
 
 model ExportLink {

@@ -7,6 +7,7 @@ import * as creditService from "@/services/credit.service.js";
 import * as cvService from "@/services/cv.service.js";
 import * as templateService from "@/services/template.service.js";
 import * as pdfService from "@/services/pdf.service.js";
+import * as exportQuotaService from "@/services/exportQuota.service.js";
 import {
   createExportLink,
   resolveExportLink,
@@ -26,6 +27,12 @@ function toFilename(title: string): string {
 
 export const exportRoutes = new Hono<AuthEnv>();
 
+exportRoutes.get("/quota", requireAuth, async (c) => {
+  const userId = c.get("user").sub;
+  const status = await exportQuotaService.getQuotaStatus(userId);
+  return c.json(status);
+});
+
 exportRoutes.post(
   "/pdf",
   requireAuth,
@@ -33,10 +40,14 @@ exportRoutes.post(
   async (c) => {
     const userId = c.get("user").sub;
     const { cvId, templateId, pageSize } = c.req.valid("json");
+
     const creditCost = await templateService.getTemplateCreditCost(templateId);
     if (creditCost > 0) {
       await creditService.assertCreditBalance(userId, creditCost);
     }
+
+    // Check & consume export quota (throws 402 EXPORT_LIMIT_REACHED if exhausted)
+    await exportQuotaService.useExportSlot(userId);
     const cv = await cvService.getOwnedCv(userId, cvId);
     const data = cvDataSchema.parse(cv.data);
     const html = templateService.renderTemplate(templateId, data);

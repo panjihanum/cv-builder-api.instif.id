@@ -77,7 +77,9 @@ app.notFound((c) => c.json({ error: "Route tidak ditemukan" }, 404));
 
 app.onError((err, c) => {
   if (err instanceof HttpError) {
-    return c.json({ error: err.message }, err.status);
+    const body: { error: string; code?: string } = { error: err.message };
+    if (err.code) body.code = err.code;
+    return c.json(body, err.status);
   }
   console.error("Unhandled error:", err);
   return c.json({ error: "Terjadi kesalahan pada server" }, 500);

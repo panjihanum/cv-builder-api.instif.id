@@ -137,3 +137,38 @@ export async function getMe(userId: string): Promise<PublicUser> {
   }
   return toPublicUser(user);
 }
+
+export async function updateMe(
+  userId: string,
+  input: { name?: string; email?: string | null }
+): Promise<PublicUser> {
+  if (input.email) {
+    const conflict = await db.user.findFirst({
+      where: { email: input.email, NOT: { id: userId } },
+    });
+    if (conflict) throw new HttpError(400, "Email sudah dipakai akun lain");
+  }
+  const user = await db.user.update({
+    where: { id: userId },
+    data: {
+      ...(input.name !== undefined && { name: input.name }),
+      ...(input.email !== undefined && { email: input.email }),
+    },
+  });
+  return toPublicUser(user);
+}
+
+export async function changePassword(
+  userId: string,
+  input: { currentPassword: string; newPassword: string }
+): Promise<{ ok: true }> {
+  const user = await db.user.findUnique({ where: { id: userId } });
+  if (!user) throw new HttpError(404, "User tidak ditemukan");
+  if (!user.password)
+    throw new HttpError(400, "Akun ini tidak menggunakan password");
+  const valid = await bcryptjs.compare(input.currentPassword, user.password);
+  if (!valid) throw new HttpError(400, "Password saat ini salah");
+  const hashed = await bcryptjs.hash(input.newPassword, BCRYPT_ROUNDS);
+  await db.user.update({ where: { id: userId }, data: { password: hashed } });
+  return { ok: true };
+}

@@ -6,6 +6,9 @@ import * as creditService from "@/services/credit.service.js";
 beforeEach(() => {
   vi.clearAllMocks();
   invalidateSettingsCache();
+  vi.mocked(db.exportQuota.findUnique).mockResolvedValue(null);
+  vi.mocked(db.exportQuota.create).mockResolvedValue({} as never);
+  vi.mocked(db.exportQuota.update).mockResolvedValue({} as never);
 });
 
 describe("credit.service ensureCredit", () => {
