@@ -339,3 +339,69 @@ describe("template.service aurora dan foto", () => {
     }
   );
 });
+
+describe("template.service rich text deskripsi (semua template)", () => {
+  // Deskripsi dari editor rich text (TipTap) berisi HTML <strong>/<em>/<u>/<ul>.
+  // SEMUA template harus mempertahankan tag tersebut saat diekspor — termasuk
+  // template sidebar/kreatif yang dulu memakai renderBullets/renderMultiline
+  // (meng-escape HTML sehingga tag tampil sebagai teks mentah di PDF).
+  const richData = cvDataSchema.parse({
+    ...sampleData,
+    experience: [
+      {
+        ...sampleData.experience[0],
+        description:
+          "<ul><li><strong>Memimpin</strong> tim <em>backend</em></li><li><u>Menurunkan</u> latensi 40%</li></ul>",
+      },
+    ],
+  });
+
+  it.each(allTemplateIds)(
+    "template %s mempertahankan bold/italic/underline/list pada deskripsi (tidak ter-escape)",
+    (id) => {
+      const html = templateService.renderTemplate(id, richData);
+      expect(html).toContain("<strong>Memimpin</strong>");
+      expect(html).toContain("<em>backend</em>");
+      expect(html).toContain("<u>Menurunkan</u>");
+      expect(html).toContain("<li>");
+      // Tidak boleh ada tag yang ter-escape menjadi teks.
+      expect(html).not.toContain("&lt;strong&gt;");
+      expect(html).not.toContain("&lt;ul&gt;");
+    }
+  );
+
+  it("tetap meng-escape HTML berbahaya pada deskripsi rich text", () => {
+    const evil = cvDataSchema.parse({
+      ...sampleData,
+      experience: [
+        {
+          ...sampleData.experience[0],
+          description:
+            '<p>aman</p><script>alert(1)</script><p onclick="x()">klik</p>',
+        },
+      ],
+    });
+    const html = templateService.renderTemplate("aurora", evil);
+    expect(html).not.toContain("<script>");
+    expect(html).not.toContain("onclick=");
+  });
+});
+
+describe("template.service ringkasan sebagai paragraf (semua template)", () => {
+  // Ringkasan adalah teks biasa (textarea). Harus jadi paragraf dengan baris
+  // baru dipertahankan (<br />), bukan daftar poin — agar konsisten dengan
+  // preview (whitespace-pre-line) di frontend.
+  const multilineSummary = cvDataSchema.parse({
+    ...sampleData,
+    summary: "Baris ringkasan satu\nBaris ringkasan dua",
+  });
+
+  it.each(allTemplateIds)(
+    "template %s merender ringkasan multibaris sebagai paragraf ber-<br />",
+    (id) => {
+      const html = templateService.renderTemplate(id, multilineSummary);
+      expect(html).toContain("Baris ringkasan satu<br />Baris ringkasan dua");
+      expect(html).not.toContain("<li>Baris ringkasan satu</li>");
+    }
+  );
+});

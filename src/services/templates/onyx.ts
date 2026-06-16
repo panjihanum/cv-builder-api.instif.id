@@ -4,7 +4,8 @@ import {
   escapeHtml,
   formatDateRange,
   joinNonEmpty,
-  renderBullets,
+  renderDescription,
+  renderMultiline,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -172,7 +173,7 @@ function renderExperience(data: CvData): string {
         item.position
       )}</h3><span class="date">${date}</span></div>${
         meta ? `<p class="meta">${meta}</p>` : ""
-      }${renderBullets(item.description)}</div>`;
+      }${renderDescription(item.description)}</div>`;
     })
     .join("");
   return mainSection(
@@ -216,7 +217,7 @@ function renderProjects(data: CvData): string {
         `<div class="blk"><h3>${joinNonEmpty(
           [project.name, project.url].map(escapeHtml),
           " · "
-        )}</h3>${renderBullets(project.description)}</div>`
+        )}</h3>${renderDescription(project.description)}</div>`
     )
     .join("");
   return mainSection("projects", "Proyek", entries);
@@ -230,7 +231,7 @@ function renderCustom(data: CvData): string {
           const heading = item.heading.trim()
             ? `<h3>${escapeHtml(item.heading)}</h3>`
             : "";
-          return `<div class="blk">${heading}${renderBullets(item.body)}</div>`;
+          return `<div class="blk">${heading}${renderDescription(item.body)}</div>`;
         })
         .join("");
       return mainSection(
@@ -247,7 +248,7 @@ export function renderOnyx(data: CvData): string {
     ? mainSection(
         "summary",
         "Professional Statement",
-        `<p class="muted">${escapeHtml(data.summary)}</p>`
+        `<p class="muted">${renderMultiline(data.summary)}</p>`
       )
     : "";
   const main = [

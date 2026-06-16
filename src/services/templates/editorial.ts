@@ -4,7 +4,8 @@ import {
   escapeHtml,
   formatDateRange,
   joinNonEmpty,
-  renderBullets,
+  renderDescription,
+  renderMultiline,
 } from "@/services/templates/shared.js";
 import {
   formatLinkText,
@@ -74,7 +75,7 @@ function renderHead(data: CvData): string {
 
 function renderSummary(data: CvData): string {
   if (!data.summary.trim()) return "";
-  return `<section>${sectionTitle("summary", "Profil")}<p>${escapeHtml(
+  return `<section>${sectionTitle("summary", "Profil")}<p>${renderMultiline(
     data.summary
   )}</p></section>`;
 }
@@ -94,7 +95,7 @@ function renderExperience(data: CvData): string {
         item.position
       )}</h3><span class="date">${date}</span></div>${
         org ? `<p class="org">${org}</p>` : ""
-      }${renderBullets(item.description)}</div>`;
+      }${renderDescription(item.description)}</div>`;
     })
     .join("");
   return `<section>${sectionTitle("experience", "Pengalaman")}${entries}</section>`;
@@ -145,7 +146,7 @@ function renderProjects(data: CvData): string {
         `<div class="entry"><h3>${joinNonEmpty(
           [project.name, project.url].map(escapeHtml),
           " — "
-        )}</h3>${renderBullets(project.description)}</div>`
+        )}</h3>${renderDescription(project.description)}</div>`
     )
     .join("");
   return `<section>${sectionTitle("projects", "Proyek")}${entries}</section>`;
@@ -195,7 +196,7 @@ function renderCustom(data: CvData): string {
           const heading = item.heading.trim()
             ? `<h3>${escapeHtml(item.heading)}</h3>`
             : "";
-          return `<div class="entry">${heading}${renderBullets(item.body)}</div>`;
+          return `<div class="entry">${heading}${renderDescription(item.body)}</div>`;
         })
         .join("");
       if (!items) return "";

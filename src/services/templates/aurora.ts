@@ -4,6 +4,7 @@ import {
   escapeHtml,
   formatDateRange,
   joinNonEmpty,
+  renderDescription,
   renderMultiline,
 } from "@/services/templates/shared.js";
 import { renderAuroraSidebar } from "@/services/templates/aurora-sidebar.js";
@@ -36,6 +37,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5
 .entry .date { margin: 0 0 1px; font-size: 8pt; font-weight: 600; color: #7c3aed; }
 .entry .meta { margin: 1px 0 2px; font-size: 8.5pt; color: #64748b; }
 .entry p { margin: 0; }
+.entry ul, .entry ol { margin: 3px 0 0; padding-left: 16px; color: #475569; }
 `;
 
 function section(title: string, content: string): string {
@@ -51,7 +53,7 @@ function entry(
 ): string {
   const dateLine = date ? `<p class="date">${date}</p>` : "";
   const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
-  const body = description ? `<p>${description}</p>` : "";
+  const body = description || "";
   return `<article class="entry">${dateLine}<h3>${heading}</h3>${metaLine}${body}</article>`;
 }
 
@@ -71,9 +73,7 @@ function renderExperienceSection(data: CvData): string {
           " &mdash; "
         ),
         escapeHtml(experience.location),
-        experience.description.trim()
-          ? renderMultiline(experience.description)
-          : ""
+        renderDescription(experience.description)
       )
     )
     .join("");
@@ -105,7 +105,7 @@ function renderEducationSection(data: CvData): string {
           " &middot; "
         ),
         education.description.trim()
-          ? renderMultiline(education.description)
+          ? `<p>${renderMultiline(education.description)}</p>`
           : ""
       );
     })
@@ -120,7 +120,7 @@ function renderProjectsSection(data: CvData): string {
         "",
         joinNonEmpty([project.name, project.url].map(escapeHtml), " &middot; "),
         "",
-        project.description.trim() ? renderMultiline(project.description) : ""
+        renderDescription(project.description)
       )
     )
     .join("");
@@ -148,12 +148,7 @@ function renderCustomSections(data: CvData): string {
     .map((custom) => {
       const items = custom.items
         .map((item) =>
-          entry(
-            "",
-            escapeHtml(item.heading),
-            "",
-            item.body.trim() ? renderMultiline(item.body) : ""
-          )
+          entry("", escapeHtml(item.heading), "", renderDescription(item.body))
         )
         .join("");
       return section(custom.title || "Lainnya", items);

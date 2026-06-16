@@ -5,6 +5,7 @@ import {
   joinNonEmpty,
   formatDateRange,
   renderDescription,
+  renderMultiline,
 } from "@/services/templates/shared.js";
 
 const css = `
@@ -57,9 +58,8 @@ export function renderCleanSimple(data: CvData): string {
   const sections: string[] = [];
 
   if (data.summary.trim()) {
-    const sumHtml = renderDescription(data.summary);
     sections.push(
-      `<section><h2>Ringkasan</h2>${sumHtml.startsWith("<") ? sumHtml : `<p>${sumHtml}</p>`}</section>`
+      `<section><h2>Ringkasan</h2><p>${renderMultiline(data.summary)}</p></section>`
     );
   }
 
