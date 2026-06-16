@@ -161,6 +161,10 @@ describe("template.service full-bleed & padding halaman", () => {
     "vibrant",
     "two-column-compact",
     "designer-studio",
+    "nova",
+    "atlas",
+    "monarch",
+    "prism",
   ];
   // Non-fullBleed = single-column + editorial/bloom decorative templates: Puppeteer
   // adds 12mm top/bottom per page; body vertical padding is reset to avoid doubling.
@@ -176,6 +180,12 @@ describe("template.service full-bleed & padding halaman", () => {
     "executive-senior",
     "editorial",
     "bloom",
+    "slate",
+    "meridian",
+    "ivory",
+    "prestige",
+    "spectrum",
+    "canvas",
   ];
 
   it.each(fullBleedIds)("menandai %s sebagai full-bleed", (id) => {
@@ -206,28 +216,38 @@ describe("template.service full-bleed & padding halaman", () => {
 });
 
 describe("template.service biaya kredit", () => {
-  // Tier visual: makin menonjol/kreatif makin mahal (4–12 kredit), classic-ats gratis.
+  // Tier visual: makin menonjol/kreatif makin mahal (2–10 kredit), free/basic gratis.
   const expectedCosts: Record<string, number> = {
     "clean-simple": 0,
     "classic-ats": 0,
-    "modern-professional": 4,
-    "ats-professional": 4,
-    "ats-recruiter-focus": 6,
-    "ats-executive": 6,
-    "ats-compact": 4,
-    "executive-senior": 4,
-    "two-column-compact": 6,
-    "minimalist-creative": 6,
-    aurora: 8,
-    graphite: 8,
-    vibrant: 10,
-    editorial: 10,
-    onyx: 10,
-    bloom: 12,
-    "designer-studio": 12,
+    "modern-professional": 0,
+    "ats-professional": 0,
+    "ats-recruiter-focus": 2,
+    "ats-executive": 2,
+    "ats-compact": 0,
+    "executive-senior": 0,
+    "two-column-compact": 2,
+    "minimalist-creative": 2,
+    aurora: 5,
+    graphite: 5,
+    vibrant: 8,
+    editorial: 8,
+    onyx: 8,
+    bloom: 10,
+    "designer-studio": 10,
+    slate: 0,
+    meridian: 2,
+    nova: 5,
+    atlas: 5,
+    monarch: 10,
+    ivory: 8,
+    prestige: 8,
+    prism: 10,
+    spectrum: 8,
+    canvas: 2,
   };
 
-  it("memberi biaya berjenjang per template (gratis, lalu 4–12 kredit) dari default", async () => {
+  it("memberi biaya berjenjang per template (free/basic gratis, lalu 2–10 kredit) dari default", async () => {
     // Tanpa setting tersimpan, biaya jatuh ke default tier (DB di-mock kosong).
     for (const id of allTemplateIds) {
       expect(await templateService.getTemplateCreditCost(id)).toBe(

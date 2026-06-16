@@ -78,8 +78,8 @@ beforeEach(() => {
 });
 
 describe("routes/ai parse-cv", () => {
-  it("memotong dua kredit dan mengembalikan data plus sisa kredit", async () => {
-    mockBalance(5, 3);
+  it("memotong tiga kredit dan mengembalikan data plus sisa kredit", async () => {
+    mockBalance(5, 2);
     vi.mocked(claudeService.extractCvData).mockResolvedValue(completeCv);
     const form = new FormData();
     form.append(
@@ -93,13 +93,13 @@ describe("routes/ai parse-cv", () => {
     });
     expect(res.status).toBe(200);
     const body = (await res.json()) as { data: unknown; credits: number };
-    expect(body.credits).toBe(3);
+    expect(body.credits).toBe(2);
     const args = vi.mocked(db.credit.updateMany).mock.calls[0][0];
-    expect(args.where).toEqual({ userId: "user-1", balance: { gte: 2 } });
-    expect(args.data).toEqual({ balance: { decrement: 2 } });
+    expect(args.where).toEqual({ userId: "user-1", balance: { gte: 3 } });
+    expect(args.data).toEqual({ balance: { decrement: 3 } });
   });
 
-  it("melempar 402 saat saldo kurang dari dua", async () => {
+  it("melempar 402 saat saldo kurang dari tiga", async () => {
     vi.mocked(db.credit.findUnique).mockResolvedValue({
       balance: 1,
     } as never);
@@ -174,8 +174,8 @@ describe("routes/ai polish-cv", () => {
     expect(db.credit.updateMany).not.toHaveBeenCalled();
   });
 
-  it("memotong lima kredit dan menyimpan hasil polish ke cv", async () => {
-    mockBalance(8, 3);
+  it("memotong tiga kredit dan menyimpan hasil polish ke cv", async () => {
+    mockBalance(8, 5);
     const polished = { ...completeCv, summary: "Ringkasan paling rapi" };
     vi.mocked(db.cv.findFirst).mockResolvedValue(cvRecord as never);
     vi.mocked(db.cv.update).mockResolvedValue(cvRecord as never);
@@ -187,11 +187,11 @@ describe("routes/ai polish-cv", () => {
       credits: number;
     };
     expect(body.data.summary).toBe("Ringkasan paling rapi");
-    expect(body.credits).toBe(3);
+    expect(body.credits).toBe(5);
     const updateArgs = vi.mocked(db.cv.update).mock.calls[0][0];
     expect(updateArgs.where).toEqual({ id: "cv-1" });
     expect(updateArgs.data).toEqual({ data: polished });
     const creditArgs = vi.mocked(db.credit.updateMany).mock.calls[0][0];
-    expect(creditArgs.data).toEqual({ balance: { decrement: 5 } });
+    expect(creditArgs.data).toEqual({ balance: { decrement: 3 } });
   });
 });

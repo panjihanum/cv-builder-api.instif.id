@@ -17,6 +17,16 @@ import { renderDesignerStudio } from "@/services/templates/designer-studio.js";
 import { renderGraphite } from "@/services/templates/graphite.js";
 import { renderOnyx } from "@/services/templates/onyx.js";
 import { renderBloom } from "@/services/templates/bloom.js";
+import { renderSlate } from "@/services/templates/slate.js";
+import { renderMeridian } from "@/services/templates/meridian.js";
+import { renderNova } from "@/services/templates/nova.js";
+import { renderAtlas } from "@/services/templates/atlas.js";
+import { renderMonarch } from "@/services/templates/monarch.js";
+import { renderIvory } from "@/services/templates/ivory.js";
+import { renderPrestige } from "@/services/templates/prestige.js";
+import { renderPrism } from "@/services/templates/prism.js";
+import { renderSpectrum } from "@/services/templates/spectrum.js";
+import { renderCanvas } from "@/services/templates/canvas.js";
 
 export type TemplateRenderer = (data: CvData) => string;
 
@@ -65,4 +75,14 @@ export const templates: Record<string, TemplateEntry> = {
   graphite: { render: renderGraphite, tier: "premium", fullBleed: true },
   onyx: { render: renderOnyx, tier: "elite", fullBleed: true },
   bloom: { render: renderBloom, tier: "flagship" },
+  slate: { render: renderSlate, tier: "basic" },
+  meridian: { render: renderMeridian, tier: "standard" },
+  nova: { render: renderNova, tier: "premium", fullBleed: true },
+  atlas: { render: renderAtlas, tier: "premium", fullBleed: true },
+  monarch: { render: renderMonarch, tier: "flagship", fullBleed: true },
+  ivory: { render: renderIvory, tier: "elite" },
+  prestige: { render: renderPrestige, tier: "elite" },
+  prism: { render: renderPrism, tier: "flagship", fullBleed: true },
+  spectrum: { render: renderSpectrum, tier: "elite" },
+  canvas: { render: renderCanvas, tier: "standard" },
 };

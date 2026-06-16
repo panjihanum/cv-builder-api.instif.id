@@ -61,23 +61,23 @@ describe("routes/export pdf", () => {
     expect(db.credit.updateMany).not.toHaveBeenCalled();
   });
 
-  it("export template premium memotong biaya tier-nya (modern-professional = 4 kredit)", async () => {
+  it("export template standard memotong biaya tier-nya (ats-recruiter-focus = 2 kredit)", async () => {
     vi.mocked(db.credit.findUnique)
       .mockResolvedValueOnce({ balance: 5 } as never)
-      .mockResolvedValueOnce({ balance: 1 } as never);
+      .mockResolvedValueOnce({ balance: 3 } as never);
     vi.mocked(db.credit.updateMany).mockResolvedValue({ count: 1 } as never);
-    const res = await requestExport("modern-professional");
+    const res = await requestExport("ats-recruiter-focus");
     expect(res.status).toBe(200);
     const args = vi.mocked(db.credit.updateMany).mock.calls[0][0];
-    expect(args.where).toEqual({ userId: "user-1", balance: { gte: 4 } });
-    expect(args.data).toEqual({ balance: { decrement: 4 } });
+    expect(args.where).toEqual({ userId: "user-1", balance: { gte: 2 } });
+    expect(args.data).toEqual({ balance: { decrement: 2 } });
   });
 
-  it("melempar 402 saat saldo kurang untuk template premium", async () => {
+  it("melempar 402 saat saldo kurang untuk template standard", async () => {
     vi.mocked(db.credit.findUnique).mockResolvedValue({
-      balance: 2,
+      balance: 1,
     } as never);
-    const res = await requestExport("modern-professional");
+    const res = await requestExport("ats-recruiter-focus");
     expect(res.status).toBe(402);
     const body = (await res.json()) as { error: string };
     expect(body.error).toBeTruthy();

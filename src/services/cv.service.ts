@@ -33,7 +33,12 @@ export async function listCvs(userId: string) {
   });
 }
 
-export async function createCv(userId: string, title?: string) {
+export async function createCv(
+  userId: string,
+  title?: string,
+  templateId?: string,
+  data?: CvData
+) {
   const paid = await hasPaidAccess(userId);
   if (!paid) {
     const count = await db.cv.count({ where: { userId } });
@@ -48,7 +53,8 @@ export async function createCv(userId: string, title?: string) {
     data: {
       userId,
       ...(title ? { title } : {}),
-      data: createEmptyCvData(),
+      ...(templateId ? { templateId } : {}),
+      data: data ?? createEmptyCvData(),
     },
     select: cvSelect,
   });

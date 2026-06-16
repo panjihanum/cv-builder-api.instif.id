@@ -42,7 +42,7 @@ describe("settings.service getSetting", () => {
 
   it("mengembalikan default saat setting belum diisi", async () => {
     vi.mocked(db.setting.findUnique).mockResolvedValue(null);
-    expect(await settingsService.getSetting("pricing.packPrice")).toBe("13000");
+    expect(await settingsService.getSetting("pricing.packPrice")).toBe("12000");
     expect(await settingsService.getSetting("anthropic.model")).toBe(
       "claude-opus-4-8"
     );
@@ -125,7 +125,7 @@ describe("settings.service getAllSettingsMasked", () => {
       masked: false,
     });
     expect(settings["pricing.packPrice"]).toEqual({
-      value: "13000",
+      value: "12000",
       masked: false,
     });
     expect(settings["anthropic.apiKey"]).toEqual({ value: "", masked: false });
@@ -176,7 +176,7 @@ describe("settings.service payment gateway keys", () => {
 describe("settings.service pricing helpers", () => {
   it("mengembalikan angka harga paket dan kredit per pack", async () => {
     vi.mocked(db.setting.findUnique).mockResolvedValue(null);
-    expect(await settingsService.getPackPrice()).toBe(13000);
+    expect(await settingsService.getPackPrice()).toBe(12000);
     expect(await settingsService.getCreditsPerPack()).toBe(15);
   });
 
@@ -188,7 +188,7 @@ describe("settings.service pricing helpers", () => {
       encrypted: false,
       updatedAt: new Date(),
     } as never);
-    expect(await settingsService.getPackPrice()).toBe(13000);
+    expect(await settingsService.getPackPrice()).toBe(12000);
   });
 });
 
@@ -198,27 +198,27 @@ describe("settings.service biaya kredit fleksibel", () => {
     const costs = await settingsService.getCreditCosts();
     expect(costs.templateTier).toEqual({
       free: 0,
-      basic: 4,
-      standard: 6,
-      premium: 8,
-      elite: 10,
-      flagship: 12,
+      basic: 0,
+      standard: 2,
+      premium: 5,
+      elite: 8,
+      flagship: 10,
     });
-    expect(costs.aiParse).toBe(2);
+    expect(costs.aiParse).toBe(3);
     expect(costs.aiSectionImprove).toBe(1);
-    expect(costs.aiPolish).toBe(5);
+    expect(costs.aiPolish).toBe(3);
   });
 
   it("getPricingConfig menyusun seluruh harga default", async () => {
     vi.mocked(db.setting.findUnique).mockResolvedValue(null);
     const pricing = await settingsService.getPricingConfig();
     expect(pricing).toMatchObject({
-      packPrice: 13000,
+      packPrice: 12000,
       originalPackPrice: 25000,
       creditsPerPack: 15,
       maxPacksPerOrder: 10,
     });
-    expect(pricing.costs.templateTier.flagship).toBe(12);
+    expect(pricing.costs.templateTier.flagship).toBe(10);
   });
 
   it("memakai nilai admin dari DB dan mengizinkan biaya 0", async () => {
@@ -243,6 +243,6 @@ describe("settings.service biaya kredit fleksibel", () => {
     const costs = await settingsService.getCreditCosts();
     expect(costs.templateTier.premium).toBe(20);
     expect(costs.aiPolish).toBe(0);
-    expect(costs.templateTier.basic).toBe(4);
+    expect(costs.templateTier.basic).toBe(0);
   });
 });

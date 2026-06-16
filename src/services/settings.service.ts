@@ -21,6 +21,11 @@ export function templateOverrideSettingKey(templateId: string): string {
   return `pricing.cost.templateOverride.${templateId}`;
 }
 
+/** Setting key untuk override tier per template spesifik. */
+export function templateTierOverrideSettingKey(templateId: string): string {
+  return `pricing.tier.override.${templateId}`;
+}
+
 const AI_COST_KEYS = {
   aiParse: "pricing.cost.aiParse",
   aiSectionImprove: "pricing.cost.aiSectionImprove",

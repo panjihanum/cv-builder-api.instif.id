@@ -7,6 +7,8 @@ import * as cvService from "@/services/cv.service.js";
 
 const createCvSchema = z.object({
   title: z.string().min(1).optional(),
+  templateId: z.string().min(1).optional(),
+  data: cvDataSchema.optional(),
 });
 
 const updateCvSchema = z.object({
@@ -25,8 +27,13 @@ cvRoutes.get("/", async (c) => {
 });
 
 cvRoutes.post("/", validate("json", createCvSchema), async (c) => {
-  const { title } = c.req.valid("json");
-  const cv = await cvService.createCv(c.get("user").sub, title);
+  const { title, templateId, data } = c.req.valid("json");
+  const cv = await cvService.createCv(
+    c.get("user").sub,
+    title,
+    templateId,
+    data
+  );
   return c.json({ cv });
 });
 

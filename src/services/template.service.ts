@@ -1,11 +1,12 @@
 import type { CvData } from "@/lib/cvData.js";
-import type { TemplateTier } from "@/config/pricing.js";
+import { TEMPLATE_TIERS, type TemplateTier } from "@/config/pricing.js";
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
 import {
   getCreditCosts,
   getSetting,
   templateOverrideSettingKey,
+  templateTierOverrideSettingKey,
 } from "@/services/settings.service.js";
 import { templates, type TemplateEntry } from "@/services/templates/index.js";
 
@@ -32,9 +33,35 @@ export function getTemplateTier(templateId: string): TemplateTier {
   return getTemplate(templateId).tier;
 }
 
+/** Override tier admin dari DB; null jika tidak diset. */
+async function getTemplateTierOverride(
+  templateId: string
+): Promise<TemplateTier | null> {
+  const raw = await getSetting(templateTierOverrideSettingKey(templateId));
+  if (raw && (TEMPLATE_TIERS as readonly string[]).includes(raw)) {
+    return raw as TemplateTier;
+  }
+  return null;
+}
+
+/** Semua override tier admin yang sudah diset (hanya template yang punya override). */
+export async function getTemplateTierOverrides(): Promise<
+  Record<string, TemplateTier>
+> {
+  const entries = await Promise.all(
+    listTemplateIds().map(async (id) => {
+      const override = await getTemplateTierOverride(id);
+      return override ? ([id, override] as const) : null;
+    })
+  );
+  return Object.fromEntries(
+    entries.filter((e): e is readonly [string, TemplateTier] => e !== null)
+  );
+}
+
 /**
  * Biaya kredit template, diresolusi dari pengaturan harga admin (DB).
- * Override per-template dicek lebih dulu; jika tidak ada, gunakan biaya tier.
+ * Override per-template dicek lebih dulu; jika tidak ada, gunakan biaya tier (bisa override).
  */
 export async function getTemplateCreditCost(
   templateId: string
@@ -45,8 +72,10 @@ export async function getTemplateCreditCost(
     const parsed = Number(overrideRaw);
     if (Number.isFinite(parsed) && parsed >= 0) return parsed;
   }
+  const tierOverride = await getTemplateTierOverride(templateId);
+  const effectiveTier = tierOverride ?? template.tier;
   const costs = await getCreditCosts();
-  return costs.templateTier[template.tier];
+  return costs.templateTier[effectiveTier];
 }
 
 /**
