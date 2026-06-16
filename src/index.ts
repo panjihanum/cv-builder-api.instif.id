@@ -69,8 +69,8 @@ app.route("/upload", uploadRoutes);
 app.route("/billing", billingRoutes);
 app.route("/otp", otpRoutes);
 app.route("/templates", templateRoutes);
-app.route("/admin", adminRoutes);
 app.route("/admin/ai-stats", adminAiStatsRoutes);
+app.route("/admin", adminRoutes);
 app.route("/quick", quickRoutes);
 
 app.notFound((c) => c.json({ error: "Route tidak ditemukan" }, 404));
