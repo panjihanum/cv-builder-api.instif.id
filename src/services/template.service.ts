@@ -44,6 +44,15 @@ export function renderTemplate(templateId: string, data: CvData): string {
   return getTemplate(templateId).render(data);
 }
 
+/**
+ * Whether a template is edge-to-edge (sidebar/banner). Full-bleed templates are
+ * exported with no page margin; the rest get a vertical page margin so content
+ * keeps top/bottom breathing room on every page.
+ */
+export function isFullBleed(templateId: string): boolean {
+  return getTemplate(templateId).fullBleed ?? false;
+}
+
 export interface TemplateStat {
   templateId: string;
   usageCount: number;

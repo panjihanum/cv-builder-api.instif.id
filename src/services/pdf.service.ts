@@ -16,22 +16,42 @@ async function getBrowser(): Promise<Browser> {
   return browserPromise;
 }
 
+/** Vertical whitespace applied to the top and bottom of every page so content
+ *  never touches the page edge (including at inner page breaks). */
+const PAGE_VERTICAL_MARGIN = "12mm";
+
+/** Resolve the Puppeteer page margin for a template. Full-bleed templates print
+ *  edge-to-edge (their sidebar/banner reaches every edge); plain single-column
+ *  templates get a top/bottom margin — left/right stays 0 because each template
+ *  supplies its own horizontal padding. */
+export function resolvePdfMargin(fullBleed: boolean): {
+  top: string;
+  bottom: string;
+  left: string;
+  right: string;
+} {
+  const vertical = fullBleed ? "0" : PAGE_VERTICAL_MARGIN;
+  return { top: vertical, bottom: vertical, left: "0", right: "0" };
+}
+
 export async function renderPdf(
   html: string,
-  format: PaperFormat = "A4"
+  format: PaperFormat = "A4",
+  fullBleed = false
 ): Promise<Uint8Array> {
   const browser = await getBrowser();
   const page = await browser.newPage();
   try {
     await page.setContent(html, { waitUntil: "load" });
-    // No page margin: each template renders edge-to-edge and supplies its own
-    // padding, exactly like the on-screen preview. A Puppeteer margin here would
-    // add whitespace around the whole document (a white border around full-bleed
-    // sidebars) that the preview never shows.
+    // Left/right margin is always 0 so full-bleed sidebars reach the edge and
+    // single-column templates control horizontal padding themselves. The
+    // top/bottom margin gives every page (not just the first/last) its A4
+    // whitespace; the document's own vertical body padding is reset to 0 in
+    // documentShell so it isn't doubled.
     return await page.pdf({
       format,
       printBackground: true,
-      margin: { top: "0", bottom: "0", left: "0", right: "0" },
+      margin: resolvePdfMargin(fullBleed),
     });
   } finally {
     await page.close();

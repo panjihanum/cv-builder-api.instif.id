@@ -149,6 +149,58 @@ describe("template.service", () => {
   });
 });
 
+describe("template.service full-bleed & padding halaman", () => {
+  // Template full-bleed punya sidebar/banner edge-to-edge → diekspor tanpa
+  // margin halaman. Sisanya satu kolom → dapat margin vertikal per halaman.
+  const fullBleedIds = [
+    "graphite",
+    "onyx",
+    "aurora",
+    "vibrant",
+    "two-column-compact",
+    "designer-studio",
+    "editorial",
+    "bloom",
+  ];
+  const paddedIds = [
+    "clean-simple",
+    "classic-ats",
+    "modern-professional",
+    "ats-professional",
+    "ats-recruiter-focus",
+    "ats-executive",
+    "ats-compact",
+    "minimalist-creative",
+    "executive-senior",
+  ];
+
+  it.each(fullBleedIds)("menandai %s sebagai full-bleed", (id) => {
+    expect(templateService.isFullBleed(id)).toBe(true);
+  });
+
+  it.each(paddedIds)("menandai %s bukan full-bleed", (id) => {
+    expect(templateService.isFullBleed(id)).toBe(false);
+  });
+
+  it("klasifikasi full-bleed mencakup tepat semua template terdaftar", () => {
+    expect([...fullBleedIds, ...paddedIds].sort()).toEqual(
+      [...allTemplateIds].sort()
+    );
+  });
+
+  it("melempar 400 untuk id tidak dikenal", () => {
+    expect(() => templateService.isFullBleed("tidak-ada")).toThrow();
+  });
+
+  it.each(allTemplateIds)(
+    "mereset padding vertikal body pada %s agar margin halaman tak terdobel",
+    (id) => {
+      const html = templateService.renderTemplate(id, sampleData);
+      expect(html).toContain("padding-top:0;padding-bottom:0;");
+    }
+  );
+});
+
 describe("template.service biaya kredit", () => {
   // Tier visual: makin menonjol/kreatif makin mahal (4–12 kredit), classic-ats gratis.
   const expectedCosts: Record<string, number> = {

@@ -36,7 +36,11 @@ exportRoutes.post(
     const data = cvDataSchema.parse(cv.data);
     const html = templateService.renderTemplate(templateId, data);
     const format = pageSize === "letter" ? "Letter" : "A4";
-    const pdf = await pdfService.renderPdf(html, format);
+    const pdf = await pdfService.renderPdf(
+      html,
+      format,
+      templateService.isFullBleed(templateId)
+    );
     if (creditCost > 0) {
       await creditService.consumeCredits(userId, creditCost);
     }

@@ -56,4 +56,48 @@ describe("pdf.service renderPdf", () => {
     expect(vi.mocked(puppeteer.launch)).toHaveBeenCalledTimes(1);
     expect(browserMock.newPage).toHaveBeenCalledTimes(2);
   });
+
+  it("memberi margin vertikal pada template biasa (bukan full-bleed)", async () => {
+    await pdfService.renderPdf("<html></html>", "A4", false);
+    const { margin } = pageMock.pdf.mock.calls[0][0];
+    expect(margin).toEqual({
+      top: "12mm",
+      bottom: "12mm",
+      left: "0",
+      right: "0",
+    });
+  });
+
+  it("tanpa margin untuk template full-bleed", async () => {
+    await pdfService.renderPdf("<html></html>", "A4", true);
+    const { margin } = pageMock.pdf.mock.calls[0][0];
+    expect(margin).toEqual({ top: "0", bottom: "0", left: "0", right: "0" });
+  });
+
+  it("default tanpa argumen full-bleed memakai margin vertikal", async () => {
+    await pdfService.renderPdf("<html></html>");
+    const { margin } = pageMock.pdf.mock.calls[0][0];
+    expect(margin.top).toBe("12mm");
+    expect(margin.bottom).toBe("12mm");
+  });
+});
+
+describe("pdf.service resolvePdfMargin", () => {
+  it("template biasa: margin atas/bawah, kiri/kanan nol", () => {
+    expect(pdfService.resolvePdfMargin(false)).toEqual({
+      top: "12mm",
+      bottom: "12mm",
+      left: "0",
+      right: "0",
+    });
+  });
+
+  it("template full-bleed: semua margin nol", () => {
+    expect(pdfService.resolvePdfMargin(true)).toEqual({
+      top: "0",
+      bottom: "0",
+      left: "0",
+      right: "0",
+    });
+  });
 });

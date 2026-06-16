@@ -27,6 +27,13 @@ export interface TemplateEntry {
    * (DB) saat dipakai, bukan disimpan di sini, agar harga fleksibel per web.
    */
   tier: TemplateTier;
+  /**
+   * Full-bleed templates have an edge-to-edge sidebar or banner, so the PDF is
+   * rendered with zero page margin and they keep no per-page whitespace. Plain
+   * single-column templates (the default) get a vertical page margin instead so
+   * content never touches the top/bottom edge on any page. See pdf.service.
+   */
+  fullBleed?: boolean;
 }
 
 export const templates: Record<string, TemplateEntry> = {
@@ -40,14 +47,22 @@ export const templates: Record<string, TemplateEntry> = {
   },
   "ats-executive": { render: renderAtsExecutive, tier: "standard" },
   "ats-compact": { render: renderAtsCompact, tier: "basic" },
-  "two-column-compact": { render: renderTwoColumnCompact, tier: "standard" },
+  "two-column-compact": {
+    render: renderTwoColumnCompact,
+    tier: "standard",
+    fullBleed: true,
+  },
   "minimalist-creative": { render: renderMinimalistCreative, tier: "standard" },
   "executive-senior": { render: renderExecutiveSenior, tier: "basic" },
-  aurora: { render: renderAurora, tier: "premium" },
-  vibrant: { render: renderVibrant, tier: "elite" },
-  editorial: { render: renderEditorial, tier: "elite" },
-  "designer-studio": { render: renderDesignerStudio, tier: "flagship" },
-  graphite: { render: renderGraphite, tier: "premium" },
-  onyx: { render: renderOnyx, tier: "elite" },
-  bloom: { render: renderBloom, tier: "flagship" },
+  aurora: { render: renderAurora, tier: "premium", fullBleed: true },
+  vibrant: { render: renderVibrant, tier: "elite", fullBleed: true },
+  editorial: { render: renderEditorial, tier: "elite", fullBleed: true },
+  "designer-studio": {
+    render: renderDesignerStudio,
+    tier: "flagship",
+    fullBleed: true,
+  },
+  graphite: { render: renderGraphite, tier: "premium", fullBleed: true },
+  onyx: { render: renderOnyx, tier: "elite", fullBleed: true },
+  bloom: { render: renderBloom, tier: "flagship", fullBleed: true },
 };

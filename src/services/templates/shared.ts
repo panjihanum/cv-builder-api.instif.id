@@ -67,6 +67,11 @@ const PAGINATION_CSS = [
   "header,.header,.namehead,.head,.hero,.profile{break-inside:avoid;page-break-inside:avoid;}",
   ".entry,.blk,.bar-row,.si,article,li,.skill-item,.skill-grid .si,.cert,.lang{break-inside:avoid;page-break-inside:avoid;}",
   "img{break-inside:avoid;page-break-inside:avoid;}",
+  // Top/bottom whitespace is supplied per page by the PDF page margin (see
+  // pdf.service), so the document itself must not add vertical body padding —
+  // otherwise the first/last page would be padded twice and inner page breaks
+  // not at all. Horizontal body padding is kept (it applies to every page).
+  "body{padding-top:0;padding-bottom:0;}",
 ].join("");
 
 export function documentShell(
