@@ -3,7 +3,7 @@ import {
   escapeHtml,
   formatDateRange,
   joinNonEmpty,
-  renderMultiline,
+  renderDescription,
 } from "@/services/templates/shared.js";
 
 function section(title: string, content: string, className = ""): string {
@@ -34,7 +34,13 @@ export function renderHeader(data: CvData): string {
 
 export function renderSummarySection(data: CvData): string {
   if (!data.summary.trim()) return "";
-  return section("Summary", `<p>${renderMultiline(data.summary)}</p>`);
+  const rendered = renderDescription(data.summary);
+  return section(
+    "Summary",
+    rendered.startsWith("<p") || rendered.startsWith("<ul")
+      ? rendered
+      : `<p>${rendered}</p>`
+  );
 }
 
 export function renderExperienceSection(data: CvData): string {
@@ -57,9 +63,8 @@ export function renderExperienceSection(data: CvData): string {
         ],
         " &middot; "
       );
-      const description = experience.description.trim()
-        ? `<p>${renderMultiline(experience.description)}</p>`
-        : "";
+      const descHtml = renderDescription(experience.description);
+      const description = descHtml ? descHtml : "";
       const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
       return `<article class="entry"><h3>${heading}</h3>${metaLine}${description}</article>`;
     })
@@ -91,9 +96,8 @@ export function renderEducationSection(data: CvData): string {
         ],
         " &middot; "
       );
-      const description = education.description.trim()
-        ? `<p>${renderMultiline(education.description)}</p>`
-        : "";
+      const descHtml = renderDescription(education.description);
+      const description = descHtml ? descHtml : "";
       const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
       return `<article class="entry"><h3>${heading}</h3>${metaLine}${description}</article>`;
     })
@@ -125,9 +129,8 @@ export function renderProjectsSection(data: CvData): string {
         [project.name, project.url].map(escapeHtml),
         " &middot; "
       );
-      const description = project.description.trim()
-        ? `<p>${renderMultiline(project.description)}</p>`
-        : "";
+      const descHtml = renderDescription(project.description);
+      const description = descHtml ? descHtml : "";
       return `<article class="entry"><h3>${heading}</h3>${description}</article>`;
     })
     .join("");
@@ -176,9 +179,8 @@ export function renderCustomSections(data: CvData): string {
           const heading = item.heading.trim()
             ? `<h3>${escapeHtml(item.heading)}</h3>`
             : "";
-          const body = item.body.trim()
-            ? `<p>${renderMultiline(item.body)}</p>`
-            : "";
+          const bodyHtml = renderDescription(item.body);
+          const body = bodyHtml ? bodyHtml : "";
           return heading || body
             ? `<article class="entry">${heading}${body}</article>`
             : "";

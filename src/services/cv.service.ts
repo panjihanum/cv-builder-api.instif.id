@@ -17,6 +17,14 @@ export interface UpdateCvInput {
   data?: CvData;
 }
 
+async function hasPaidAccess(userId: string): Promise<boolean> {
+  const paid = await db.order.findFirst({
+    where: { userId, status: "PAID" },
+    select: { id: true },
+  });
+  return paid !== null;
+}
+
 export async function listCvs(userId: string) {
   return db.cv.findMany({
     where: { userId },
@@ -26,6 +34,16 @@ export async function listCvs(userId: string) {
 }
 
 export async function createCv(userId: string, title?: string) {
+  const paid = await hasPaidAccess(userId);
+  if (!paid) {
+    const count = await db.cv.count({ where: { userId } });
+    if (count >= 1) {
+      throw new HttpError(
+        402,
+        "Akun gratis hanya bisa membuat 1 CV. Beli paket kredit untuk membuat lebih banyak CV."
+      );
+    }
+  }
   return db.cv.create({
     data: {
       userId,

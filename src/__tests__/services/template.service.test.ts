@@ -128,6 +128,7 @@ describe("template.service", () => {
 describe("template.service biaya kredit", () => {
   // Tier visual: makin menonjol/kreatif makin mahal (4–12 kredit), classic-ats gratis.
   const expectedCosts: Record<string, number> = {
+    "clean-simple": 0,
     "classic-ats": 0,
     "modern-professional": 4,
     "ats-professional": 4,

@@ -1,6 +1,7 @@
 import type { CvData } from "@/lib/cvData.js";
 import type { TemplateTier } from "@/config/pricing.js";
 import { renderClassicAts } from "@/services/templates/classic-ats.js";
+import { renderCleanSimple } from "@/services/templates/clean-simple.js";
 import { renderModernProfessional } from "@/services/templates/modern-professional.js";
 import { renderAtsProfessional } from "@/services/templates/ats-professional.js";
 import { renderAtsRecruiterFocus } from "@/services/templates/ats-recruiter-focus.js";
@@ -30,6 +31,7 @@ export interface TemplateEntry {
 
 export const templates: Record<string, TemplateEntry> = {
   "classic-ats": { render: renderClassicAts, tier: "free" },
+  "clean-simple": { render: renderCleanSimple, tier: "free" },
   "modern-professional": { render: renderModernProfessional, tier: "basic" },
   "ats-professional": { render: renderAtsProfessional, tier: "basic" },
   "ats-recruiter-focus": {

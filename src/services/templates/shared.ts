@@ -24,6 +24,24 @@ export function renderBullets(value: string, className = ""): string {
   return `<ul${cls}>${items}</ul>`;
 }
 
+/**
+ * Render a description field that may be HTML (from the rich text editor) or
+ * legacy plain text (newline-separated bullets).
+ * TipTap always wraps content in <p>, <ul>, or <ol> — use that as the signal.
+ */
+export function renderDescription(value: string): string {
+  const trimmed = value.trim();
+  if (!trimmed) return "";
+  if (/^<(p|ul|ol)[\s>]/i.test(trimmed)) {
+    // HTML from TipTap rich text editor — strip dangerous tags/attrs
+    return trimmed
+      .replace(/<script[\s\S]*?<\/script>/gi, "")
+      .replace(/<style[\s\S]*?<\/style>/gi, "")
+      .replace(/\bon\w+\s*=/gi, "data-removed=");
+  }
+  return renderBullets(trimmed);
+}
+
 export function joinNonEmpty(parts: string[], separator: string): string {
   return parts.filter((part) => part.trim().length > 0).join(separator);
 }
