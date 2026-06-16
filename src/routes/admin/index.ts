@@ -3,6 +3,7 @@ import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import { requireRole } from "@/middleware/requireRole.js";
 import { adminSettingsRoutes } from "@/routes/admin/settings.js";
 import { adminPaymentsRoutes } from "@/routes/admin/payments.js";
+import { adminPaymentMethodsRoutes } from "@/routes/admin/paymentMethods.js";
 import { adminUsersRoutes } from "@/routes/admin/users.js";
 
 export const adminRoutes = new Hono<AuthEnv>();
@@ -11,4 +12,5 @@ adminRoutes.use("*", requireAuth, requireRole("ADMIN"));
 
 adminRoutes.route("/settings", adminSettingsRoutes);
 adminRoutes.route("/payments", adminPaymentsRoutes);
+adminRoutes.route("/payment-methods", adminPaymentMethodsRoutes);
 adminRoutes.route("/users", adminUsersRoutes);

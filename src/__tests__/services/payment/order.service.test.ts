@@ -34,12 +34,16 @@ describe("order.service createCheckout manual", () => {
           updatedAt: new Date(),
         };
       }
-      if (args.where.key === "bank.accounts") {
+      if (args.where.key === "manual.methods") {
         return {
           id: "s2",
           key: args.where.key,
           value: JSON.stringify([
             {
+              id: "m1",
+              type: "bank_transfer",
+              label: "BCA",
+              isActive: true,
               bankName: "BCA",
               accountNumber: "1234567890",
               accountHolder: "PT Instif",
@@ -65,8 +69,11 @@ describe("order.service createCheckout manual", () => {
       amount: 30000,
     });
     expect(result.order.amount).toBe(30000);
-    expect("bankAccounts" in result && result.bankAccounts).toEqual([
+    expect("manualMethods" in result && result.manualMethods).toMatchObject([
       {
+        id: "m1",
+        type: "bank_transfer",
+        label: "BCA",
         bankName: "BCA",
         accountNumber: "1234567890",
         accountHolder: "PT Instif",

@@ -1,7 +1,7 @@
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
 import { getPackPrice } from "@/services/settings.service.js";
-import { getBankAccounts } from "@/services/payment/manual.service.js";
+import { getActiveMethods } from "@/services/payment/manual.service.js";
 
 const orderSelect = {
   id: true,
@@ -50,8 +50,8 @@ export async function createCheckout(
   packs: number
 ) {
   const order = await createOrder(userId, method, packs);
-  const bankAccounts = await getBankAccounts();
-  return { order, bankAccounts };
+  const manualMethods = await getActiveMethods();
+  return { order, manualMethods };
 }
 
 export async function attachProof(

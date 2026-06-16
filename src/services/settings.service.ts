@@ -38,6 +38,7 @@ export const SETTING_KEYS = [
   "xendit.callbackToken",
   "anthropic.apiKey",
   "anthropic.model",
+  "manual.methods",
   "bank.accounts",
   "pricing.packPrice",
   "pricing.originalPackPrice",
@@ -47,6 +48,7 @@ export const SETTING_KEYS = [
   AI_COST_KEYS.aiParse,
   AI_COST_KEYS.aiSectionImprove,
   AI_COST_KEYS.aiPolish,
+  "notification.phone",
 ] as const;
 
 const DEFAULT_SETTINGS: Record<string, string> = {
@@ -65,6 +67,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   [AI_COST_KEYS.aiPolish]: String(CREDIT_COSTS.aiPolish),
   "anthropic.model": "claude-opus-4-8",
   "duitku.env": "sandbox",
+  "manual.methods": "[]",
   "bank.accounts": "[]",
   // "" = no automatic gateway (manual transfer only)
   "payment.provider": "",
