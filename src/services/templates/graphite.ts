@@ -20,7 +20,10 @@ import { photoToDataUrl } from "@/services/templates/photo.js";
 
 const css = `
 * { box-sizing: border-box; }
-body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.5; margin: 0; }
+/* Sidebar colour painted on the page background too, so the left column keeps
+   its fill on page 2+ (Chrome doesn't repeat a grid item's background across a
+   page break, but it always repeats the body background). */
+body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.5; margin: 0; background: linear-gradient(90deg, #1e293b 0, #1e293b 30%, #ffffff 30%, #ffffff 100%); }
 .layout { display: grid; grid-template-columns: 30% 70%; min-height: 100vh; }
 .sidebar { background: linear-gradient(180deg,#334155,#1e293b); color: #e2e8f0; padding: 22px 16px; }
 .sidebar .photo { width: 104px; height: 104px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 8px; border: 4px solid rgba(255,255,255,0.18); }

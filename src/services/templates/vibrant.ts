@@ -20,7 +20,9 @@ import { photoToDataUrl } from "@/services/templates/photo.js";
 
 const css = `
 * { box-sizing: border-box; }
-body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.5; margin: 0; }
+/* Sidebar colour on the page background so the left column keeps its fill on
+   page 2+ (Chrome doesn't repeat a grid item's background across a page break). */
+body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5pt; line-height: 1.5; margin: 0; background: linear-gradient(90deg, #0d9488 0, #0d9488 33%, #ffffff 33%, #ffffff 100%); }
 .layout { display: grid; grid-template-columns: 33% 67%; min-height: 100vh; }
 .sidebar { background: linear-gradient(165deg,#10b981 0%,#0d9488 50%,#0891b2 100%); color: #ffffff; padding: 24px 18px; }
 .sidebar .photo { width: 94px; height: 94px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 14px; border: 3px solid rgba(255,255,255,0.4); }

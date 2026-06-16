@@ -10,7 +10,9 @@ import { renderAuroraSidebar } from "@/services/templates/aurora-sidebar.js";
 
 const css = `
 * { box-sizing: border-box; }
-body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5pt; line-height: 1.5; margin: 0; }
+/* Sidebar colour on the page background so the left column keeps its fill on
+   page 2+ (Chrome doesn't repeat a grid item's background across a page break). */
+body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5pt; line-height: 1.5; margin: 0; background: linear-gradient(90deg, #6d28d9 0, #6d28d9 34%, #ffffff 34%, #ffffff 100%); }
 .layout { display: grid; grid-template-columns: 34% 66%; min-height: 100vh; }
 .sidebar { background: linear-gradient(160deg, #4338ca 0%, #6d28d9 55%, #7c3aed 100%); color: #ffffff; padding: 24px 18px; }
 .sidebar .photo { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 16px; border: 3px solid rgba(255, 255, 255, 0.35); }

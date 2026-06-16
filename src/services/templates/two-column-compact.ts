@@ -16,7 +16,9 @@ import { renderPhoto } from "@/services/templates/photo.js";
 
 const css = `
 * { box-sizing: border-box; }
-body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5pt; line-height: 1.5; margin: 0; }
+/* Sidebar colour on the page background so the left column keeps its fill on
+   page 2+ (Chrome doesn't repeat a grid item's background across a page break). */
+body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5pt; line-height: 1.5; margin: 0; background: linear-gradient(90deg, #0f172a 0, #0f172a 31%, #ffffff 31%, #ffffff 100%); }
 .layout { display: grid; grid-template-columns: 31% 69%; min-height: 100vh; }
 .sidebar { background: #0f172a; color: #cbd5e1; padding: 24px 20px; }
 .sidebar .photo { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; display: block; margin: 0 0 12px; border: 2px solid rgba(34,211,238,0.4); }
