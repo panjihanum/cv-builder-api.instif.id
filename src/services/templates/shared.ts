@@ -84,9 +84,13 @@ export function formatDateRange(
  * sidebars or columns, which must be allowed to flow across pages.
  */
 const PAGINATION_CSS = [
-  "h1,h2,h3,h4,h5,h6,.sec-h,.s-h{break-after:avoid;page-break-after:avoid;}",
+  // Section headings + entry sub-headings stay with the next line so they're
+  // never orphaned at the foot of a page. .meta = company/date row inside .entry.
+  "h1,h2,h3,h4,h5,h6,.meta,.sec-h,.s-h{break-after:avoid;page-break-after:avoid;}",
   "header,.header,.namehead,.head,.hero,.profile{break-inside:avoid;page-break-inside:avoid;}",
-  ".entry,.blk,.bar-row,.si,article,li,.skill-item,.skill-grid .si,.cert,.lang{break-inside:avoid;page-break-inside:avoid;}",
+  // .entry and article are NOT kept together — their bullets may flow across
+  // pages. Individual li items stay intact, headers stay with their .meta row.
+  ".blk,.bar-row,.si,li,.skill-item,.skill-grid .si,.cert,.lang{break-inside:avoid;page-break-inside:avoid;}",
   "img{break-inside:avoid;page-break-inside:avoid;}",
   // Top/bottom whitespace is supplied per page by the PDF page margin (see
   // pdf.service), so the document itself must not add vertical body padding —
