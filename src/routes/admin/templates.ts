@@ -72,6 +72,33 @@ const tierUpdateSchema = z.record(
   z.union([z.enum(TEMPLATE_TIERS), z.null()])
 );
 
+/** Template default yang dipilih admin. */
+adminTemplateRoutes.get("/default", async (c) => {
+  const defaultId = await settingsService.getDefaultTemplateId();
+  return c.json({ defaultTemplateId: defaultId });
+});
+
+const defaultTemplateSchema = z.object({
+  templateId: z.union([z.string(), z.null()]),
+});
+
+/** Set atau hapus template default. null = hapus (kembali ke template pertama). */
+adminTemplateRoutes.put(
+  "/default",
+  validate("json", defaultTemplateSchema),
+  async (c) => {
+    const { templateId } = c.req.valid("json");
+    if (
+      templateId !== null &&
+      !templateService.listTemplateIds().includes(templateId)
+    ) {
+      return c.json({ error: "Template tidak ditemukan" }, 400);
+    }
+    await settingsService.setDefaultTemplateId(templateId);
+    return c.json({ ok: true });
+  }
+);
+
 /** Set atau hapus override tier per template. null = hapus override (kembali ke tier bawaan). */
 adminTemplateRoutes.patch(
   "/tiers",

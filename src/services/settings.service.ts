@@ -59,6 +59,7 @@ export const SETTING_KEYS = [
   AI_COST_KEYS.aiSectionImprove,
   AI_COST_KEYS.aiPolish,
   "notification.phone",
+  "template.default",
 ] as const;
 
 const DEFAULT_SETTINGS: Record<string, string> = {
@@ -176,6 +177,22 @@ export async function getCreditsPerPack(): Promise<number> {
   return Number.isFinite(parsed) && parsed > 0
     ? parsed
     : DEFAULT_CREDITS_PER_PACK;
+}
+
+/** Template default yang dipilih admin, atau null jika belum diset. */
+export async function getDefaultTemplateId(): Promise<string | null> {
+  return getSetting("template.default");
+}
+
+/** Set template default. Hapus setting (null) untuk kembali ke template pertama. */
+export async function setDefaultTemplateId(
+  templateId: string | null
+): Promise<void> {
+  if (templateId === null) {
+    await deleteSettingIfExists("template.default");
+  } else {
+    await setSettings({ "template.default": templateId });
+  }
 }
 
 /**

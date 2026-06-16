@@ -7,8 +7,14 @@ import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import * as creditService from "@/services/credit.service.js";
 import * as orderService from "@/services/payment/order.service.js";
 import * as gatewayService from "@/services/payment/gateway.service.js";
-import { getPricingConfig } from "@/services/settings.service.js";
-import { getTemplateOverrides } from "@/services/template.service.js";
+import {
+  getPricingConfig,
+  getDefaultTemplateId,
+} from "@/services/settings.service.js";
+import {
+  getTemplateOverrides,
+  getTemplateTierOverrides,
+} from "@/services/template.service.js";
 import { getActiveMethods } from "@/services/payment/manual.service.js";
 import { notifyManualProofUploaded } from "@/services/paymentNotification.service.js";
 import type { WebhookRequest } from "@/services/payment/providers/types.js";
@@ -32,13 +38,17 @@ export const billingRoutes = new Hono<AuthEnv>();
  * Termasuk override harga per template jika admin mengaturnya.
  */
 billingRoutes.get("/pricing", async (c) => {
-  const [config, templateOverride] = await Promise.all([
-    getPricingConfig(),
-    getTemplateOverrides(),
-  ]);
+  const [config, templateOverride, templateTierOverride, defaultTemplateId] =
+    await Promise.all([
+      getPricingConfig(),
+      getTemplateOverrides(),
+      getTemplateTierOverrides(),
+      getDefaultTemplateId(),
+    ]);
   return c.json({
     ...config,
-    costs: { ...config.costs, templateOverride },
+    defaultTemplateId: defaultTemplateId ?? undefined,
+    costs: { ...config.costs, templateOverride, templateTierOverride },
   });
 });
 
