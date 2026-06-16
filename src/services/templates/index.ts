@@ -56,7 +56,7 @@ export const templates: Record<string, TemplateEntry> = {
   "executive-senior": { render: renderExecutiveSenior, tier: "basic" },
   aurora: { render: renderAurora, tier: "premium", fullBleed: true },
   vibrant: { render: renderVibrant, tier: "elite", fullBleed: true },
-  editorial: { render: renderEditorial, tier: "elite", fullBleed: true },
+  editorial: { render: renderEditorial, tier: "elite" },
   "designer-studio": {
     render: renderDesignerStudio,
     tier: "flagship",
@@ -64,5 +64,5 @@ export const templates: Record<string, TemplateEntry> = {
   },
   graphite: { render: renderGraphite, tier: "premium", fullBleed: true },
   onyx: { render: renderOnyx, tier: "elite", fullBleed: true },
-  bloom: { render: renderBloom, tier: "flagship", fullBleed: true },
+  bloom: { render: renderBloom, tier: "flagship" },
 };

@@ -20,7 +20,7 @@ const css = `
    page 2+ (Chrome doesn't repeat a grid item's background across a page break). */
 body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5pt; line-height: 1.5; margin: 0; background: linear-gradient(90deg, #0f172a 0, #0f172a 31%, #ffffff 31%, #ffffff 100%); }
 .layout { display: grid; grid-template-columns: 31% 69%; min-height: 100vh; }
-.sidebar { background: #0f172a; color: #cbd5e1; padding: 24px 20px; }
+.sidebar { background: #0f172a; color: #cbd5e1; padding: 24px 18px; }
 .sidebar .photo { width: 92px; height: 92px; border-radius: 50%; object-fit: cover; display: block; margin: 0 0 12px; border: 2px solid rgba(34,211,238,0.4); }
 .sidebar h1 { margin: 0; font-size: 16pt; font-weight: 700; color: #ffffff; line-height: 1.2; }
 .sidebar .role { margin: 3px 0 0; font-size: 9.5pt; font-weight: 500; color: #67e8f9; }
@@ -34,7 +34,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5
 .cert { margin-bottom: 6px; }
 .cert .nm { font-weight: 600; color: #f1f5f9; }
 .cert .ds { color: #94a3b8; }
-.main { padding: 26px 26px; }
+.main { padding: 24px 24px; }
 .section { margin-bottom: 13px; }
 .section h2 { font-size: 9.5pt; text-transform: uppercase; letter-spacing: 1.6px; color: #0f172a; font-weight: 700; border-bottom: 1px solid #e2e8f0; padding-bottom: 4px; margin: 0 0 7px; }
 .entry { margin-bottom: 8px; }

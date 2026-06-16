@@ -152,6 +152,8 @@ describe("template.service", () => {
 describe("template.service full-bleed & padding halaman", () => {
   // Template full-bleed punya sidebar/banner edge-to-edge → diekspor tanpa
   // margin halaman. Sisanya satu kolom → dapat margin vertikal per halaman.
+  // Full-bleed = true sidebar/banner templates: printed edge-to-edge, zero Puppeteer
+  // margin, no per-page vertical whitespace from CSS (sidebar provides internal padding).
   const fullBleedIds = [
     "graphite",
     "onyx",
@@ -159,9 +161,9 @@ describe("template.service full-bleed & padding halaman", () => {
     "vibrant",
     "two-column-compact",
     "designer-studio",
-    "editorial",
-    "bloom",
   ];
+  // Non-fullBleed = single-column + editorial/bloom decorative templates: Puppeteer
+  // adds 12mm top/bottom per page; body vertical padding is reset to avoid doubling.
   const paddedIds = [
     "clean-simple",
     "classic-ats",
@@ -172,6 +174,8 @@ describe("template.service full-bleed & padding halaman", () => {
     "ats-compact",
     "minimalist-creative",
     "executive-senior",
+    "editorial",
+    "bloom",
   ];
 
   it.each(fullBleedIds)("menandai %s sebagai full-bleed", (id) => {
@@ -242,6 +246,58 @@ describe("template.service biaya kredit", () => {
     await expect(
       templateService.getTemplateCreditCost("tidak-ada")
     ).rejects.toMatchObject({ status: 400 });
+  });
+});
+
+describe("template.service padding preview↔PDF (konsistensi)", () => {
+  // Sidebar templates: padding sidebar dan main harus sinkron dengan nilai React
+  // (py-6/px-[18px] dan p-6) agar page break preview = PDF.
+  const sidebarTemplates: Array<[string, string]> = [
+    ["aurora", "padding: 24px 18px"],
+    ["vibrant", "padding: 24px 18px"],
+    ["graphite", "padding: 24px 18px"],
+    ["onyx", "padding: 24px 18px"],
+    ["two-column-compact", "padding: 24px 18px"],
+  ];
+
+  it.each(sidebarTemplates)(
+    "template %s memiliki padding sidebar %s",
+    (id, expectedPadding) => {
+      const html = templateService.renderTemplate(id, sampleData);
+      expect(html).toContain(expectedPadding);
+    }
+  );
+
+  it.each([
+    "aurora",
+    "vibrant",
+    "graphite",
+    "onyx",
+    "two-column-compact",
+    "designer-studio",
+  ])("template %s memiliki padding main 24px 24px", (id) => {
+    const html = templateService.renderTemplate(id, sampleData);
+    expect(html).toContain("padding: 24px 24px");
+  });
+
+  it("designer-studio memiliki padding hero 24px 28px", () => {
+    const html = templateService.renderTemplate("designer-studio", sampleData);
+    expect(html).toContain("padding: 24px 28px");
+  });
+
+  it("editorial memiliki padding halaman horizontal saja (0 vertikal — Puppeteer memberi margin)", () => {
+    const html = templateService.renderTemplate("editorial", sampleData);
+    expect(html).toContain("padding: 0 48px");
+  });
+
+  it("bloom memiliki padding halaman horizontal saja (0 vertikal — Puppeteer memberi margin)", () => {
+    const html = templateService.renderTemplate("bloom", sampleData);
+    expect(html).toContain("padding: 0 34px");
+  });
+
+  it("editorial dan bloom tidak lagi full-bleed (mendapat margin vertikal per halaman dari Puppeteer)", () => {
+    expect(templateService.isFullBleed("editorial")).toBe(false);
+    expect(templateService.isFullBleed("bloom")).toBe(false);
   });
 });
 

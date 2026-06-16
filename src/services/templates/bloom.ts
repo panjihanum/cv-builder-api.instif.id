@@ -48,7 +48,7 @@ const decorBottomLeft = `<svg class="decor bl" viewBox="0 0 200 200">
 const css = `
 * { box-sizing: border-box; }
 body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5pt; line-height: 1.5; margin: 0; }
-.page { position: relative; overflow: hidden; min-height: 100vh; padding: 30px 34px; background: #ffffff; }
+.page { position: relative; overflow: hidden; min-height: 100vh; padding: 0 34px; background: #ffffff; }
 .decor { position: absolute; pointer-events: none; }
 .decor.tr { top: -60px; right: -60px; width: 280px; height: 280px; }
 .decor.bl { bottom: -60px; left: -60px; width: 250px; height: 250px; }

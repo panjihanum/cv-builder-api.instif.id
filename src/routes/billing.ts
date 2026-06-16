@@ -8,7 +8,8 @@ import * as creditService from "@/services/credit.service.js";
 import * as orderService from "@/services/payment/order.service.js";
 import * as gatewayService from "@/services/payment/gateway.service.js";
 import { getPricingConfig } from "@/services/settings.service.js";
-import { getBankAccounts } from "@/services/payment/manual.service.js";
+import { getActiveMethods } from "@/services/payment/manual.service.js";
+import { notifyManualProofUploaded } from "@/services/paymentNotification.service.js";
 import type { WebhookRequest } from "@/services/payment/providers/types.js";
 
 const createOrderSchema = z.object({
@@ -44,12 +45,13 @@ billingRoutes.get("/orders", requireAuth, async (c) => {
 
 /** Checkout options available to the buyer: manual transfer and/or a gateway. */
 billingRoutes.get("/methods", requireAuth, async (c) => {
-  const [bankAccounts, gateway] = await Promise.all([
-    getBankAccounts(),
+  const [manualMethods, gateway] = await Promise.all([
+    getActiveMethods(),
     gatewayService.getActiveProvider(),
   ]);
   return c.json({
-    manual: bankAccounts.length > 0,
+    manual: manualMethods.length > 0,
+    manualMethods,
     gateway: gateway?.configured
       ? { id: gateway.id, label: gateway.label }
       : null,
@@ -87,11 +89,13 @@ billingRoutes.post("/order/:id/proof", requireAuth, async (c) => {
   const body = await c.req.parseBody();
   const file = assertUploadedFile(body.file, proofFileRule);
   const proofUrl = await saveUploadedFile(file);
+  const userId = c.get("user").sub;
   const order = await orderService.attachProof(
-    c.get("user").sub,
+    userId,
     c.req.param("id"),
     proofUrl
   );
+  void notifyManualProofUploaded(order.id, userId);
   return c.json({ order });
 });
 

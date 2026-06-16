@@ -22,7 +22,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5
 .sidebar li { margin-bottom: 5px; word-break: break-word; }
 .skill-row { display: flex; justify-content: space-between; gap: 6px; }
 .dots { letter-spacing: 2px; color: #c7d2fe; white-space: nowrap; }
-.main { padding: 26px 24px; }
+.main { padding: 24px 24px; }
 .main h1 { font-size: 21pt; font-weight: 800; margin: 0 0 2px; color: #0f172a; letter-spacing: -0.3px; }
 .main .role { margin: 0 0 16px; font-size: 11pt; font-weight: 600; color: #6d28d9; }
 .section { margin-bottom: 14px; }

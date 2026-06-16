@@ -20,7 +20,7 @@ import {
 const css = `
 * { box-sizing: border-box; }
 body { font-family: Georgia, "Times New Roman", serif; color: #292524; font-size: 10pt; line-height: 1.55; margin: 0; min-height: 100vh; background: #fcfaf6; border-top: 5px solid #b45309; }
-.page { padding: 40px 48px; }
+.page { padding: 0 48px; }
 .head { text-align: center; border-bottom: 2px solid #292524; padding-bottom: 16px; }
 .head h1 { margin: 0; font-size: 28pt; font-weight: 700; letter-spacing: -0.5px; color: #1c1917; }
 .head .role { margin: 7px 0 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 4px; color: #b45309; }

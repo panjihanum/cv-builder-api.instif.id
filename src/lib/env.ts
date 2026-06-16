@@ -26,6 +26,13 @@ const envSchema = z.object({
   PUBLIC_API_URL: z.string().optional(),
   /** Public app URL users return to after paying. Falls back to the first CORS origin. */
   PUBLIC_APP_URL: z.string().optional(),
+  /** WhatsApp number to notify when a payment comes in (e.g. "6282113589617"). */
+  NOTIFICATION_PHONE: z.string().optional(),
+  /** HMAC secret for generating stateless quick-approve/reject tokens in WA notifications. */
+  QUICK_TOKEN_SECRET: z
+    .string()
+    .min(1)
+    .default("change-this-secret-in-production"),
 });
 
 export const env = envSchema.parse(process.env);

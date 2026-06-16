@@ -36,7 +36,7 @@ body { font-family: Helvetica, Arial, sans-serif; color: #1e293b; font-size: 9.5
 .bar-row .lbl { font-size: 8.5pt; margin-bottom: 3px; }
 .bar { height: 5px; width: 100%; background: rgba(255,255,255,0.15); border-radius: 999px; }
 .bar > span { display: block; height: 5px; border-radius: 999px; background: #22d3ee; }
-.main { padding: 24px 22px; }
+.main { padding: 24px 24px; }
 .sec { margin-bottom: 16px; }
 .sec:last-child { margin-bottom: 0; }
 .sec-h { display: flex; align-items: center; gap: 8px; margin: 0 0 10px; font-size: 11pt; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: #0f172a; }

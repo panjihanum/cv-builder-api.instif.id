@@ -66,6 +66,38 @@ async function call(
   return { ok: false, error: lastError };
 }
 
+/**
+ * Send a plain-text WhatsApp message. Fails silently so it never blocks
+ * the payment flow.
+ */
+export async function sendMessage(
+  phone: string,
+  message: string
+): Promise<void> {
+  const result = await call("/message/send", { phone, message });
+  if (!result.ok) {
+    console.error(`[WA] Gagal kirim pesan ke ${phone}:`, result.error);
+  }
+}
+
+/**
+ * Send an image (by URL) with a caption. Fails silently.
+ */
+export async function sendImage(
+  phone: string,
+  imageUrl: string,
+  caption: string
+): Promise<void> {
+  const result = await call("/message/send-image", {
+    phone,
+    imageUrl,
+    caption,
+  });
+  if (!result.ok) {
+    console.error(`[WA] Gagal kirim gambar ke ${phone}:`, result.error);
+  }
+}
+
 export async function requestOtp(
   phone: string,
   purpose: "LOGIN" | "VERIFY_PHONE"
