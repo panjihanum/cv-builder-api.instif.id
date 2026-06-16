@@ -6,7 +6,6 @@ import { adminPaymentsRoutes } from "@/routes/admin/payments.js";
 import { adminPaymentMethodsRoutes } from "@/routes/admin/paymentMethods.js";
 import { adminUsersRoutes } from "@/routes/admin/users.js";
 import { adminTemplateRoutes } from "@/routes/admin/templates.js";
-
 export const adminRoutes = new Hono<AuthEnv>();
 
 adminRoutes.use("*", requireAuth, requireRole("ADMIN"));

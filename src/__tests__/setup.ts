@@ -32,6 +32,7 @@ vi.mock("@/lib/db.js", () => {
     setting: createModelMock(),
     otpCode: createModelMock(),
     whatsAppSession: createModelMock(),
+    aiUsageLog: createModelMock(),
     $transaction: vi.fn(),
   };
   db.$transaction.mockImplementation(async (arg: unknown) => {

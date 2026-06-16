@@ -1,7 +1,10 @@
 import { z } from "zod";
 import { cvDataSchema } from "@/lib/cvData.js";
 import { HttpError } from "@/lib/httpError.js";
-import { requestStructured } from "@/services/ai/structured.service.js";
+import {
+  requestStructured,
+  type StructuredResult,
+} from "@/services/ai/structured.service.js";
 
 export const IMPROVABLE_SECTIONS = [
   "summary",
@@ -25,7 +28,7 @@ function getSectionSchema(section: ImprovableSection): z.ZodType {
 export async function improveSection(
   section: ImprovableSection,
   data: unknown
-): Promise<unknown> {
+): Promise<StructuredResult<unknown>> {
   const parsed = getSectionSchema(section).safeParse(data);
   if (!parsed.success) {
     throw new HttpError(400, `data tidak sesuai bentuk section ${section}`);
@@ -37,5 +40,5 @@ export async function improveSection(
     toolDescription: `Simpan hasil perbaikan wording bagian ${section}`,
     schema: z.object({ data: getSectionSchema(section) }),
   });
-  return result.data;
+  return { ...result, data: result.data.data };
 }

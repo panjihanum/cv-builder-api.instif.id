@@ -11,6 +11,7 @@ import { closeBrowser } from "@/services/pdf.service.js";
 import { authRoutes } from "@/routes/auth.js";
 import { cvRoutes } from "@/routes/cv.js";
 import { adminRoutes } from "@/routes/admin/index.js";
+import { adminAiStatsRoutes } from "@/routes/admin/aiStats.js";
 import { billingRoutes } from "@/routes/billing.js";
 import { aiRoutes } from "@/routes/ai.js";
 import { exportRoutes } from "@/routes/export.js";
@@ -69,6 +70,7 @@ app.route("/billing", billingRoutes);
 app.route("/otp", otpRoutes);
 app.route("/templates", templateRoutes);
 app.route("/admin", adminRoutes);
+app.route("/admin/ai-stats", adminAiStatsRoutes);
 app.route("/quick", quickRoutes);
 
 app.notFound((c) => c.json({ error: "Route tidak ditemukan" }, 404));

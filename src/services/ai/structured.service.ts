@@ -18,6 +18,13 @@ export interface StructuredRequest<Output> {
   schema: z.ZodType<Output>;
 }
 
+export interface StructuredResult<Output> {
+  data: Output;
+  inputTokens: number;
+  outputTokens: number;
+  model: string;
+}
+
 async function createClaudeClient(): Promise<{
   client: Anthropic;
   model: string;
@@ -35,7 +42,10 @@ async function requestToolInput<Output>(
   model: string,
   request: StructuredRequest<Output>,
   retryHint?: string
-): Promise<unknown> {
+): Promise<{
+  input: unknown;
+  usage: { input_tokens: number; output_tokens: number };
+}> {
   const content = retryHint
     ? `${request.userContent}\n\n${retryHint}`
     : request.userContent;
@@ -61,30 +71,45 @@ async function requestToolInput<Output>(
   if (!toolUse) {
     throw new HttpError(502, "Claude tidak mengembalikan data terstruktur");
   }
-  return toolUse.input;
+  return { input: toolUse.input, usage: message.usage };
 }
 
 export async function requestStructured<Output>(
   request: StructuredRequest<Output>
-): Promise<Output> {
+): Promise<StructuredResult<Output>> {
   const { client, model } = await createClaudeClient();
-  const firstAttempt = await requestToolInput(client, model, request);
-  const firstParse = request.schema.safeParse(firstAttempt);
+  let totalInputTokens = 0;
+  let totalOutputTokens = 0;
+
+  const first = await requestToolInput(client, model, request);
+  totalInputTokens += first.usage.input_tokens;
+  totalOutputTokens += first.usage.output_tokens;
+
+  const firstParse = request.schema.safeParse(first.input);
   if (firstParse.success) {
-    return firstParse.data;
+    return {
+      data: firstParse.data,
+      inputTokens: totalInputTokens,
+      outputTokens: totalOutputTokens,
+      model,
+    };
   }
-  const secondAttempt = await requestToolInput(
-    client,
-    model,
-    request,
-    RETRY_HINT
-  );
-  const secondParse = request.schema.safeParse(secondAttempt);
+
+  const second = await requestToolInput(client, model, request, RETRY_HINT);
+  totalInputTokens += second.usage.input_tokens;
+  totalOutputTokens += second.usage.output_tokens;
+
+  const secondParse = request.schema.safeParse(second.input);
   if (!secondParse.success) {
     throw new HttpError(
       502,
       "Claude mengembalikan data yang tidak sesuai schema setelah retry"
     );
   }
-  return secondParse.data;
+  return {
+    data: secondParse.data,
+    inputTokens: totalInputTokens,
+    outputTokens: totalOutputTokens,
+    model,
+  };
 }

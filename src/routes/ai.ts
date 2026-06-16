@@ -12,6 +12,7 @@ import * as parserService from "@/services/ai/parser.service.js";
 import * as claudeService from "@/services/ai/claude.service.js";
 import * as improveService from "@/services/ai/improve.service.js";
 import * as polishService from "@/services/ai/polish.service.js";
+import { logAiUsage } from "@/services/ai-log.service.js";
 
 const cvFileRule = {
   mimeTypes: [
@@ -47,7 +48,36 @@ aiRoutes.post("/parse-cv", requireAuth, async (c) => {
     file.name,
     file.type
   );
-  const data = await claudeService.extractCvData(text);
+  const start = Date.now();
+  let success = true;
+  let errorMessage: string | undefined;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let model = "";
+  let data;
+  try {
+    const result = await claudeService.extractCvData(text);
+    data = result.data;
+    inputTokens = result.inputTokens;
+    outputTokens = result.outputTokens;
+    model = result.model;
+  } catch (err) {
+    success = false;
+    errorMessage = err instanceof Error ? err.message : String(err);
+    throw err;
+  } finally {
+    void logAiUsage({
+      userId,
+      endpoint: "parse",
+      model,
+      inputTokens,
+      outputTokens,
+      durationMs: Date.now() - start,
+      creditsUsed: success ? cost : 0,
+      success,
+      errorMessage,
+    });
+  }
   const credits = await creditService.consumeCredits(userId, cost);
   return c.json({ data, credits });
 });
@@ -58,10 +88,39 @@ aiRoutes.post(
   validate("json", improveSectionSchema),
   async (c) => {
     const userId = c.get("user").sub;
-    const { section, data } = c.req.valid("json");
+    const { section, data: sectionData } = c.req.valid("json");
     const cost = (await getCreditCosts()).aiSectionImprove;
     await creditService.assertCreditBalance(userId, cost);
-    const improved = await improveService.improveSection(section, data);
+    const start = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let model = "";
+    let improved;
+    try {
+      const result = await improveService.improveSection(section, sectionData);
+      improved = result.data;
+      inputTokens = result.inputTokens;
+      outputTokens = result.outputTokens;
+      model = result.model;
+    } catch (err) {
+      success = false;
+      errorMessage = err instanceof Error ? err.message : String(err);
+      throw err;
+    } finally {
+      void logAiUsage({
+        userId,
+        endpoint: "improve",
+        model,
+        inputTokens,
+        outputTokens,
+        durationMs: Date.now() - start,
+        creditsUsed: success ? cost : 0,
+        success,
+        errorMessage,
+      });
+    }
     const credits = await creditService.consumeCredits(userId, cost);
     return c.json({ data: improved, credits });
   }
@@ -82,7 +141,36 @@ aiRoutes.post(
     }
     const cost = (await getCreditCosts()).aiPolish;
     await creditService.assertCreditBalance(userId, cost);
-    const polished = await polishService.polishCv(data);
+    const start = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let model = "";
+    let polished;
+    try {
+      const result = await polishService.polishCv(data);
+      polished = result.data;
+      inputTokens = result.inputTokens;
+      outputTokens = result.outputTokens;
+      model = result.model;
+    } catch (err) {
+      success = false;
+      errorMessage = err instanceof Error ? err.message : String(err);
+      throw err;
+    } finally {
+      void logAiUsage({
+        userId,
+        endpoint: "polish",
+        model,
+        inputTokens,
+        outputTokens,
+        durationMs: Date.now() - start,
+        creditsUsed: success ? cost : 0,
+        success,
+        errorMessage,
+      });
+    }
     await cvService.updateCv(userId, cvId, { data: polished });
     const credits = await creditService.consumeCredits(userId, cost);
     return c.json({ data: polished, credits });

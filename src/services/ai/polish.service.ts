@@ -1,5 +1,8 @@
 import { cvDataSchema, type CvData } from "@/lib/cvData.js";
-import { requestStructured } from "@/services/ai/structured.service.js";
+import {
+  requestStructured,
+  type StructuredResult,
+} from "@/services/ai/structured.service.js";
 
 const SYSTEM_PROMPT =
   "Kamu adalah editor CV/resume profesional yang ahli membuat CV lolos ATS. Rapikan wording, bullet, dan konsistensi seluruh CV agar profesional, ringkas, dan berorientasi hasil (gunakan kata kerja aksi; pertahankan angka/metrik yang sudah ada) dalam bahasa yang sama dengan input. JANGAN menambah fakta, angka, atau skill baru, dan JANGAN mengarang pencapaian. Pertahankan struktur, id, dan tanggal apa adanya. Kembalikan bentuk CvData yang sama.";
@@ -30,7 +33,9 @@ export function findIncompleteParts(data: CvData): string[] {
   );
 }
 
-export async function polishCv(data: CvData): Promise<CvData> {
+export async function polishCv(
+  data: CvData
+): Promise<StructuredResult<CvData>> {
   return requestStructured({
     system: SYSTEM_PROMPT,
     userContent: JSON.stringify(data),

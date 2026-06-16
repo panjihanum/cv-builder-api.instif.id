@@ -119,3 +119,23 @@ model ExportLink {
   @@index([expiresAt])
   @@map("export_links")
 }
+
+model AiUsageLog {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id])
+  endpoint     String
+  model        String
+  inputTokens  Int      @default(0)
+  outputTokens Int      @default(0)
+  durationMs   Int      @default(0)
+  creditsUsed  Int      @default(0)
+  success      Boolean  @default(true)
+  errorMessage String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([createdAt])
+  @@index([endpoint])
+  @@map("ai_usage_logs")
+}

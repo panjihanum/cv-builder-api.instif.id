@@ -42,6 +42,7 @@ function toolUseResponse(input: unknown) {
     content: [
       { type: "tool_use", id: "toolu_1", name: "extract_cv_data", input },
     ],
+    usage: { input_tokens: 10, output_tokens: 20 },
   };
 }
 
@@ -101,11 +102,11 @@ describe("claude.service extractCvData", () => {
   it("mengembalikan cvdata valid dengan tool_choice dipaksa", async () => {
     anthropicSettings();
     createMock.mockResolvedValue(toolUseResponse(validInput));
-    const data = await claudeService.extractCvData("teks cv budi");
-    expect(data.personal.fullName).toBe("Budi Santoso");
-    expect(data.experience[0].current).toBe(true);
-    expect(data.experience[0].id).not.toBe("");
-    expect(data.skills[0].id).not.toBe("");
+    const result = await claudeService.extractCvData("teks cv budi");
+    expect(result.data.personal.fullName).toBe("Budi Santoso");
+    expect(result.data.experience[0].current).toBe(true);
+    expect(result.data.experience[0].id).not.toBe("");
+    expect(result.data.skills[0].id).not.toBe("");
     const request = createMock.mock.calls[0][0];
     expect(request.model).toBe("claude-opus-4-8");
     expect(request.tool_choice).toEqual({
@@ -136,8 +137,8 @@ describe("claude.service extractCvData", () => {
         experience: [{ ...validInput.experience[0], description: html }],
       })
     );
-    const data = await claudeService.extractCvData("teks cv");
-    expect(data.experience[0].description).toBe(html);
+    const result = await claudeService.extractCvData("teks cv");
+    expect(result.data.experience[0].description).toBe(html);
   });
 
   it("retry sekali saat output pertama tidak valid", async () => {
@@ -147,8 +148,8 @@ describe("claude.service extractCvData", () => {
         toolUseResponse({ skills: [{ name: "X", level: 99 }] })
       )
       .mockResolvedValueOnce(toolUseResponse(validInput));
-    const data = await claudeService.extractCvData("teks cv");
-    expect(data.personal.fullName).toBe("Budi Santoso");
+    const result = await claudeService.extractCvData("teks cv");
+    expect(result.data.personal.fullName).toBe("Budi Santoso");
     expect(createMock).toHaveBeenCalledTimes(2);
   });
 

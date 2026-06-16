@@ -80,7 +80,12 @@ beforeEach(() => {
 describe("routes/ai parse-cv", () => {
   it("memotong tiga kredit dan mengembalikan data plus sisa kredit", async () => {
     mockBalance(5, 2);
-    vi.mocked(claudeService.extractCvData).mockResolvedValue(completeCv);
+    vi.mocked(claudeService.extractCvData).mockResolvedValue({
+      data: completeCv,
+      inputTokens: 10,
+      outputTokens: 20,
+      model: "claude-opus-4-8",
+    });
     const form = new FormData();
     form.append(
       "file",
@@ -121,9 +126,12 @@ describe("routes/ai parse-cv", () => {
 describe("routes/ai improve-section", () => {
   it("memotong satu kredit dan mengembalikan section hasil perbaikan", async () => {
     mockBalance(4, 3);
-    vi.mocked(improveService.improveSection).mockResolvedValue(
-      "Ringkasan rapi"
-    );
+    vi.mocked(improveService.improveSection).mockResolvedValue({
+      data: "Ringkasan rapi",
+      inputTokens: 5,
+      outputTokens: 10,
+      model: "claude-opus-4-8",
+    });
     const res = await postJson("/ai/improve-section", {
       section: "summary",
       data: "ringkasan lama",
@@ -179,7 +187,12 @@ describe("routes/ai polish-cv", () => {
     const polished = { ...completeCv, summary: "Ringkasan paling rapi" };
     vi.mocked(db.cv.findFirst).mockResolvedValue(cvRecord as never);
     vi.mocked(db.cv.update).mockResolvedValue(cvRecord as never);
-    vi.mocked(polishService.polishCv).mockResolvedValue(polished);
+    vi.mocked(polishService.polishCv).mockResolvedValue({
+      data: polished,
+      inputTokens: 15,
+      outputTokens: 30,
+      model: "claude-opus-4-8",
+    });
     const res = await postJson("/ai/polish-cv", { cvId: "cv-1" });
     expect(res.status).toBe(200);
     const body = (await res.json()) as {

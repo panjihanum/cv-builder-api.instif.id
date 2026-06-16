@@ -76,9 +76,12 @@ describe("polish.service polishCv", () => {
       content: [
         { type: "tool_use", id: "t1", name: "polish_cv_data", input: polished },
       ],
+      usage: { input_tokens: 10, output_tokens: 20 },
     });
     const result = await polishService.polishCv(completeCv);
-    expect(result.summary).toBe("Backend engineer dengan rekam jejak terbukti");
+    expect(result.data.summary).toBe(
+      "Backend engineer dengan rekam jejak terbukti"
+    );
     const request = createMock.mock.calls[0][0];
     expect(request.tool_choice).toEqual({
       type: "tool",
@@ -100,6 +103,7 @@ describe("polish.service polishCv", () => {
           input: { skills: [{ name: "X", level: 99 }] },
         },
       ],
+      usage: { input_tokens: 10, output_tokens: 20 },
     });
     await expect(polishService.polishCv(completeCv)).rejects.toMatchObject({
       status: 502,

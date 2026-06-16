@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import type Anthropic from "@anthropic-ai/sdk";
 import { z } from "zod";
 import { cvDataSchema, type CvData } from "@/lib/cvData.js";
-import { requestStructured } from "@/services/ai/structured.service.js";
+import {
+  requestStructured,
+  type StructuredResult,
+} from "@/services/ai/structured.service.js";
 
 const EXTRACT_TOOL_NAME = "extract_cv_data";
 const SYSTEM_PROMPT = [
@@ -45,8 +48,10 @@ function fillGeneratedIds(data: CvData): CvData {
   };
 }
 
-export async function extractCvData(documentText: string): Promise<CvData> {
-  const data = await requestStructured({
+export async function extractCvData(
+  documentText: string
+): Promise<StructuredResult<CvData>> {
+  const result = await requestStructured({
     system: SYSTEM_PROMPT,
     userContent: documentText,
     toolName: EXTRACT_TOOL_NAME,
@@ -54,5 +59,5 @@ export async function extractCvData(documentText: string): Promise<CvData> {
       "Simpan data CV terstruktur hasil ekstraksi dari teks dokumen",
     schema: cvDataSchema,
   });
-  return fillGeneratedIds(data);
+  return { ...result, data: fillGeneratedIds(result.data) };
 }

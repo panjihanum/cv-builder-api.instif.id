@@ -32,6 +32,7 @@ function toolUseResponse(input: unknown) {
     content: [
       { type: "tool_use", id: "toolu_1", name: "improve_cv_section", input },
     ],
+    usage: { input_tokens: 10, output_tokens: 20 },
   };
 }
 
@@ -73,7 +74,7 @@ describe("improve.service improveSection", () => {
       "experience",
       experienceInput
     );
-    expect(result).toEqual(improvedExperience);
+    expect(result.data).toEqual(improvedExperience);
     const request = createMock.mock.calls[0][0];
     expect(request.tool_choice).toEqual({
       type: "tool",
@@ -91,7 +92,7 @@ describe("improve.service improveSection", () => {
       "summary",
       "ringkasan lama"
     );
-    expect(result).toBe("Ringkasan profesional");
+    expect(result.data).toBe("Ringkasan profesional");
     const request = createMock.mock.calls[0][0];
     expect(request.tools[0].input_schema.properties.data.type).toBe("string");
   });
@@ -105,7 +106,7 @@ describe("improve.service improveSection", () => {
       "experience",
       experienceInput
     );
-    expect(result).toEqual(improvedExperience);
+    expect(result.data).toEqual(improvedExperience);
     expect(createMock).toHaveBeenCalledTimes(2);
   });
 
