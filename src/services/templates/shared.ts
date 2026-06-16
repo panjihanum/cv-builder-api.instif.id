@@ -97,6 +97,11 @@ const PAGINATION_CSS = [
   // otherwise the first/last page would be padded twice and inner page breaks
   // not at all. Horizontal body padding is kept (it applies to every page).
   "body{padding-top:0;padding-bottom:0;}",
+  // Full-bleed sidebar templates use Puppeteer margin=0 so the sidebar/main
+  // containers own all vertical spacing. box-decoration-break:clone makes each
+  // page fragment re-apply its padding-top/bottom and background, giving the
+  // same py-6 breathing room on page 2+ that page 1 gets from the container start.
+  ".sidebar,.main,.aside{-webkit-box-decoration-break:clone;box-decoration-break:clone;}",
 ].join("");
 
 export function documentShell(
