@@ -2,7 +2,20 @@ import { db } from "@/lib/db.js";
 import { env } from "@/lib/env.js";
 import * as wa from "@/lib/waGateway.js";
 import { generateToken } from "@/lib/quickToken.js";
-import { getSetting } from "@/services/settings.service.js";
+import { getSetting, getCreditsPerPack } from "@/services/settings.service.js";
+
+const METHOD_LABELS: Record<string, string> = {
+  MANUAL: "Transfer Manual",
+  GATEWAY: "Pembayaran Otomatis",
+};
+
+function methodLabel(method: string): string {
+  return METHOD_LABELS[method] ?? method;
+}
+
+function formatCredits(packs: number, creditsPerPack: number): string {
+  return `${packs} pack (${packs * creditsPerPack} kredit)`;
+}
 
 function formatRupiah(amount: number): string {
   return new Intl.NumberFormat("id-ID", {
@@ -42,15 +55,23 @@ export async function notifyManualProofUploaded(
   if (!adminPhone) return;
 
   try {
-    const [order, user] = await Promise.all([
+    const [order, user, creditsPerPack] = await Promise.all([
       db.order.findUnique({
         where: { id: orderId },
-        select: { id: true, amount: true, packs: true, proofUrl: true },
+        select: {
+          id: true,
+          amount: true,
+          packs: true,
+          method: true,
+          proofUrl: true,
+          createdAt: true,
+        },
       }),
       db.user.findUnique({
         where: { id: userId },
-        select: { name: true, email: true },
+        select: { name: true, email: true, phone: true },
       }),
+      getCreditsPerPack(),
     ]);
     if (!order || !user) return;
 
@@ -63,9 +84,11 @@ export async function notifyManualProofUploaded(
       ``,
       `*ID:* \`${order.id}\``,
       `*Nama:* ${user.name}`,
-      `*Email:* ${user.email}`,
+      `*No. HP:* ${user.phone ?? "-"}`,
+      `*Email:* ${user.email ?? "-"}`,
+      `*Metode:* ${methodLabel(order.method)}`,
+      `*Paket:* ${formatCredits(order.packs, creditsPerPack)}`,
       `*Jumlah:* ${formatRupiah(order.amount)}`,
-      `*Paket:* ${order.packs} pack`,
       proofFullUrl ? `*Bukti:* ${proofFullUrl}` : `⚠️ Belum ada bukti transfer`,
       ``,
       `✅ *SETUJUI:*\n${approveUrl}`,
@@ -95,10 +118,15 @@ export async function notifyGatewayPaid(orderId: string): Promise<void> {
   if (!adminPhone) return;
 
   try {
-    const order = await db.order.findUnique({
-      where: { id: orderId },
-      include: { user: { select: { name: true, email: true } } },
-    });
+    const [order, creditsPerPack] = await Promise.all([
+      db.order.findUnique({
+        where: { id: orderId },
+        include: {
+          user: { select: { name: true, email: true, phone: true } },
+        },
+      }),
+      getCreditsPerPack(),
+    ]);
     if (!order?.user) return;
 
     const lines = [
@@ -106,9 +134,11 @@ export async function notifyGatewayPaid(orderId: string): Promise<void> {
       ``,
       `*ID:* \`${order.id}\``,
       `*Nama:* ${order.user.name}`,
-      `*Email:* ${order.user.email}`,
+      `*No. HP:* ${order.user.phone ?? "-"}`,
+      `*Email:* ${order.user.email ?? "-"}`,
+      `*Metode:* ${methodLabel(order.method)}`,
+      `*Paket:* ${formatCredits(order.packs, creditsPerPack)}`,
       `*Jumlah:* ${formatRupiah(order.amount)}`,
-      `*Paket:* ${order.packs} pack`,
       `*Status:* Otomatis disetujui ✓`,
     ];
 
