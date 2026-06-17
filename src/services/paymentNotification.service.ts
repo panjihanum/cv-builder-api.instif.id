@@ -75,8 +75,8 @@ export async function notifyManualProofUploaded(
 
     await wa.sendMessage(adminPhone, lines.join("\n"));
 
-    if (proofFullUrl && /\.(jpe?g|png)$/i.test(order.proofUrl ?? "")) {
-      await wa.sendImage(
+    if (proofFullUrl) {
+      await wa.sendFile(
         adminPhone,
         proofFullUrl,
         `Bukti pembayaran — ${user.name} (${order.id})`

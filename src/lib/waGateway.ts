@@ -74,27 +74,34 @@ export async function sendMessage(
   phone: string,
   message: string
 ): Promise<void> {
-  const result = await call("/message/send", { phone, message });
+  const result = await call("/send", {
+    phone,
+    message,
+    appId: "cv-builder",
+    purpose: "NOTIF",
+  });
   if (!result.ok) {
     console.error(`[WA] Gagal kirim pesan ke ${phone}:`, result.error);
   }
 }
 
 /**
- * Send an image (by URL) with a caption. Fails silently.
+ * Send a file (image/pdf by URL) with a caption. Fails silently.
  */
-export async function sendImage(
+export async function sendFile(
   phone: string,
-  imageUrl: string,
+  fileUrl: string,
   caption: string
 ): Promise<void> {
-  const result = await call("/message/send-image", {
+  const result = await call("/send-image", {
     phone,
-    imageUrl,
+    fileUrl,
     caption,
+    appId: "cv-builder",
+    purpose: "NOTIF",
   });
   if (!result.ok) {
-    console.error(`[WA] Gagal kirim gambar ke ${phone}:`, result.error);
+    console.error(`[WA] Gagal kirim file ke ${phone}:`, result.error);
   }
 }
 
