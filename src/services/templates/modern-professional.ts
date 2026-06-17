@@ -25,5 +25,5 @@ ul { margin: 3px 0 0; padding-left: 17px; color: #475569; }
 
 export function renderModernProfessional(data: CvData): string {
   const body = `<main>${renderHeader(data)}${renderBodySections(data)}</main>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

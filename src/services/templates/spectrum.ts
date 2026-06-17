@@ -12,6 +12,7 @@ import {
   linkIconSvg,
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const ACCENT_BG = ["#ffe4e6", "#ede9fe", "#dbeafe", "#ccfbf1", "#fef3c7"];
 const ACCENT_TEXT = ["#be123c", "#6d28d9", "#1d4ed8", "#0f766e", "#92400e"];
@@ -47,6 +48,7 @@ function section(title: string, content: string): string {
 }
 
 export function renderSpectrum(data: CvData): string {
+  const t = getCvLabels(data.language);
   const contactParts = [
     data.personal.email
       ? `<span>${linkIconSvg("mail", 11)}${escapeHtml(data.personal.email)}</span>`
@@ -79,12 +81,12 @@ export function renderSpectrum(data: CvData): string {
   </div>`;
 
   const summary = data.summary.trim()
-    ? section("Tentang Saya", renderSummary(data.summary))
+    ? section(t.summary, renderSummary(data.summary))
     : "";
 
   const skills = data.skills.filter((s) => s.name.trim()).length
     ? section(
-        "Keahlian",
+        t.skills,
         `<div class="chip-wrap">${data.skills
           .filter((s) => s.name.trim())
           .map((s, i) => {
@@ -100,13 +102,18 @@ export function renderSpectrum(data: CvData): string {
 
   const experience = data.experience.length
     ? section(
-        "Pengalaman Kerja",
+        t.experience,
         data.experience
           .map((item, i) => {
             const border = ACCENT_BORDER[i % ACCENT_BORDER.length];
             const dateColor = ACCENT_TEXT[i % ACCENT_TEXT.length];
             const date = escapeHtml(
-              formatDateRange(item.startDate, item.endDate, item.current)
+              formatDateRange(
+                item.startDate,
+                item.endDate,
+                item.current,
+                data.language
+              )
             );
             const meta = joinNonEmpty(
               [item.company, item.location].map(escapeHtml),
@@ -124,11 +131,16 @@ export function renderSpectrum(data: CvData): string {
 
   const education = data.education.length
     ? section(
-        "Pendidikan",
+        t.education,
         data.education
           .map((item) => {
             const date = escapeHtml(
-              formatDateRange(item.startDate, item.endDate, false)
+              formatDateRange(
+                item.startDate,
+                item.endDate,
+                false,
+                data.language
+              )
             );
             const meta = joinNonEmpty(
               [
@@ -136,7 +148,7 @@ export function renderSpectrum(data: CvData): string {
                   .filter(Boolean)
                   .map(escapeHtml)
                   .join(" "),
-                item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+                item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
               ],
               " · "
             );
@@ -152,7 +164,7 @@ export function renderSpectrum(data: CvData): string {
 
   const projects = data.projects.length
     ? section(
-        "Proyek",
+        t.projects,
         data.projects
           .map((p) => {
             const heading = joinNonEmpty(
@@ -169,7 +181,7 @@ export function renderSpectrum(data: CvData): string {
 
   const certifications = data.certifications.length
     ? section(
-        "Sertifikasi",
+        t.certifications,
         `<div class="chip-wrap">${data.certifications
           .map((c, i) => {
             const bg = ACCENT_BG[i % ACCENT_BG.length];
@@ -186,7 +198,7 @@ export function renderSpectrum(data: CvData): string {
 
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
-        "Bahasa",
+        t.languages,
         `<div class="chip-wrap">${data.languages
           .filter((l) => l.name.trim())
           .map((l, i) => {
@@ -204,7 +216,7 @@ export function renderSpectrum(data: CvData): string {
   const custom = data.customSections
     .map((cs) =>
       section(
-        cs.title || "Lainnya",
+        cs.title || t.other,
         cs.items
           .map((item) => {
             const h = item.heading
@@ -218,5 +230,5 @@ export function renderSpectrum(data: CvData): string {
     .join("");
 
   const body = `<div class="page">${headerHtml}${summary}${skills}${experience}${education}${projects}${certifications}${languages}${custom}</div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

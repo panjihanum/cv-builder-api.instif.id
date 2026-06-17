@@ -17,6 +17,7 @@ import {
   resolveSectionIcon,
   type SectionIconKey,
 } from "@/services/templates/sectionIcons.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
 
 const BLOB_A =
@@ -144,10 +145,16 @@ function renderHead(data: CvData): string {
 }
 
 function renderExperience(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.experience
     .map((item) => {
       const date = escapeHtml(
-        formatDateRange(item.startDate, item.endDate, item.current)
+        formatDateRange(
+          item.startDate,
+          item.endDate,
+          item.current,
+          data.language
+        )
       );
       const org = joinNonEmpty(
         [item.company, item.location].map(escapeHtml),
@@ -160,10 +167,11 @@ function renderExperience(data: CvData): string {
       }${renderDescription(item.description)}</div>`;
     })
     .join("");
-  return section("experience", "Pengalaman Kerja", "amber", entries);
+  return section("experience", t.experience, "amber", entries);
 }
 
 function renderCustom(data: CvData): string {
+  const t = getCvLabels(data.language);
   return data.customSections
     .map((custom) => {
       const items = custom.items
@@ -176,7 +184,7 @@ function renderCustom(data: CvData): string {
         .join("");
       return section(
         resolveSectionIcon(custom.icon, "custom"),
-        custom.title || "Lainnya",
+        custom.title || t.other,
         "coral",
         items
       );
@@ -185,13 +193,16 @@ function renderCustom(data: CvData): string {
 }
 
 function renderEducation(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.education
     .map((item) => {
       const degree = [item.degree, item.field].filter(Boolean).join(" ");
       const meta = joinNonEmpty(
         [
-          escapeHtml(formatDateRange(item.startDate, item.endDate, false)),
-          item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+          escapeHtml(
+            formatDateRange(item.startDate, item.endDate, false, data.language)
+          ),
+          item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
         ],
         " · "
       );
@@ -202,10 +213,11 @@ function renderEducation(data: CvData): string {
       }</div>`;
     })
     .join("");
-  return section("education", "Pendidikan", "teal", entries);
+  return section("education", t.education, "teal", entries);
 }
 
 function renderSkills(data: CvData): string {
+  const t = getCvLabels(data.language);
   const bars = data.skills
     .filter((skill) => skill.name.trim().length > 0)
     .map(
@@ -217,10 +229,11 @@ function renderSkills(data: CvData): string {
         }%"></span></div></div>`
     )
     .join("");
-  return section("skills", "Keahlian", "amber", bars);
+  return section("skills", t.skills, "amber", bars);
 }
 
 function renderLanguages(data: CvData): string {
+  const t = getCvLabels(data.language);
   const items = data.languages
     .filter((language) => language.name.trim().length > 0)
     .map(
@@ -232,13 +245,14 @@ function renderLanguages(data: CvData): string {
     .join("");
   return section(
     "languages",
-    "Bahasa",
+    t.languages,
     "coral",
     items ? `<ul class="list">${items}</ul>` : ""
   );
 }
 
 function renderCertifications(data: CvData): string {
+  const t = getCvLabels(data.language);
   const items = data.certifications
     .map((certification) =>
       joinNonEmpty(
@@ -251,13 +265,14 @@ function renderCertifications(data: CvData): string {
     .join("");
   return section(
     "certifications",
-    "Sertifikasi",
+    t.certifications,
     "teal",
     items ? `<ul class="list">${items}</ul>` : ""
   );
 }
 
 function renderProjects(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.projects
     .map(
       (project) =>
@@ -267,14 +282,15 @@ function renderProjects(data: CvData): string {
         )}</h3>${renderDescription(project.description)}</div>`
     )
     .join("");
-  return section("projects", "Proyek", "amber", entries);
+  return section("projects", t.projects, "amber", entries);
 }
 
 export function renderBloom(data: CvData): string {
+  const t = getCvLabels(data.language);
   const summary = data.summary.trim()
     ? section(
         "summary",
-        "Tentang Saya",
+        t.summary,
         "teal",
         renderSummary(data.summary, "muted")
       )
@@ -298,5 +314,5 @@ export function renderBloom(data: CvData): string {
   const body = `<div class="page">${decorTopRight}${decorBottomLeft}<div class="content">${renderHead(
     data
   )}<div class="cols">${left}${right}</div></div></div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

@@ -141,7 +141,8 @@ describe("routes/ai improve-section", () => {
     expect(body).toEqual({ data: "Ringkasan rapi", credits: 3 });
     expect(improveService.improveSection).toHaveBeenCalledWith(
       "summary",
-      "ringkasan lama"
+      "ringkasan lama",
+      undefined
     );
     const args = vi.mocked(db.credit.updateMany).mock.calls[0][0];
     expect(args.data).toEqual({ balance: { decrement: 1 } });

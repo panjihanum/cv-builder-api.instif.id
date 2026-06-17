@@ -13,6 +13,7 @@ import {
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const CHIP_BG = ["#ffe4e6", "#ede9fe", "#dbeafe"];
 const CHIP_TEXT = ["#be123c", "#6d28d9", "#1d4ed8"];
@@ -66,6 +67,7 @@ function entry(
 }
 
 export function renderPrism(data: CvData): string {
+  const t = getCvLabels(data.language);
   const photoSrc = photoToDataUrl(data.personal.photoUrl);
   const photo = photoSrc
     ? `<img class="photo" src="${escapeHtml(photoSrc)}" alt="" />`
@@ -100,7 +102,7 @@ export function renderPrism(data: CvData): string {
   )}</h1>${role}<div class="contact">${contactParts}</div></div></div>`;
 
   const skills = data.skills.filter((s) => s.name.trim()).length
-    ? `<p class="s-h-dark">Keahlian</p><div class="chip-wrap">${data.skills
+    ? `<p class="s-h-dark">${escapeHtml(t.skills)}</p><div class="chip-wrap">${data.skills
         .filter((s) => s.name.trim())
         .map((s, i) => {
           const bg = CHIP_BG[i % 3];
@@ -111,7 +113,7 @@ export function renderPrism(data: CvData): string {
     : "";
 
   const languages = data.languages.filter((l) => l.name.trim()).length
-    ? `<p class="s-h-dark">Bahasa</p>${data.languages
+    ? `<p class="s-h-dark">${escapeHtml(t.languages)}</p>${data.languages
         .filter((l) => l.name.trim())
         .map(
           (l) =>
@@ -123,7 +125,7 @@ export function renderPrism(data: CvData): string {
     : "";
 
   const certs = data.certifications.filter((c) => c.name.trim()).length
-    ? `<p class="s-h-dark">Sertifikasi</p>${data.certifications
+    ? `<p class="s-h-dark">${escapeHtml(t.certifications)}</p>${data.certifications
         .filter((c) => c.name.trim())
         .map(
           (c) =>
@@ -137,15 +139,20 @@ export function renderPrism(data: CvData): string {
   const sidebar = `<div class="sidebar">${skills}${languages}${certs}</div>`;
 
   const summary = data.summary.trim()
-    ? `<p class="sec-h">Tentang Saya</p>${renderSummary(data.summary)}`
+    ? `<p class="sec-h">${escapeHtml(t.summary)}</p>${renderSummary(data.summary)}`
     : "";
 
   const experience = data.experience.length
-    ? `<p class="sec-h">Pengalaman</p>${data.experience
+    ? `<p class="sec-h">${escapeHtml(t.experience)}</p>${data.experience
         .map((item) =>
           entry(
             escapeHtml(
-              formatDateRange(item.startDate, item.endDate, item.current)
+              formatDateRange(
+                item.startDate,
+                item.endDate,
+                item.current,
+                data.language
+              )
             ),
             "#e11d48",
             escapeHtml(item.position),
@@ -157,10 +164,17 @@ export function renderPrism(data: CvData): string {
     : "";
 
   const education = data.education.length
-    ? `<p class="sec-h">Pendidikan</p>${data.education
+    ? `<p class="sec-h">${escapeHtml(t.education)}</p>${data.education
         .map((item) =>
           entry(
-            escapeHtml(formatDateRange(item.startDate, item.endDate, false)),
+            escapeHtml(
+              formatDateRange(
+                item.startDate,
+                item.endDate,
+                false,
+                data.language
+              )
+            ),
             "#a855f7",
             escapeHtml(item.institution),
             joinNonEmpty(
@@ -169,7 +183,7 @@ export function renderPrism(data: CvData): string {
                   .filter(Boolean)
                   .map(escapeHtml)
                   .join(" "),
-                item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+                item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
               ],
               " · "
             ),
@@ -180,7 +194,7 @@ export function renderPrism(data: CvData): string {
     : "";
 
   const projects = data.projects.length
-    ? `<p class="sec-h">Proyek</p>${data.projects
+    ? `<p class="sec-h">${escapeHtml(t.projects)}</p>${data.projects
         .map((p) =>
           entry(
             "",
@@ -207,12 +221,12 @@ export function renderPrism(data: CvData): string {
         )
         .join("");
       return items
-        ? `<p class="sec-h">${escapeHtml(cs.title || "Lainnya")}</p>${items}`
+        ? `<p class="sec-h">${escapeHtml(cs.title || t.other)}</p>${items}`
         : "";
     })
     .join("");
 
   const mainContent = `<div class="main">${summary}${experience}${education}${projects}${custom}</div>`;
   const body = `${banner}<div class="body">${sidebar}${mainContent}</div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

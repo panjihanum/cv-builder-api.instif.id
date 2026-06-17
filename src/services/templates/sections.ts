@@ -6,6 +6,7 @@ import {
   renderDescription,
   renderSummary,
 } from "@/services/templates/shared.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 function section(title: string, content: string, className = ""): string {
   if (!content) return "";
@@ -35,7 +36,10 @@ export function renderHeader(data: CvData): string {
 
 export function renderSummarySection(data: CvData): string {
   if (!data.summary.trim()) return "";
-  return section("Summary", renderSummary(data.summary));
+  return section(
+    getCvLabels(data.language).summary,
+    renderSummary(data.summary)
+  );
 }
 
 export function renderExperienceSection(data: CvData): string {
@@ -52,7 +56,8 @@ export function renderExperienceSection(data: CvData): string {
             formatDateRange(
               experience.startDate,
               experience.endDate,
-              experience.current
+              experience.current,
+              data.language
             )
           ),
         ],
@@ -64,7 +69,7 @@ export function renderExperienceSection(data: CvData): string {
       return `<article class="entry"><h3>${heading}</h3>${metaLine}${description}</article>`;
     })
     .join("");
-  return section("Work Experience", entries);
+  return section(getCvLabels(data.language).experience, entries);
 }
 
 export function renderEducationSection(data: CvData): string {
@@ -79,13 +84,18 @@ export function renderEducationSection(data: CvData): string {
         ", "
       );
       const gpa = education.gpa.trim()
-        ? `GPA ${escapeHtml(education.gpa)}`
+        ? `${getCvLabels(data.language).gpa} ${escapeHtml(education.gpa)}`
         : "";
       const meta = joinNonEmpty(
         [
           detail,
           escapeHtml(
-            formatDateRange(education.startDate, education.endDate, false)
+            formatDateRange(
+              education.startDate,
+              education.endDate,
+              false,
+              data.language
+            )
           ),
           gpa,
         ],
@@ -97,7 +107,7 @@ export function renderEducationSection(data: CvData): string {
       return `<article class="entry"><h3>${heading}</h3>${metaLine}${description}</article>`;
     })
     .join("");
-  return section("Education", entries);
+  return section(getCvLabels(data.language).education, entries);
 }
 
 export function renderSkillItems(data: CvData): string {
@@ -112,7 +122,7 @@ export function renderSkillItems(data: CvData): string {
 export function renderSkillsSection(data: CvData): string {
   const items = renderSkillItems(data);
   return section(
-    "Skills",
+    getCvLabels(data.language).skills,
     items ? `<ul class="inline-list">${items}</ul>` : ""
   );
 }
@@ -129,7 +139,7 @@ export function renderProjectsSection(data: CvData): string {
       return `<article class="entry"><h3>${heading}</h3>${description}</article>`;
     })
     .join("");
-  return section("Projects", entries);
+  return section(getCvLabels(data.language).projects, entries);
 }
 
 export function renderCertificationsSection(data: CvData): string {
@@ -145,7 +155,10 @@ export function renderCertificationsSection(data: CvData): string {
     .filter((item) => item.length > 0)
     .map((item) => `<li>${item}</li>`)
     .join("");
-  return section("Certifications", items ? `<ul>${items}</ul>` : "");
+  return section(
+    getCvLabels(data.language).certifications,
+    items ? `<ul>${items}</ul>` : ""
+  );
 }
 
 export function renderLanguageItems(data: CvData): string {
@@ -163,7 +176,10 @@ export function renderLanguageItems(data: CvData): string {
 
 export function renderLanguagesSection(data: CvData): string {
   const items = renderLanguageItems(data);
-  return section("Languages", items ? `<ul>${items}</ul>` : "");
+  return section(
+    getCvLabels(data.language).languages,
+    items ? `<ul>${items}</ul>` : ""
+  );
 }
 
 export function renderCustomSections(data: CvData): string {
@@ -181,7 +197,7 @@ export function renderCustomSections(data: CvData): string {
             : "";
         })
         .join("");
-      return section(custom.title || "Other", items);
+      return section(custom.title || getCvLabels(data.language).other, items);
     })
     .join("");
 }

@@ -28,6 +28,7 @@ const cvFileRule = {
 const improveSectionSchema = z.object({
   section: z.enum(improveService.IMPROVABLE_SECTIONS),
   data: z.unknown(),
+  language: z.enum(["en", "id", "zh"]).optional(),
 });
 
 const polishCvSchema = z.object({
@@ -88,7 +89,7 @@ aiRoutes.post(
   validate("json", improveSectionSchema),
   async (c) => {
     const userId = c.get("user").sub;
-    const { section, data: sectionData } = c.req.valid("json");
+    const { section, data: sectionData, language } = c.req.valid("json");
     const cost = (await getCreditCosts()).aiSectionImprove;
     await creditService.assertCreditBalance(userId, cost);
     const start = Date.now();
@@ -99,7 +100,11 @@ aiRoutes.post(
     let model = "";
     let improved;
     try {
-      const result = await improveService.improveSection(section, sectionData);
+      const result = await improveService.improveSection(
+        section,
+        sectionData,
+        language
+      );
       improved = result.data;
       inputTokens = result.inputTokens;
       outputTokens = result.outputTokens;

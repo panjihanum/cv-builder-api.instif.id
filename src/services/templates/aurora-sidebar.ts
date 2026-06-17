@@ -1,5 +1,6 @@
 import type { CvData } from "@/lib/cvData.js";
 import { escapeHtml, joinNonEmpty } from "@/services/templates/shared.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 import { renderPhoto } from "@/services/templates/photo.js";
 
 function sidebarBlock(title: string, items: string): string {
@@ -20,6 +21,7 @@ function renderSkillDots(level: number): string {
 }
 
 export function renderAuroraSidebar(data: CvData): string {
+  const t = getCvLabels(data.language);
   const contact = toListItems(
     [data.personal.email, data.personal.phone, data.personal.address].map(
       escapeHtml
@@ -48,10 +50,10 @@ export function renderAuroraSidebar(data: CvData): string {
   return [
     '<aside class="sidebar">',
     renderPhoto(data.personal.photoUrl),
-    sidebarBlock("Kontak", contact),
+    sidebarBlock(t.contact, contact),
     sidebarBlock("Tautan", links),
-    sidebarBlock("Keahlian", skills),
-    sidebarBlock("Bahasa", languages),
+    sidebarBlock(t.skills, skills),
+    sidebarBlock(t.languages, languages),
     "</aside>",
   ].join("");
 }

@@ -7,6 +7,7 @@ import {
   renderDescription,
   renderSummary,
 } from "@/services/templates/shared.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -36,6 +37,7 @@ u { text-decoration: underline; }
 
 export function renderCleanSimple(data: CvData): string {
   const { personal } = data;
+  const t = getCvLabels(data.language);
 
   const contact = [
     personal.email,
@@ -59,7 +61,7 @@ export function renderCleanSimple(data: CvData): string {
 
   if (data.summary.trim()) {
     sections.push(
-      `<section><h2>Ringkasan</h2>${renderSummary(data.summary)}</section>`
+      `<section><h2>${t.summary}</h2>${renderSummary(data.summary)}</section>`
     );
   }
 
@@ -69,7 +71,8 @@ export function renderCleanSimple(data: CvData): string {
         const dateRange = formatDateRange(
           exp.startDate,
           exp.endDate,
-          exp.current
+          exp.current,
+          data.language
         );
         const sub = joinNonEmpty(
           [escapeHtml(exp.company), escapeHtml(exp.location)],
@@ -83,18 +86,23 @@ export function renderCleanSimple(data: CvData): string {
       </div>`;
       })
       .join("");
-    sections.push(`<section><h2>Pengalaman Kerja</h2>${entries}</section>`);
+    sections.push(`<section><h2>${t.experience}</h2>${entries}</section>`);
   }
 
   if (data.education.length > 0) {
     const entries = data.education
       .map((edu) => {
-        const dateRange = formatDateRange(edu.startDate, edu.endDate, false);
+        const dateRange = formatDateRange(
+          edu.startDate,
+          edu.endDate,
+          false,
+          data.language
+        );
         const detail = joinNonEmpty(
           [escapeHtml(edu.degree), escapeHtml(edu.field)],
           " — "
         );
-        const gpa = edu.gpa ? `IPK ${escapeHtml(edu.gpa)}` : "";
+        const gpa = edu.gpa ? `${t.gpa} ${escapeHtml(edu.gpa)}` : "";
         const sub = joinNonEmpty([detail, gpa], " · ");
         return `<div class="entry">
         <div class="row"><span class="entry-title">${escapeHtml(edu.institution)}</span><span class="entry-date">${escapeHtml(dateRange)}</span></div>
@@ -102,14 +110,14 @@ export function renderCleanSimple(data: CvData): string {
       </div>`;
       })
       .join("");
-    sections.push(`<section><h2>Pendidikan</h2>${entries}</section>`);
+    sections.push(`<section><h2>${t.education}</h2>${entries}</section>`);
   }
 
   if (data.skills.length > 0) {
     const items = data.skills
       .map((s) => `<span class="inline">${escapeHtml(s.name)}</span>`)
       .join("");
-    sections.push(`<section><h2>Keahlian</h2><div>${items}</div></section>`);
+    sections.push(`<section><h2>${t.skills}</h2><div>${items}</div></section>`);
   }
 
   if (data.projects.length > 0) {
@@ -123,7 +131,7 @@ export function renderCleanSimple(data: CvData): string {
         return `<div class="entry"><div class="entry-title">${title}</div>${desc}</div>`;
       })
       .join("");
-    sections.push(`<section><h2>Proyek</h2>${entries}</section>`);
+    sections.push(`<section><h2>${t.projects}</h2>${entries}</section>`);
   }
 
   if (data.certifications.length > 0) {
@@ -131,12 +139,14 @@ export function renderCleanSimple(data: CvData): string {
       .map((c) => {
         const parts = joinNonEmpty([c.name, c.issuer].map(escapeHtml), " — ");
         const date = c.date
-          ? ` (${escapeHtml(formatDateRange(c.date, "", false))})`
+          ? ` (${escapeHtml(formatDateRange(c.date, "", false, data.language))})`
           : "";
         return `<li>${parts}${date}</li>`;
       })
       .join("");
-    sections.push(`<section><h2>Sertifikasi</h2><ul>${items}</ul></section>`);
+    sections.push(
+      `<section><h2>${t.certifications}</h2><ul>${items}</ul></section>`
+    );
   }
 
   if (data.languages.length > 0) {
@@ -146,7 +156,9 @@ export function renderCleanSimple(data: CvData): string {
         return `<span class="inline">${escapeHtml(l.name)}${prof}</span>`;
       })
       .join("");
-    sections.push(`<section><h2>Bahasa</h2><div>${items}</div></section>`);
+    sections.push(
+      `<section><h2>${t.languages}</h2><div>${items}</div></section>`
+    );
   }
 
   data.customSections.forEach((cs) => {
@@ -161,10 +173,10 @@ export function renderCleanSimple(data: CvData): string {
       })
       .join("");
     sections.push(
-      `<section><h2>${escapeHtml(cs.title || "Lainnya")}</h2>${items}</section>`
+      `<section><h2>${escapeHtml(cs.title || t.other)}</h2>${items}</section>`
     );
   });
 
   const body = `<main>${header}${sections.join("")}</main>`;
-  return documentShell(personal.fullName, css, body);
+  return documentShell(personal.fullName, css, body, data.language);
 }

@@ -12,6 +12,7 @@ import {
   linkIconSvg,
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
 
 const css = `
@@ -70,6 +71,7 @@ function entry(
 }
 
 function renderSidebar(data: CvData): string {
+  const t = getCvLabels(data.language);
   const photoSrc = photoToDataUrl(data.personal.photoUrl);
   const photo = photoSrc
     ? `<img class="photo" src="${escapeHtml(photoSrc)}" alt="" />`
@@ -100,11 +102,11 @@ function renderSidebar(data: CvData): string {
     .join("");
 
   const contact = contactRows
-    ? `${sideHeader("Kontak")}<ul class="s-list">${contactRows}</ul>`
+    ? `${sideHeader(t.contact)}<ul class="s-list">${contactRows}</ul>`
     : "";
 
   const skills = data.skills.filter((s) => s.name.trim()).length
-    ? `${sideHeader("Keahlian")}${data.skills
+    ? `${sideHeader(t.skills)}${data.skills
         .filter((s) => s.name.trim())
         .map(
           (s) =>
@@ -114,7 +116,7 @@ function renderSidebar(data: CvData): string {
     : "";
 
   const languages = data.languages.filter((l) => l.name.trim()).length
-    ? `${sideHeader("Bahasa")}<ul class="s-list">${data.languages
+    ? `${sideHeader(t.languages)}<ul class="s-list">${data.languages
         .filter((l) => l.name.trim())
         .map(
           (l) =>
@@ -126,7 +128,7 @@ function renderSidebar(data: CvData): string {
     : "";
 
   const certs = data.certifications.filter((c) => c.name.trim()).length
-    ? `${sideHeader("Sertifikasi")}<ul class="s-list">${data.certifications
+    ? `${sideHeader(t.certifications)}<ul class="s-list">${data.certifications
         .filter((c) => c.name.trim())
         .map(
           (c) =>
@@ -143,18 +145,24 @@ function renderSidebar(data: CvData): string {
 }
 
 export function renderAtlas(data: CvData): string {
+  const t = getCvLabels(data.language);
   const summary = data.summary.trim()
-    ? mainSection("Profil", renderSummary(data.summary))
+    ? mainSection(t.summary, renderSummary(data.summary))
     : "";
 
   const experience = data.experience.length
     ? mainSection(
-        "Pengalaman Kerja",
+        t.experience,
         data.experience
           .map((item) =>
             entry(
               escapeHtml(
-                formatDateRange(item.startDate, item.endDate, item.current)
+                formatDateRange(
+                  item.startDate,
+                  item.endDate,
+                  item.current,
+                  data.language
+                )
               ),
               escapeHtml(item.position),
               joinNonEmpty(
@@ -170,11 +178,18 @@ export function renderAtlas(data: CvData): string {
 
   const education = data.education.length
     ? mainSection(
-        "Pendidikan",
+        t.education,
         data.education
           .map((item) =>
             entry(
-              escapeHtml(formatDateRange(item.startDate, item.endDate, false)),
+              escapeHtml(
+                formatDateRange(
+                  item.startDate,
+                  item.endDate,
+                  false,
+                  data.language
+                )
+              ),
               escapeHtml(item.institution),
               joinNonEmpty(
                 [
@@ -182,7 +197,7 @@ export function renderAtlas(data: CvData): string {
                     .filter(Boolean)
                     .map(escapeHtml)
                     .join(" "),
-                  item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+                  item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
                 ],
                 " · "
               ),
@@ -195,7 +210,7 @@ export function renderAtlas(data: CvData): string {
 
   const projects = data.projects.length
     ? mainSection(
-        "Proyek",
+        t.projects,
         data.projects
           .map((p) =>
             entry(
@@ -212,7 +227,7 @@ export function renderAtlas(data: CvData): string {
   const custom = data.customSections
     .map((cs) =>
       mainSection(
-        cs.title || "Lainnya",
+        cs.title || t.other,
         cs.items
           .map((item) =>
             entry(
@@ -229,5 +244,5 @@ export function renderAtlas(data: CvData): string {
 
   const mainContent = `<div class="main">${summary}${experience}${education}${projects}${custom}</div>`;
   const body = `<div class="layout">${renderSidebar(data)}${mainContent}</div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

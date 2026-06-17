@@ -82,6 +82,7 @@ const customSectionSchema = z.object({
 });
 
 export const cvDataSchema = z.object({
+  language: z.enum(["en", "id", "zh"]).default("en"),
   personal: personalSchema.prefault({}),
   summary: z.string().default("").describe(RICH_DESCRIPTION_HINT),
   experience: z.array(experienceSchema).default([]),

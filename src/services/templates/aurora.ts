@@ -9,6 +9,7 @@ import {
   renderSummary,
 } from "@/services/templates/shared.js";
 import { renderAuroraSidebar } from "@/services/templates/aurora-sidebar.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -59,6 +60,7 @@ function entry(
 }
 
 function renderExperienceSection(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.experience
     .map((experience) =>
       entry(
@@ -66,7 +68,8 @@ function renderExperienceSection(data: CvData): string {
           formatDateRange(
             experience.startDate,
             experience.endDate,
-            experience.current
+            experience.current,
+            data.language
           )
         ),
         joinNonEmpty(
@@ -79,20 +82,26 @@ function renderExperienceSection(data: CvData): string {
     )
     .join("");
   return section(
-    "Pengalaman",
+    t.experience,
     entries ? `<div class="timeline">${entries}</div>` : ""
   );
 }
 
 function renderEducationSection(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.education
     .map((education) => {
       const gpa = education.gpa.trim()
-        ? `GPA ${escapeHtml(education.gpa)}`
+        ? `${t.gpa} ${escapeHtml(education.gpa)}`
         : "";
       return entry(
         escapeHtml(
-          formatDateRange(education.startDate, education.endDate, false)
+          formatDateRange(
+            education.startDate,
+            education.endDate,
+            false,
+            data.language
+          )
         ),
         escapeHtml(education.institution),
         joinNonEmpty(
@@ -111,10 +120,11 @@ function renderEducationSection(data: CvData): string {
       );
     })
     .join("");
-  return section("Pendidikan", entries);
+  return section(t.education, entries);
 }
 
 function renderProjectsSection(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.projects
     .map((project) =>
       entry(
@@ -125,10 +135,11 @@ function renderProjectsSection(data: CvData): string {
       )
     )
     .join("");
-  return section("Proyek", entries);
+  return section(t.projects, entries);
 }
 
 function renderCertificationsSection(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.certifications
     .map((certification) =>
       joinNonEmpty(
@@ -141,10 +152,11 @@ function renderCertificationsSection(data: CvData): string {
     .filter((item) => item.length > 0)
     .map((item) => `<article class="entry"><h3>${item}</h3></article>`)
     .join("");
-  return section("Sertifikasi", entries);
+  return section(t.certifications, entries);
 }
 
 function renderCustomSections(data: CvData): string {
+  const t = getCvLabels(data.language);
   return data.customSections
     .map((custom) => {
       const items = custom.items
@@ -152,17 +164,18 @@ function renderCustomSections(data: CvData): string {
           entry("", escapeHtml(item.heading), "", renderDescription(item.body))
         )
         .join("");
-      return section(custom.title || "Lainnya", items);
+      return section(custom.title || t.other, items);
     })
     .join("");
 }
 
 function renderMain(data: CvData): string {
+  const t = getCvLabels(data.language);
   const role = data.personal.jobTitle.trim()
     ? `<p class="role">${escapeHtml(data.personal.jobTitle)}</p>`
     : "";
   const summary = data.summary.trim()
-    ? section("Ringkasan", renderSummary(data.summary))
+    ? section(t.summary, renderSummary(data.summary))
     : "";
   return [
     `<div class="main"><h1>${escapeHtml(data.personal.fullName)}</h1>`,
@@ -179,5 +192,5 @@ function renderMain(data: CvData): string {
 
 export function renderAurora(data: CvData): string {
   const body = `<main class="layout">${renderAuroraSidebar(data)}${renderMain(data)}</main>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

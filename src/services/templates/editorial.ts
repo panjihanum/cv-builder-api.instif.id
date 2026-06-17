@@ -17,6 +17,7 @@ import {
   resolveSectionIcon,
   type SectionIconKey,
 } from "@/services/templates/sectionIcons.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -75,15 +76,22 @@ function renderHead(data: CvData): string {
 
 function renderSummarySection(data: CvData): string {
   if (!data.summary.trim()) return "";
-  return `<section>${sectionTitle("summary", "Profil")}${renderSummary(data.summary)}</section>`;
+  const t = getCvLabels(data.language);
+  return `<section>${sectionTitle("summary", t.summary)}${renderSummary(data.summary)}</section>`;
 }
 
 function renderExperience(data: CvData): string {
   if (data.experience.length === 0) return "";
+  const t = getCvLabels(data.language);
   const entries = data.experience
     .map((item) => {
       const date = escapeHtml(
-        formatDateRange(item.startDate, item.endDate, item.current)
+        formatDateRange(
+          item.startDate,
+          item.endDate,
+          item.current,
+          data.language
+        )
       );
       const org = joinNonEmpty(
         [item.company, item.location].map(escapeHtml),
@@ -96,20 +104,21 @@ function renderExperience(data: CvData): string {
       }${renderDescription(item.description)}</div>`;
     })
     .join("");
-  return `<section>${sectionTitle("experience", "Pengalaman")}${entries}</section>`;
+  return `<section>${sectionTitle("experience", t.experience)}${entries}</section>`;
 }
 
 function renderEducation(data: CvData): string {
   if (data.education.length === 0) return "";
+  const t = getCvLabels(data.language);
   const entries = data.education
     .map((item) => {
       const date = escapeHtml(
-        formatDateRange(item.startDate, item.endDate, false)
+        formatDateRange(item.startDate, item.endDate, false, data.language)
       );
       const meta = joinNonEmpty(
         [
           [item.degree, item.field].filter(Boolean).map(escapeHtml).join(" "),
-          item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+          item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
           escapeHtml(item.description),
         ],
         ", "
@@ -121,10 +130,11 @@ function renderEducation(data: CvData): string {
       }</div>`;
     })
     .join("");
-  return `<section>${sectionTitle("education", "Pendidikan")}${entries}</section>`;
+  return `<section>${sectionTitle("education", t.education)}${entries}</section>`;
 }
 
 function renderSkills(data: CvData): string {
+  const t = getCvLabels(data.language);
   const tags = data.skills
     .filter((skill) => skill.name.trim().length > 0)
     .map((skill) => `<span class="tag">${escapeHtml(skill.name)}</span>`)
@@ -132,12 +142,13 @@ function renderSkills(data: CvData): string {
   if (!tags) return "";
   return `<section>${sectionTitle(
     "skills",
-    "Keahlian"
+    t.skills
   )}<div class="tags">${tags}</div></section>`;
 }
 
 function renderProjects(data: CvData): string {
   if (data.projects.length === 0) return "";
+  const t = getCvLabels(data.language);
   const entries = data.projects
     .map(
       (project) =>
@@ -147,10 +158,11 @@ function renderProjects(data: CvData): string {
         )}</h3>${renderDescription(project.description)}</div>`
     )
     .join("");
-  return `<section>${sectionTitle("projects", "Proyek")}${entries}</section>`;
+  return `<section>${sectionTitle("projects", t.projects)}${entries}</section>`;
 }
 
 function renderCertsLanguages(data: CvData): string {
+  const t = getCvLabels(data.language);
   const certs = data.certifications
     .map((certification) =>
       joinNonEmpty(
@@ -174,19 +186,20 @@ function renderCertsLanguages(data: CvData): string {
   const certCol = certs
     ? `<div>${sectionTitle(
         "certifications",
-        "Sertifikasi"
+        t.certifications
       )}<ul class="list">${certs}</ul></div>`
     : "";
   const langCol = languages
     ? `<div>${sectionTitle(
         "languages",
-        "Bahasa"
+        t.languages
       )}<ul class="list">${languages}</ul></div>`
     : "";
   return `<div class="cols">${certCol}${langCol}</div>`;
 }
 
 function renderCustom(data: CvData): string {
+  const t = getCvLabels(data.language);
   return data.customSections
     .map((custom) => {
       const items = custom.items
@@ -200,7 +213,7 @@ function renderCustom(data: CvData): string {
       if (!items) return "";
       return `<section>${sectionTitle(
         resolveSectionIcon(custom.icon, "custom"),
-        custom.title || "Lainnya"
+        custom.title || t.other
       )}${items}</section>`;
     })
     .join("");
@@ -219,5 +232,5 @@ export function renderEditorial(data: CvData): string {
     renderCustom(data),
     "</div>",
   ].join("");
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

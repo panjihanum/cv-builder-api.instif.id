@@ -18,6 +18,7 @@ import {
   type SectionIconKey,
 } from "@/services/templates/sectionIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -76,6 +77,7 @@ function mainSection(
 }
 
 function renderSidebar(data: CvData): string {
+  const t = getCvLabels(data.language);
   const photoSrc = photoToDataUrl(data.personal.photoUrl);
   const photo = photoSrc
     ? `<img class="photo" src="${escapeHtml(photoSrc)}" alt="" />`
@@ -102,7 +104,7 @@ function renderSidebar(data: CvData): string {
     }),
   ].join("");
   const contact = contactRows
-    ? `${sideHeader("summary", "Kontak")}<ul class="s-list">${contactRows}</ul>`
+    ? `${sideHeader("summary", t.contact)}<ul class="s-list">${contactRows}</ul>`
     : "";
 
   const skills = data.skills
@@ -117,7 +119,7 @@ function renderSidebar(data: CvData): string {
     )
     .join("");
   const skillsBlock = skills
-    ? `${sideHeader("skills", "Keahlian")}${skills}`
+    ? `${sideHeader("skills", t.skills)}${skills}`
     : "";
 
   const languages = data.languages
@@ -130,7 +132,7 @@ function renderSidebar(data: CvData): string {
     )
     .join("");
   const langBlock = languages
-    ? `${sideHeader("languages", "Bahasa")}<ul class="s-list">${languages}</ul>`
+    ? `${sideHeader("languages", t.languages)}<ul class="s-list">${languages}</ul>`
     : "";
 
   const certs = data.certifications
@@ -144,7 +146,7 @@ function renderSidebar(data: CvData): string {
     .map((item) => `<li><span class="txt">${item}</span></li>`)
     .join("");
   const certBlock = certs
-    ? `${sideHeader("certifications", "Sertifikasi")}<ul class="s-list">${certs}</ul>`
+    ? `${sideHeader("certifications", t.certifications)}<ul class="s-list">${certs}</ul>`
     : "";
 
   return `<aside class="sidebar">${photo}<h1>${escapeHtml(
@@ -153,10 +155,16 @@ function renderSidebar(data: CvData): string {
 }
 
 function renderExperience(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.experience
     .map((item) => {
       const date = escapeHtml(
-        formatDateRange(item.startDate, item.endDate, item.current)
+        formatDateRange(
+          item.startDate,
+          item.endDate,
+          item.current,
+          data.language
+        )
       );
       const meta = joinNonEmpty(
         [item.company, item.location].map(escapeHtml),
@@ -169,19 +177,20 @@ function renderExperience(data: CvData): string {
       }${renderDescription(item.description)}</div>`;
     })
     .join("");
-  return mainSection("experience", "Pengalaman Kerja", entries);
+  return mainSection("experience", t.experience, entries);
 }
 
 function renderEducation(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.education
     .map((item) => {
       const date = escapeHtml(
-        formatDateRange(item.startDate, item.endDate, false)
+        formatDateRange(item.startDate, item.endDate, false, data.language)
       );
       const meta = joinNonEmpty(
         [
           [item.degree, item.field].filter(Boolean).map(escapeHtml).join(" "),
-          item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+          item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
         ],
         " · "
       );
@@ -192,10 +201,11 @@ function renderEducation(data: CvData): string {
       }</div>`;
     })
     .join("");
-  return mainSection("education", "Pendidikan", entries);
+  return mainSection("education", t.education, entries);
 }
 
 function renderProjects(data: CvData): string {
+  const t = getCvLabels(data.language);
   const entries = data.projects
     .map(
       (project) =>
@@ -205,10 +215,11 @@ function renderProjects(data: CvData): string {
         )}</h3>${renderDescription(project.description)}</div>`
     )
     .join("");
-  return mainSection("projects", "Proyek", entries);
+  return mainSection("projects", t.projects, entries);
 }
 
 function renderCustom(data: CvData): string {
+  const t = getCvLabels(data.language);
   return data.customSections
     .map((custom) => {
       const items = custom.items
@@ -221,7 +232,7 @@ function renderCustom(data: CvData): string {
         .join("");
       return mainSection(
         resolveSectionIcon(custom.icon, "custom"),
-        custom.title || "Lainnya",
+        custom.title || t.other,
         items
       );
     })
@@ -229,8 +240,9 @@ function renderCustom(data: CvData): string {
 }
 
 export function renderVibrant(data: CvData): string {
+  const t = getCvLabels(data.language);
   const summary = data.summary.trim()
-    ? mainSection("summary", "Ringkasan", renderSummary(data.summary, "muted"))
+    ? mainSection("summary", t.summary, renderSummary(data.summary, "muted"))
     : "";
   const main = [
     '<div class="main">',
@@ -242,5 +254,5 @@ export function renderVibrant(data: CvData): string {
     "</div>",
   ].join("");
   const body = `<div class="layout">${renderSidebar(data)}${main}</div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

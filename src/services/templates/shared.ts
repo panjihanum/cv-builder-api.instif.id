@@ -1,3 +1,10 @@
+import {
+  defaultCvLocale,
+  formatCvMonth,
+  getPresentWord,
+  type CvLocale,
+} from "@/services/templates/i18n.js";
+
 export function escapeHtml(value: string): string {
   return value
     .replaceAll("&", "&amp;")
@@ -70,10 +77,16 @@ export function joinNonEmpty(parts: string[], separator: string): string {
 export function formatDateRange(
   startDate: string,
   endDate: string,
-  current: boolean
+  current: boolean,
+  locale: CvLocale = defaultCvLocale
 ): string {
-  const end = current ? "Present" : endDate;
-  return joinNonEmpty([startDate, end], " - ");
+  const start = startDate ? formatCvMonth(startDate, locale) : "";
+  const end = current
+    ? getPresentWord(locale)
+    : endDate
+      ? formatCvMonth(endDate, locale)
+      : "";
+  return joinNonEmpty([start, end], " - ");
 }
 
 /**
@@ -107,11 +120,12 @@ const PAGINATION_CSS = [
 export function documentShell(
   title: string,
   css: string,
-  body: string
+  body: string,
+  locale: CvLocale = defaultCvLocale
 ): string {
   return [
     "<!doctype html>",
-    '<html lang="id">',
+    `<html lang="${locale}">`,
     '<head><meta charset="utf-8" />',
     `<title>${escapeHtml(title || "CV")}</title>`,
     `<style>${css}\n${PAGINATION_CSS}</style>`,

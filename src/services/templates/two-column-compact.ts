@@ -13,6 +13,7 @@ import {
   renderSummarySection,
 } from "@/services/templates/sections.js";
 import { renderPhoto } from "@/services/templates/photo.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -50,6 +51,7 @@ function clampLevel(level: number): number {
 }
 
 function renderSidebar(data: CvData): string {
+  const t = getCvLabels(data.language);
   const { personal } = data;
   const photo = renderPhoto(personal.photoUrl);
   const role = personal.jobTitle.trim()
@@ -68,7 +70,7 @@ function renderSidebar(data: CvData): string {
     .map((part) => `<li>${part}</li>`)
     .join("");
   const contactBlock = contactItems
-    ? `<div class="s-h">Kontak</div><ul class="s-list">${contactItems}</ul>`
+    ? `<div class="s-h">${t.contact}</div><ul class="s-list">${contactItems}</ul>`
     : "";
 
   const skills = data.skills
@@ -82,7 +84,9 @@ function renderSidebar(data: CvData): string {
         }%"></span></div></div>`
     )
     .join("");
-  const skillsBlock = skills ? `<div class="s-h">Keahlian</div>${skills}` : "";
+  const skillsBlock = skills
+    ? `<div class="s-h">${t.skills}</div>${skills}`
+    : "";
 
   const languages = data.languages
     .filter((language) => language.name.trim().length > 0)
@@ -94,7 +98,7 @@ function renderSidebar(data: CvData): string {
     )
     .join("");
   const langBlock = languages
-    ? `<div class="s-h">Bahasa</div><ul class="s-list">${languages}</ul>`
+    ? `<div class="s-h">${t.languages}</div><ul class="s-list">${languages}</ul>`
     : "";
 
   const certs = data.certifications
@@ -104,7 +108,9 @@ function renderSidebar(data: CvData): string {
       const detail = joinNonEmpty(
         [
           escapeHtml(certification.issuer),
-          escapeHtml(formatDateRange(certification.date, "", false)),
+          escapeHtml(
+            formatDateRange(certification.date, "", false, data.language)
+          ),
         ],
         " · "
       );
@@ -113,7 +119,9 @@ function renderSidebar(data: CvData): string {
       }</div>`;
     })
     .join("");
-  const certBlock = certs ? `<div class="s-h">Sertifikasi</div>${certs}` : "";
+  const certBlock = certs
+    ? `<div class="s-h">${t.certifications}</div>${certs}`
+    : "";
 
   return `<aside class="sidebar">${photo}<h1>${escapeHtml(
     personal.fullName
@@ -134,5 +142,5 @@ function renderMain(data: CvData): string {
 
 export function renderTwoColumnCompact(data: CvData): string {
   const body = `<div class="layout">${renderSidebar(data)}${renderMain(data)}</div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

@@ -12,6 +12,7 @@ import {
   resolveLinkIcon,
   linkIconSvg,
 } from "@/services/templates/linkIcons.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -57,6 +58,7 @@ function entry(
 }
 
 export function renderIvory(data: CvData): string {
+  const t = getCvLabels(data.language);
   const contactParts = [
     data.personal.email
       ? `<span>${escapeHtml(data.personal.email)}</span>`
@@ -89,17 +91,22 @@ export function renderIvory(data: CvData): string {
   ${divider()}`;
 
   const summary = data.summary.trim()
-    ? section("Profil", renderSummary(data.summary))
+    ? section(t.summary, renderSummary(data.summary))
     : "";
 
   const experience = data.experience.length
     ? section(
-        "Pengalaman",
+        t.experience,
         data.experience
           .map((item) =>
             entry(
               escapeHtml(
-                formatDateRange(item.startDate, item.endDate, item.current)
+                formatDateRange(
+                  item.startDate,
+                  item.endDate,
+                  item.current,
+                  data.language
+                )
               ),
               escapeHtml(item.position),
               joinNonEmpty(
@@ -115,11 +122,18 @@ export function renderIvory(data: CvData): string {
 
   const education = data.education.length
     ? section(
-        "Pendidikan",
+        t.education,
         data.education
           .map((item) =>
             entry(
-              escapeHtml(formatDateRange(item.startDate, item.endDate, false)),
+              escapeHtml(
+                formatDateRange(
+                  item.startDate,
+                  item.endDate,
+                  false,
+                  data.language
+                )
+              ),
               escapeHtml(item.institution),
               joinNonEmpty(
                 [
@@ -127,7 +141,7 @@ export function renderIvory(data: CvData): string {
                     .filter(Boolean)
                     .map(escapeHtml)
                     .join(" "),
-                  item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+                  item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
                 ],
                 " · "
               ),
@@ -140,7 +154,7 @@ export function renderIvory(data: CvData): string {
 
   const skills = data.skills.filter((s) => s.name.trim()).length
     ? section(
-        "Keahlian",
+        t.skills,
         `<p class="skill-line">${data.skills
           .filter((s) => s.name.trim())
           .map((s) => escapeHtml(s.name))
@@ -150,7 +164,7 @@ export function renderIvory(data: CvData): string {
 
   const projects = data.projects.length
     ? section(
-        "Proyek",
+        t.projects,
         data.projects
           .map((p) =>
             entry(
@@ -166,7 +180,7 @@ export function renderIvory(data: CvData): string {
 
   const certifications = data.certifications.length
     ? section(
-        "Sertifikasi",
+        t.certifications,
         `<ul>${data.certifications
           .map(
             (c) =>
@@ -181,7 +195,7 @@ export function renderIvory(data: CvData): string {
 
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
-        "Bahasa",
+        t.languages,
         `<p class="skill-line">${data.languages
           .filter((l) => l.name.trim())
           .map(
@@ -196,7 +210,7 @@ export function renderIvory(data: CvData): string {
   const custom = data.customSections
     .map((cs) =>
       section(
-        cs.title || "Lainnya",
+        cs.title || t.other,
         cs.items
           .map((item) =>
             entry(
@@ -212,5 +226,5 @@ export function renderIvory(data: CvData): string {
     .join("");
 
   const body = `<div class="page">${headerHtml}${summary}${experience}${education}${skills}${projects}${certifications}${languages}${custom}</div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

@@ -121,7 +121,28 @@ describe("template.service", () => {
 
   it("merender tanggal berjalan sebagai present", () => {
     const html = templateService.renderTemplate("classic-ats", sampleData);
-    expect(html).toContain("2021-03 - Present");
+    expect(html).toContain("Mar 2021 - Present");
+  });
+
+  it("melokalkan heading dan tanggal sesuai bahasa CV", () => {
+    const en = templateService.renderTemplate("classic-ats", sampleData);
+    expect(en).toContain("Work Experience");
+    expect(en).toContain("Mar 2021 - Present");
+
+    const id = templateService.renderTemplate("classic-ats", {
+      ...sampleData,
+      language: "id",
+    });
+    expect(id).toContain("Pengalaman Kerja");
+    expect(id).toContain("Pendidikan");
+    expect(id).toContain("Mar 2021 - Sekarang");
+
+    const zh = templateService.renderTemplate("classic-ats", {
+      ...sampleData,
+      language: "zh",
+    });
+    expect(zh).toContain("工作经历");
+    expect(zh).toContain("2021年3月 - 至今");
   });
 
   it("mempertahankan format rich text (poin, bold, italic, underline) dari deskripsi html", () => {
@@ -336,9 +357,12 @@ describe("template.service aurora dan foto", () => {
     },
   });
 
-  it("mendaftarkan aurora dengan sidebar gradien dan heading indonesia", () => {
+  it("mendaftarkan aurora dengan sidebar gradien dan heading terlokalisasi", () => {
     expect(allTemplateIds).toContain("aurora");
-    const html = templateService.renderTemplate("aurora", sampleData);
+    const html = templateService.renderTemplate("aurora", {
+      ...sampleData,
+      language: "id",
+    });
     expect(html).toContain("linear-gradient(160deg,");
     expect(html).toContain("Ringkasan");
     expect(html).toContain("Pengalaman");

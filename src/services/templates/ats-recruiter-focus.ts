@@ -41,5 +41,5 @@ export function renderAtsRecruiterFocus(data: CvData): string {
   )}${renderProjectsSection(data)}${renderCertificationsSection(
     data
   )}${renderLanguagesSection(data)}${renderCustomSections(data)}</main>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

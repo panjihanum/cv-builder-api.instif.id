@@ -13,6 +13,7 @@ import {
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
+import { getCvLabels } from "@/services/templates/i18n.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -64,6 +65,7 @@ function entry(
 }
 
 export function renderSilhouette(data: CvData): string {
+  const t = getCvLabels(data.language);
   const photoSrc = photoToDataUrl(data.personal.photoUrl);
   const photo = photoSrc
     ? `<img class="photo" src="${escapeHtml(photoSrc)}" alt="" />`
@@ -123,24 +125,29 @@ export function renderSilhouette(data: CvData): string {
       <h1>${escapeHtml(data.personal.fullName)}</h1>
       ${role}
     </div>
-    ${contactItems ? `<h2>Kontak</h2><ul>${contactItems}</ul>` : ""}
-    ${skillItems ? `<h2>Keahlian</h2><ul>${skillItems}</ul>` : ""}
-    ${langItems ? `<h2>Bahasa</h2><ul>${langItems}</ul>` : ""}
-    ${certItems ? `<h2>Sertifikasi</h2><ul>${certItems}</ul>` : ""}
+    ${contactItems ? `<h2>${escapeHtml(t.contact)}</h2><ul>${contactItems}</ul>` : ""}
+    ${skillItems ? `<h2>${escapeHtml(t.skills)}</h2><ul>${skillItems}</ul>` : ""}
+    ${langItems ? `<h2>${escapeHtml(t.languages)}</h2><ul>${langItems}</ul>` : ""}
+    ${certItems ? `<h2>${escapeHtml(t.certifications)}</h2><ul>${certItems}</ul>` : ""}
   </div>`;
 
   const summary = data.summary.trim()
-    ? mainSection("Ringkasan", renderSummary(data.summary))
+    ? mainSection(t.summary, renderSummary(data.summary))
     : "";
 
   const experience = data.experience.length
     ? mainSection(
-        "Pengalaman Kerja",
+        t.experience,
         data.experience
           .map((item) =>
             entry(
               escapeHtml(
-                formatDateRange(item.startDate, item.endDate, item.current)
+                formatDateRange(
+                  item.startDate,
+                  item.endDate,
+                  item.current,
+                  data.language
+                )
               ),
               escapeHtml(item.position),
               joinNonEmpty(
@@ -156,11 +163,18 @@ export function renderSilhouette(data: CvData): string {
 
   const education = data.education.length
     ? mainSection(
-        "Pendidikan",
+        t.education,
         data.education
           .map((item) =>
             entry(
-              escapeHtml(formatDateRange(item.startDate, item.endDate, false)),
+              escapeHtml(
+                formatDateRange(
+                  item.startDate,
+                  item.endDate,
+                  false,
+                  data.language
+                )
+              ),
               escapeHtml(item.institution),
               joinNonEmpty(
                 [
@@ -168,7 +182,7 @@ export function renderSilhouette(data: CvData): string {
                     .filter(Boolean)
                     .map(escapeHtml)
                     .join(" "),
-                  item.gpa.trim() ? `IPK ${escapeHtml(item.gpa)}` : "",
+                  item.gpa.trim() ? `${t.gpa} ${escapeHtml(item.gpa)}` : "",
                 ],
                 " · "
               ),
@@ -181,7 +195,7 @@ export function renderSilhouette(data: CvData): string {
 
   const projects = data.projects.length
     ? mainSection(
-        "Proyek",
+        t.projects,
         data.projects
           .map((p) =>
             entry(
@@ -198,7 +212,7 @@ export function renderSilhouette(data: CvData): string {
   const custom = data.customSections
     .map((cs) =>
       mainSection(
-        cs.title || "Lainnya",
+        cs.title || t.other,
         cs.items
           .map((item) =>
             entry(
@@ -215,5 +229,5 @@ export function renderSilhouette(data: CvData): string {
 
   const main = `<div class="main">${summary}${experience}${education}${projects}${custom}</div>`;
   const body = `<div class="layout">${sidebar}${main}</div>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }

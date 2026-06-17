@@ -34,5 +34,5 @@ ul { margin: 3px 0 0; padding-left: 18px; }
 export function renderExecutiveSenior(data: CvData): string {
   const headerRow = `<div class="header-row">${renderHeader(data)}${renderPhoto(data.personal.photoUrl)}</div>`;
   const body = `<main>${headerRow}${renderBodySections(data)}</main>`;
-  return documentShell(data.personal.fullName, css, body);
+  return documentShell(data.personal.fullName, css, body, data.language);
 }
