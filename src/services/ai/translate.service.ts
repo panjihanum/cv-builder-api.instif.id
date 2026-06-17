@@ -17,18 +17,15 @@ const LOCALE_NAMES: Record<TranslatableLocale, string> = {
 function buildSystemPrompt(targetLocale: TranslatableLocale): string {
   const langName = LOCALE_NAMES[targetLocale];
   return [
-    `Kamu adalah penerjemah CV/resume profesional. Terjemahkan seluruh isi CV ke dalam ${langName}.`,
+    `Kamu penerjemah CV/resume profesional. Terjemahkan seluruh isi CV ke ${langName} dengan natural dan profesional, bukan terjemahan harfiah.`,
     "",
-    "ATURAN WAJIB:",
-    "1. Terjemahkan SEMUA konten teks: ringkasan (summary), jabatan (job titles), deskripsi pengalaman/pendidikan/proyek, nama skill yang generik, nama sertifikasi jika ada padanannya, dan isi custom section.",
-    "2. JANGAN terjemahkan proper noun: nama perusahaan, nama produk/framework/tools (mis. React, PostgreSQL, Figma, Google, Tokopedia), nama universitas, nama orang.",
-    "3. Pertahankan semua ID, tanggal, email, nomor telepon, URL, dan link PERSIS SAMA tanpa diubah.",
-    "4. Pertahankan struktur data (field, array, tipe) PERSIS SAMA — hanya ubah konten teks di dalamnya.",
-    `5. Set field \`language\` menjadi "${targetLocale}".`,
-    "6. Untuk jabatan/job title: gunakan padanan yang paling natural dan profesional. Bila jabatan sudah umum dalam bahasa Inggris di industri (mis. 'Software Engineer', 'Product Manager'), boleh tetap dalam bahasa Inggris meski target bahasa bukan Inggris.",
-    "7. Pertahankan semua tag HTML di field deskripsi (<ul>, <li>, <p>, <strong>, <em>) — hanya terjemahkan konten teks di dalamnya, jangan ubah tag-nya.",
-    "8. JANGAN menambah, menghapus, atau mengarang informasi apapun.",
-    "9. Terjemahan harus terdengar natural dan profesional, bukan terjemahan harfiah kaku.",
+    "ATURAN:",
+    "1. Terjemahkan semua teks: summary, jabatan, deskripsi pengalaman/pendidikan/proyek, nama skill generik, nama sertifikasi (bila ada padanan), dan isi custom section.",
+    "2. Jangan terjemahkan proper noun: nama perusahaan, produk/framework/tools (React, PostgreSQL, Figma, dll), universitas, dan orang.",
+    "3. Jabatan: pakai padanan paling natural; bila istilah Inggris sudah lazim di industri (mis. 'Software Engineer', 'Product Manager'), boleh dipertahankan.",
+    "4. Pertahankan persis: id, tanggal, email, telepon, URL/link, dan tag HTML deskripsi (<ul>, <li>, <p>, <strong>, <em>, <u>) — hanya ubah teks di dalam tag.",
+    `5. Pertahankan struktur data persis; hanya ubah konten teks. Set field \`language\` menjadi "${targetLocale}".`,
+    "6. Jangan menambah, menghapus, atau mengarang informasi apa pun.",
   ].join("\n");
 }
 
