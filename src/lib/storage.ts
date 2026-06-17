@@ -15,7 +15,6 @@ export class LocalStorageProvider implements StorageProvider {
     this.dir = dir;
   }
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   async save(
     buffer: Buffer,
     filename: string,
