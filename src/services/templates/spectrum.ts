@@ -13,6 +13,7 @@ import {
   resolveLinkIcon,
 } from "@/services/templates/linkIcons.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { photoToDataUrl } from "@/services/templates/photo.js";
 
 const ACCENT_BG = ["#ffe4e6", "#ede9fe", "#dbeafe", "#ccfbf1", "#fef3c7"];
 const ACCENT_TEXT = ["#be123c", "#6d28d9", "#1d4ed8", "#0f766e", "#92400e"];
@@ -24,6 +25,8 @@ body { font-family: Helvetica, Arial, sans-serif; color: #262626; font-size: 9.5
 .page { padding: 36px 46px; }
 h1 { font-size: 22pt; font-weight: 800; letter-spacing: -0.5px; color: #0a0a0a; margin: 0 0 2px; }
 .role { margin: 0; font-size: 9pt; font-weight: 700; background: linear-gradient(90deg, #f43f5e, #8b5cf6, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.head-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 16px; }
+.head-top .photo { width: 76px; height: 76px; border-radius: 50%; object-fit: cover; flex-shrink: 0; box-shadow: 0 0 0 1px #ffffff, 0 0 0 3px #a78bfa; }
 .contact { display: flex; flex-wrap: wrap; gap: 5px 14px; font-size: 7.5pt; color: #6b7280; margin: 8px 0 0; }
 .contact span { display: flex; align-items: center; gap: 4px; }
 .gradient-line { height: 2px; background: linear-gradient(90deg, #f43f5e, #8b5cf6, #3b82f6); margin: 12px 0; }
@@ -73,9 +76,19 @@ export function renderSpectrum(data: CvData): string {
     ? `<p class="role">${escapeHtml(data.personal.jobTitle)}</p>`
     : "";
 
+  const photoSrc = photoToDataUrl(data.personal.photoUrl);
+  const photo = photoSrc
+    ? `<img class="photo" src="${escapeHtml(photoSrc)}" alt="" />`
+    : "";
+
   const headerHtml = `<div>
-    <h1>${escapeHtml(data.personal.fullName)}</h1>
-    ${role}
+    <div class="head-top">
+      <div>
+        <h1>${escapeHtml(data.personal.fullName)}</h1>
+        ${role}
+      </div>
+      ${photo}
+    </div>
     <div class="contact">${contactParts}</div>
     <div class="gradient-line"></div>
   </div>`;

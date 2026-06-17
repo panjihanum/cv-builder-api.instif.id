@@ -18,12 +18,14 @@ import {
   type SectionIconKey,
 } from "@/services/templates/sectionIcons.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { photoToDataUrl } from "@/services/templates/photo.js";
 
 const css = `
 * { box-sizing: border-box; }
 body { font-family: Georgia, "Times New Roman", serif; color: #292524; font-size: 10pt; line-height: 1.55; margin: 0; min-height: 100vh; background: #fcfaf6; border-top: 5px solid #b45309; }
 .page { padding: 0 48px; }
 .head { text-align: center; border-bottom: 2px solid #292524; padding-bottom: 16px; }
+.head .photo { width: 88px; height: 88px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 16px; box-shadow: 0 0 0 2px #fcfaf6, 0 0 0 4px #fbbf24; }
 .head h1 { margin: 0; font-size: 28pt; font-weight: 700; letter-spacing: -0.5px; color: #1c1917; }
 .head .role { margin: 7px 0 0; font-size: 9.5pt; text-transform: uppercase; letter-spacing: 4px; color: #b45309; }
 .contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 16px; margin-top: 11px; font-family: Helvetica, Arial, sans-serif; font-size: 8.5pt; color: #57534e; }
@@ -58,6 +60,10 @@ function sectionTitle(icon: SectionIconKey, title: string): string {
 }
 
 function renderHead(data: CvData): string {
+  const photoSrc = photoToDataUrl(data.personal.photoUrl);
+  const photo = photoSrc
+    ? `<img class="photo" src="${escapeHtml(photoSrc)}" alt="" />`
+    : "";
   const role = data.personal.jobTitle.trim()
     ? `<p class="role">${escapeHtml(data.personal.jobTitle)}</p>`
     : "";
@@ -69,7 +75,7 @@ function renderHead(data: CvData): string {
       chip(linkIconSvg(resolveLinkIcon(link), 12), formatLinkText(link))
     ),
   ].join("");
-  return `<header class="head"><h1>${escapeHtml(
+  return `<header class="head">${photo}<h1>${escapeHtml(
     data.personal.fullName
   )}</h1>${role}<div class="contact">${contacts}</div></header>`;
 }

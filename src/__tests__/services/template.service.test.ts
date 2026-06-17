@@ -374,6 +374,8 @@ describe("template.service aurora dan foto", () => {
     "two-column-compact",
     "minimalist-creative",
     "executive-senior",
+    "editorial",
+    "spectrum",
   ])("merender foto pada template %s saat photoUrl terisi", (id) => {
     expect(templateService.renderTemplate(id, photoData)).toContain(
       '<img class="photo"'
