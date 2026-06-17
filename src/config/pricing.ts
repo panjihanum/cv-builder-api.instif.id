@@ -17,6 +17,7 @@ export const CREDIT_COSTS = {
   aiParse: 3,
   aiSectionImprove: 1,
   aiPolish: 3,
+  aiTranslate: 3,
 } as const;
 
 /** Nama tier biaya template (urut termurah → termahal). */

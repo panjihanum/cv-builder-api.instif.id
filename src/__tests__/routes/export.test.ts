@@ -47,21 +47,9 @@ async function requestExport(templateId: string) {
   });
 }
 
-const freeQuota = {
-  id: "quota-1",
-  userId: "user-1",
-  freeDailyUsed: 0,
-  freeDailyReset: new Date(0),
-  packExports: 0,
-  packExpiresAt: null,
-  updatedAt: new Date(),
-};
-
 beforeEach(() => {
   vi.clearAllMocks();
   vi.mocked(db.cv.findFirst).mockResolvedValue(cvRecord as never);
-  vi.mocked(db.exportQuota.upsert).mockResolvedValue(freeQuota as never);
-  vi.mocked(db.exportQuota.update).mockResolvedValue(freeQuota as never);
 });
 
 describe("routes/export pdf", () => {

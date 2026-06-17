@@ -12,6 +12,7 @@ import * as parserService from "@/services/ai/parser.service.js";
 import * as claudeService from "@/services/ai/claude.service.js";
 import * as improveService from "@/services/ai/improve.service.js";
 import * as polishService from "@/services/ai/polish.service.js";
+import * as translateService from "@/services/ai/translate.service.js";
 import { logAiUsage } from "@/services/ai-log.service.js";
 
 const cvFileRule = {
@@ -33,6 +34,11 @@ const improveSectionSchema = z.object({
 
 const polishCvSchema = z.object({
   cvId: z.string().min(1),
+});
+
+const translateCvSchema = z.object({
+  cvId: z.string().min(1),
+  targetLanguage: z.enum(["en", "id", "zh"]),
 });
 
 export const aiRoutes = new Hono<AuthEnv>();
@@ -179,5 +185,55 @@ aiRoutes.post(
     await cvService.updateCv(userId, cvId, { data: polished });
     const credits = await creditService.consumeCredits(userId, cost);
     return c.json({ data: polished, credits });
+  }
+);
+
+aiRoutes.post(
+  "/translate-cv",
+  requireAuth,
+  validate("json", translateCvSchema),
+  async (c) => {
+    const userId = c.get("user").sub;
+    const { cvId, targetLanguage } = c.req.valid("json");
+    const cv = await cvService.getOwnedCv(userId, cvId);
+    const data = cvDataSchema.parse(cv.data);
+    if (data.language === targetLanguage) {
+      throw new HttpError(400, "CV sudah dalam bahasa tersebut");
+    }
+    const cost = (await getCreditCosts()).aiTranslate;
+    await creditService.assertCreditBalance(userId, cost);
+    const start = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let model = "";
+    let translated;
+    try {
+      const result = await translateService.translateCv(data, targetLanguage);
+      translated = result.data;
+      inputTokens = result.inputTokens;
+      outputTokens = result.outputTokens;
+      model = result.model;
+    } catch (err) {
+      success = false;
+      errorMessage = err instanceof Error ? err.message : String(err);
+      throw err;
+    } finally {
+      void logAiUsage({
+        userId,
+        endpoint: "translate",
+        model,
+        inputTokens,
+        outputTokens,
+        durationMs: Date.now() - start,
+        creditsUsed: success ? cost : 0,
+        success,
+        errorMessage,
+      });
+    }
+    await cvService.updateCv(userId, cvId, { data: translated });
+    const credits = await creditService.consumeCredits(userId, cost);
+    return c.json({ data: translated, credits });
   }
 );

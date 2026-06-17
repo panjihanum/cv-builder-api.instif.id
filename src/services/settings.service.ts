@@ -30,6 +30,7 @@ const AI_COST_KEYS = {
   aiParse: "pricing.cost.aiParse",
   aiSectionImprove: "pricing.cost.aiSectionImprove",
   aiPolish: "pricing.cost.aiPolish",
+  aiTranslate: "pricing.cost.aiTranslate",
 } as const;
 
 export const SENSITIVE_KEYS = new Set([
@@ -60,6 +61,7 @@ export const SETTING_KEYS = [
   AI_COST_KEYS.aiParse,
   AI_COST_KEYS.aiSectionImprove,
   AI_COST_KEYS.aiPolish,
+  AI_COST_KEYS.aiTranslate,
   "notification.phone",
   "template.default",
   "storage.provider",
@@ -87,6 +89,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   [AI_COST_KEYS.aiParse]: String(CREDIT_COSTS.aiParse),
   [AI_COST_KEYS.aiSectionImprove]: String(CREDIT_COSTS.aiSectionImprove),
   [AI_COST_KEYS.aiPolish]: String(CREDIT_COSTS.aiPolish),
+  [AI_COST_KEYS.aiTranslate]: String(CREDIT_COSTS.aiTranslate),
   "anthropic.model": "claude-opus-4-8",
   "duitku.env": "sandbox",
   "manual.methods": "[]",
@@ -226,6 +229,7 @@ export interface CreditCosts {
   aiParse: number;
   aiSectionImprove: number;
   aiPolish: number;
+  aiTranslate: number;
 }
 
 export interface PricingConfig {
@@ -238,32 +242,36 @@ export interface PricingConfig {
 
 /** Biaya kredit per fitur (template per tier + aksi AI), resolusi dari DB. */
 export async function getCreditCosts(): Promise<CreditCosts> {
-  const [tierEntries, aiParse, aiSectionImprove, aiPolish] = await Promise.all([
-    Promise.all(
-      TEMPLATE_TIERS.map(
-        async (tier) =>
-          [
-            tier,
-            await getNumberSetting(
-              templateTierSettingKey(tier),
-              CREDIT_COSTS.templateTier[tier],
-              { allowZero: true }
-            ),
-          ] as const
-      )
-    ),
-    getNumberSetting(AI_COST_KEYS.aiParse, CREDIT_COSTS.aiParse, {
-      allowZero: true,
-    }),
-    getNumberSetting(
-      AI_COST_KEYS.aiSectionImprove,
-      CREDIT_COSTS.aiSectionImprove,
-      { allowZero: true }
-    ),
-    getNumberSetting(AI_COST_KEYS.aiPolish, CREDIT_COSTS.aiPolish, {
-      allowZero: true,
-    }),
-  ]);
+  const [tierEntries, aiParse, aiSectionImprove, aiPolish, aiTranslate] =
+    await Promise.all([
+      Promise.all(
+        TEMPLATE_TIERS.map(
+          async (tier) =>
+            [
+              tier,
+              await getNumberSetting(
+                templateTierSettingKey(tier),
+                CREDIT_COSTS.templateTier[tier],
+                { allowZero: true }
+              ),
+            ] as const
+        )
+      ),
+      getNumberSetting(AI_COST_KEYS.aiParse, CREDIT_COSTS.aiParse, {
+        allowZero: true,
+      }),
+      getNumberSetting(
+        AI_COST_KEYS.aiSectionImprove,
+        CREDIT_COSTS.aiSectionImprove,
+        { allowZero: true }
+      ),
+      getNumberSetting(AI_COST_KEYS.aiPolish, CREDIT_COSTS.aiPolish, {
+        allowZero: true,
+      }),
+      getNumberSetting(AI_COST_KEYS.aiTranslate, CREDIT_COSTS.aiTranslate, {
+        allowZero: true,
+      }),
+    ]);
   return {
     templateTier: Object.fromEntries(tierEntries) as Record<
       TemplateTier,
@@ -272,6 +280,7 @@ export async function getCreditCosts(): Promise<CreditCosts> {
     aiParse,
     aiSectionImprove,
     aiPolish,
+    aiTranslate,
   };
 }
 
