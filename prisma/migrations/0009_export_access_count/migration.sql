@@ -1,2 +1,2 @@
 -- AlterTable
-ALTER TABLE "export_links" ADD COLUMN "accessCount" INTEGER NOT NULL DEFAULT 0;
+ALTER TABLE "export_links" ADD COLUMN IF NOT EXISTS "accessCount" INTEGER NOT NULL DEFAULT 0;
