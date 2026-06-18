@@ -31,6 +31,18 @@ const proofFileRule = {
   label: "jpg, png, atau pdf",
 };
 
+/**
+ * URL tempat gateway memulangkan user setelah bayar. Diarahkan ke halaman
+ * /billing (tempat user top-up), bukan root, supaya user langsung melihat
+ * status order & saldo kreditnya.
+ */
+function buildPaymentReturnUrl(): string {
+  const base = (env.PUBLIC_APP_URL || env.CORS_ORIGIN.split(",")[0] || "")
+    .trim()
+    .replace(/\/+$/, "");
+  return `${base}/billing`;
+}
+
 export const billingRoutes = new Hono<AuthEnv>();
 
 /**
@@ -89,7 +101,7 @@ billingRoutes.post(
     if (method === "GATEWAY") {
       const result = await gatewayService.createGatewayCheckout(userId, packs, {
         callbackBaseUrl: env.PUBLIC_API_URL || new URL(c.req.url).origin,
-        returnUrl: env.PUBLIC_APP_URL || env.CORS_ORIGIN.split(",")[0],
+        returnUrl: buildPaymentReturnUrl(),
         refCode: normalizedRef,
       });
       return c.json(result);
