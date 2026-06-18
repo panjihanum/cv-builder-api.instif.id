@@ -20,8 +20,10 @@ const envSchema = z.object({
   WA_GATEWAY_SECRET: z.string().min(1).default(""),
   /** Multiple gateways with failover: "url1|secret1,url2|secret2". Overrides WA_GATEWAY_URL/SECRET. */
   WA_GATEWAYS: z.string().optional(),
-  /** Shared HMAC secret with the instif.id hub for admin SSO. Empty = SSO disabled. */
+  /** Shared HMAC secret with the instif.id hub for admin SSO + partner billing. */
   SSO_SECRET: z.string().optional(),
+  /** instif.id hub base URL — online payments are routed through its gateway. */
+  INSTIF_HUB_URL: z.string().default("https://instif.id"),
   /** Public API origin used to build gateway webhook URLs. Falls back to the request origin. */
   PUBLIC_API_URL: z.string().optional(),
   /** Public app URL users return to after paying. Falls back to the first CORS origin. */

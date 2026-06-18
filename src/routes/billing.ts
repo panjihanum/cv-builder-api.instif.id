@@ -7,6 +7,7 @@ import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import * as creditService from "@/services/credit.service.js";
 import * as orderService from "@/services/payment/order.service.js";
 import * as gatewayService from "@/services/payment/gateway.service.js";
+import * as hubService from "@/services/payment/hub.service.js";
 import {
   getPricingConfig,
   getDefaultTemplateId,
@@ -75,17 +76,18 @@ billingRoutes.get("/orders", requireAuth, async (c) => {
   return c.json({ items });
 });
 
-/** Checkout options available to the buyer: manual transfer and/or a gateway. */
+/**
+ * Checkout options available to the buyer: manual transfer and/or online
+ * payment. Online payment is routed through the instif.id hub gateway — it's
+ * offered whenever the shared hub secret is configured.
+ */
 billingRoutes.get("/methods", requireAuth, async (c) => {
-  const [manualMethods, gateway] = await Promise.all([
-    getActiveMethods(),
-    gatewayService.getActiveProvider(),
-  ]);
+  const manualMethods = await getActiveMethods();
   return c.json({
     manual: manualMethods.length > 0,
     manualMethods,
-    gateway: gateway?.configured
-      ? { id: gateway.id, label: gateway.label }
+    gateway: hubService.isHubConfigured()
+      ? { id: "hub", label: "instif.id" }
       : null,
   });
 });
@@ -99,7 +101,7 @@ billingRoutes.post(
     const userId = c.get("user").sub;
     const normalizedRef = refCode?.replace(/^@/, "").trim() || undefined;
     if (method === "GATEWAY") {
-      const result = await gatewayService.createGatewayCheckout(userId, packs, {
+      const result = await hubService.createHubCheckout(userId, packs, {
         callbackBaseUrl: env.PUBLIC_API_URL || new URL(c.req.url).origin,
         returnUrl: buildPaymentReturnUrl(),
         refCode: normalizedRef,
@@ -172,4 +174,28 @@ billingRoutes.post("/webhook/:provider", async (c) => {
     request
   );
   return c.json(result);
+});
+
+/**
+ * Paid notification from the instif.id hub for an online (hub-routed) order.
+ * Signed with the shared SSO_SECRET; credits the buyer idempotently.
+ */
+billingRoutes.post("/hub-callback", async (c) => {
+  const rawBody = await c.req.text();
+  const signature = c.req.header(hubService.PARTNER_SIGNATURE_HEADER) ?? "";
+  if (!hubService.verifyHubSignature(rawBody, signature)) {
+    return c.json({ error: "Signature tidak valid" }, 401);
+  }
+
+  let body: { externalRef?: string; status?: string };
+  try {
+    body = JSON.parse(rawBody) as { externalRef?: string; status?: string };
+  } catch {
+    return c.json({ error: "Body tidak valid" }, 400);
+  }
+
+  if (body.status === "PAID" && body.externalRef) {
+    await hubService.settleHubOrder(body.externalRef);
+  }
+  return c.json({ ok: true });
 });
