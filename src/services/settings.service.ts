@@ -40,6 +40,7 @@ export const SENSITIVE_KEYS = new Set([
   "anthropic.apiKey",
   "storage.s3.accessKeyId",
   "storage.s3.secretAccessKey",
+  "smtp.pass",
 ]);
 
 export const SETTING_KEYS = [
@@ -63,6 +64,13 @@ export const SETTING_KEYS = [
   AI_COST_KEYS.aiPolish,
   AI_COST_KEYS.aiTranslate,
   "notification.phone",
+  "smtp.host",
+  "smtp.port",
+  "smtp.secure",
+  "smtp.user",
+  "smtp.pass",
+  "smtp.fromEmail",
+  "smtp.fromName",
   "template.default",
   "storage.provider",
   "storage.s3.bucket",

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { validate } from "@/lib/validation.js";
 import { requireAuth, type AuthEnv } from "@/middleware/requireAuth.js";
 import * as authService from "@/services/auth.service.js";
+import { appBaseUrl } from "@/lib/email.js";
 
 const registerSchema = z.object({
   name: z.string().min(1),
@@ -30,6 +31,14 @@ const ssoSchema = z.object({
   token: z.string().min(1),
 });
 
+const verifyEmailSchema = z.object({
+  token: z.string().min(1),
+});
+
+const resendVerificationSchema = z.object({
+  email: z.email(),
+});
+
 const updateMeSchema = z.object({
   name: z.string().min(1).optional(),
   email: z.email().nullable().optional(),
@@ -51,6 +60,28 @@ authRoutes.post("/login", validate("json", loginSchema), async (c) => {
   const result = await authService.login(c.req.valid("json"));
   return c.json(result);
 });
+
+// Clicked from the verification email; redirects back to the login screen with
+// a status flag the UI turns into a toast.
+authRoutes.get(
+  "/verify-email",
+  validate("query", verifyEmailSchema),
+  async (c) => {
+    const status = await authService.verifyEmail(c.req.valid("query").token);
+    return c.redirect(`${appBaseUrl()}/login?verify=${status}`);
+  }
+);
+
+authRoutes.post(
+  "/resend-verification",
+  validate("json", resendVerificationSchema),
+  async (c) => {
+    const result = await authService.resendVerification(
+      c.req.valid("json").email
+    );
+    return c.json(result);
+  }
+);
 
 authRoutes.post(
   "/request-otp",

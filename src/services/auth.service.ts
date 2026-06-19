@@ -5,6 +5,11 @@ import { verifySSOToken } from "@/lib/sso.js";
 import { HttpError } from "@/lib/httpError.js";
 import { normalizePhone } from "@/lib/phone.js";
 import * as waGateway from "@/lib/waGateway.js";
+import { isEmailConfigured, sendVerificationEmail } from "@/lib/email.js";
+import {
+  consumeVerificationToken,
+  createVerificationToken,
+} from "@/lib/verification.js";
 
 const BCRYPT_ROUNDS = 10;
 
@@ -43,31 +48,50 @@ async function createAuthResult(user: UserRecord) {
   return { token, user: toPublicUser(user) };
 }
 
+export interface RegisterResult {
+  pendingVerification: true;
+  email: string;
+}
+
+/**
+ * Registers a member with email + password. The account stays unverified
+ * (`emailVerified = null`) and a verification link is emailed — login is blocked
+ * until the link is clicked. Email delivery is required, so we refuse with 503
+ * when SMTP isn't configured rather than create an account nobody can activate.
+ */
 export async function register(input: {
   name: string;
   email: string;
   password: string;
-}) {
-  const existing = await db.user.findUnique({
-    where: { email: input.email },
-  });
+}): Promise<RegisterResult> {
+  const email = input.email.trim().toLowerCase();
+  if (!(await isEmailConfigured())) {
+    throw new HttpError(
+      503,
+      "Pendaftaran email belum aktif. Hubungi admin atau masuk dengan nomor HP."
+    );
+  }
+  const existing = await db.user.findUnique({ where: { email } });
   if (existing) {
     throw new HttpError(400, "Email sudah terdaftar");
   }
   const password = await bcryptjs.hash(input.password, BCRYPT_ROUNDS);
-  const user = await db.user.create({
+  await db.user.create({
     data: {
-      name: input.name,
-      email: input.email,
+      name: input.name.trim(),
+      email,
       password,
       credit: { create: {} },
     },
   });
-  return createAuthResult(user);
+  const token = await createVerificationToken(email);
+  await sendVerificationEmail(email, token);
+  return { pendingVerification: true, email };
 }
 
 export async function login(input: { email: string; password: string }) {
-  const user = await db.user.findUnique({ where: { email: input.email } });
+  const email = input.email.trim().toLowerCase();
+  const user = await db.user.findUnique({ where: { email } });
   if (!user || !user.password) {
     throw new HttpError(401, "Email atau password salah");
   }
@@ -75,10 +99,51 @@ export async function login(input: { email: string; password: string }) {
   if (!passwordValid) {
     throw new HttpError(401, "Email atau password salah");
   }
+  if (!user.emailVerified) {
+    throw new HttpError(
+      403,
+      "Email belum diverifikasi. Cek inbox kamu untuk tautan verifikasi."
+    );
+  }
   if (user.status !== "ACTIVE") {
     throw new HttpError(403, "Akun tidak aktif");
   }
   return createAuthResult(user);
+}
+
+/**
+ * Marks an account verified from a token. Returns a coarse status the route can
+ * map to a friendly redirect — it never reveals which email was involved.
+ */
+export async function verifyEmail(
+  token: string
+): Promise<"success" | "expired" | "invalid"> {
+  const result = await consumeVerificationToken(token);
+  if (result.status !== "valid") return result.status;
+  await db.user.updateMany({
+    where: { email: result.email, emailVerified: null },
+    data: { emailVerified: new Date() },
+  });
+  return "success";
+}
+
+/**
+ * Re-sends the verification email. Always resolves to `{ ok: true }` regardless
+ * of whether the email exists, so the endpoint can't be used to enumerate
+ * accounts. No-op for unknown or already-verified emails.
+ */
+export async function resendVerification(
+  rawEmail: string
+): Promise<{ ok: true }> {
+  const email = rawEmail.trim().toLowerCase();
+  if (await isEmailConfigured()) {
+    const user = await db.user.findUnique({ where: { email } });
+    if (user && user.password && !user.emailVerified) {
+      const token = await createVerificationToken(email);
+      await sendVerificationEmail(email, token);
+    }
+  }
+  return { ok: true };
 }
 
 export async function requestPhoneOtp(phone: string): Promise<{ ok: true }> {

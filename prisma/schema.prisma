@@ -9,14 +9,15 @@ datasource db {
 }
 
 model User {
-  id          String         @id @default(cuid())
-  name        String
-  email       String?        @unique
-  phone       String?        @unique
-  password    String?
-  role        String         @default("USER")
-  status      String         @default("ACTIVE")
-  referredBy  String?
+  id            String    @id @default(cuid())
+  name          String
+  email         String?   @unique
+  phone         String?   @unique
+  password      String?
+  emailVerified DateTime?
+  role          String    @default("USER")
+  status        String    @default("ACTIVE")
+  referredBy    String?
   cvs         Cv[]
   orders      Order[]
   credit      Credit?
@@ -89,6 +90,18 @@ model OtpCode {
   createdAt DateTime @default(now())
 
   @@map("otp_codes")
+}
+
+model VerificationToken {
+  id         String   @id @default(cuid())
+  identifier String
+  tokenHash  String   @unique
+  expiresAt  DateTime
+  consumed   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  @@index([identifier])
+  @@map("verification_tokens")
 }
 
 model WhatsAppSession {
