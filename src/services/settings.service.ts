@@ -1,6 +1,7 @@
 import { db } from "@/lib/db.js";
 import { encrypt, decrypt } from "@/lib/crypto.js";
 import { HttpError } from "@/lib/httpError.js";
+import { getHubSettings } from "@/services/hubSettings.service.js";
 import {
   CREDIT_COSTS,
   DEFAULT_CREDITS_PER_PACK,
@@ -113,6 +114,13 @@ export function invalidateSettingsCache(): void {
 }
 
 export async function getSetting(key: string): Promise<string | null> {
+  // Centrally-managed hub settings win over the local Setting table. The hub
+  // map is fetched once and cached; an outage falls back to local/defaults.
+  const hub = await getHubSettings();
+  const hubValue = hub[key];
+  if (typeof hubValue === "string" && hubValue.length > 0) {
+    return hubValue;
+  }
   const cached = cache.get(key);
   if (cached !== undefined) return cached;
   const record = await db.setting.findUnique({ where: { key } });
