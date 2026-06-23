@@ -353,16 +353,16 @@ Coverage acuan ≥ 80% pada `services/` & `lib/`. Wajib diuji:
 
 ## 12. Milestone / Urutan Kerja
 
-- [ ] **M0 — Setup**: scaffold Hono, Prisma, env validation, lefthook, Vitest, `.env.example`, `.gitignore`, `lib/crypto`.
-- [ ] **M1 — Auth**: register/login/me, JWT, guard middleware, seed admin.
-- [ ] **M2 — CV CRUD**: schema CvData, endpoint, autosave.
-- [ ] **M3 — Settings + crypto**: tabel Setting, encrypt/mask, admin settings endpoint.
-- [ ] **M4 — Credit**: ledger, hubungkan ke order.
-- [ ] **M5 — Payment**: Duitku (key dari settings) + callback + manual + approve.
-- [ ] **M6 — AI parse**: parser + Claude structured output + kuota.
-- [ ] **M7 — PDF**: 5 template HTML + Puppeteer + gating kredit.
-- [ ] **M8 — WhatsApp + OTP**: session/QR, kirim OTP, verify.
-- [ ] **M9 — Hardening**: rate limit, error handling, coverage, Dockerfile (Chromium deps).
+- [x] **M0 — Setup**: scaffold Hono, Prisma, env validation, lefthook, Vitest, `.env.example`, `.gitignore`, `lib/crypto`.
+- [x] **M1 — Auth**: register/login/me, JWT, guard middleware, seed admin.
+- [x] **M2 — CV CRUD**: schema CvData, endpoint, autosave.
+- [x] **M3 — Settings + crypto**: tabel Setting, encrypt/mask, admin settings endpoint.
+- [x] **M4 — Credit**: ledger, hubungkan ke order.
+- [x] **M5 — Payment**: Duitku (key dari settings) + callback + manual + approve; plus hub integration & xendit.
+- [x] **M6 — AI parse**: parser + Claude structured output + kuota; improve/polish/translate juga tersedia.
+- [x] **M7 — PDF**: 30+ template HTML + Puppeteer + gating kredit (termasuk 20 template ATS baru).
+- [x] **M8 — WhatsApp + OTP**: OTP via external WA gateway (`lib/waGateway.ts`). Keputusan arsitektur: tidak pakai whatsapp-web.js lokal — gunakan service gateway eksternal (lebih stabil, tidak butuh Chromium tambahan untuk WA).
+- [x] **M9 — Hardening**: rate limit, error handling, coverage, Dockerfile (Chromium deps).
 
 ---
 
