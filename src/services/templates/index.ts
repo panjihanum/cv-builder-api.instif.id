@@ -30,6 +30,26 @@ import { renderPrestige } from "@/services/templates/prestige.js";
 import { renderPrism } from "@/services/templates/prism.js";
 import { renderSpectrum } from "@/services/templates/spectrum.js";
 import { renderCanvas } from "@/services/templates/canvas.js";
+import { renderAtsBeacon } from "@/services/templates/ats-beacon.js";
+import { renderAtsVeritas } from "@/services/templates/ats-veritas.js";
+import { renderAtsLumen } from "@/services/templates/ats-lumen.js";
+import { renderAtsCobalt } from "@/services/templates/ats-cobalt.js";
+import { renderAtsQuartz } from "@/services/templates/ats-quartz.js";
+import { renderAtsFoundry } from "@/services/templates/ats-foundry.js";
+import { renderAtsMarlowe } from "@/services/templates/ats-marlowe.js";
+import { renderAtsPace } from "@/services/templates/ats-pace.js";
+import { renderAtsLedger } from "@/services/templates/ats-ledger.js";
+import { renderAtsStride } from "@/services/templates/ats-stride.js";
+import { renderAtsHalcyon } from "@/services/templates/ats-halcyon.js";
+import { renderAtsOnset } from "@/services/templates/ats-onset.js";
+import { renderAtsCadence } from "@/services/templates/ats-cadence.js";
+import { renderAtsPillar } from "@/services/templates/ats-pillar.js";
+import { renderAtsDrift } from "@/services/templates/ats-drift.js";
+import { renderAtsCresset } from "@/services/templates/ats-cresset.js";
+import { renderAtsBrevity } from "@/services/templates/ats-brevity.js";
+import { renderAtsAnchor } from "@/services/templates/ats-anchor.js";
+import { renderAtsSterling } from "@/services/templates/ats-sterling.js";
+import { renderAtsVantage } from "@/services/templates/ats-vantage.js";
 
 export type TemplateRenderer = (data: CvData) => string;
 
@@ -91,4 +111,24 @@ export const templates: Record<string, TemplateEntry> = {
   ember: { render: renderEmber, tier: "standard" },
   silhouette: { render: renderSilhouette, tier: "premium", fullBleed: true },
   portrait: { render: renderPortrait, tier: "elite", fullBleed: true },
+  "ats-beacon": { render: renderAtsBeacon, tier: "basic" },
+  "ats-veritas": { render: renderAtsVeritas, tier: "standard" },
+  "ats-lumen": { render: renderAtsLumen, tier: "basic" },
+  "ats-cobalt": { render: renderAtsCobalt, tier: "basic" },
+  "ats-quartz": { render: renderAtsQuartz, tier: "standard" },
+  "ats-foundry": { render: renderAtsFoundry, tier: "standard" },
+  "ats-marlowe": { render: renderAtsMarlowe, tier: "premium" },
+  "ats-pace": { render: renderAtsPace, tier: "standard" },
+  "ats-ledger": { render: renderAtsLedger, tier: "standard" },
+  "ats-stride": { render: renderAtsStride, tier: "basic" },
+  "ats-halcyon": { render: renderAtsHalcyon, tier: "premium" },
+  "ats-onset": { render: renderAtsOnset, tier: "free" },
+  "ats-cadence": { render: renderAtsCadence, tier: "standard" },
+  "ats-pillar": { render: renderAtsPillar, tier: "premium" },
+  "ats-drift": { render: renderAtsDrift, tier: "standard" },
+  "ats-cresset": { render: renderAtsCresset, tier: "standard" },
+  "ats-brevity": { render: renderAtsBrevity, tier: "basic" },
+  "ats-anchor": { render: renderAtsAnchor, tier: "standard" },
+  "ats-sterling": { render: renderAtsSterling, tier: "elite" },
+  "ats-vantage": { render: renderAtsVantage, tier: "premium" },
 };
