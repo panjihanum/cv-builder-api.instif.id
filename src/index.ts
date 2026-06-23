@@ -8,6 +8,7 @@ import { env } from "@/lib/env.js";
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
 import { closeBrowser } from "@/services/pdf.service.js";
+import { cleanupExpiredExports } from "@/services/exportLink.service.js";
 import { authRoutes } from "@/routes/auth.js";
 import { cvRoutes } from "@/routes/cv.js";
 import { adminRoutes } from "@/routes/admin/index.js";
@@ -89,8 +90,26 @@ const server = serve({ fetch: app.fetch, port: env.PORT }, (info) => {
   console.log(`CV Builder API berjalan di http://localhost:${info.port}`);
 });
 
+// Auto-delete expired share links (and their PDFs) — run at startup and every
+// 6 hours so links never outlive their 3-day TTL on disk.
+const EXPORT_CLEANUP_INTERVAL_MS = 6 * 60 * 60 * 1000;
+function runExportCleanup(): void {
+  cleanupExpiredExports()
+    .then((count) => {
+      if (count > 0) console.log(`Menghapus ${count} share link kedaluwarsa`);
+    })
+    .catch((err) => console.error("Gagal membersihkan share link:", err));
+}
+runExportCleanup();
+const exportCleanupTimer = setInterval(
+  runExportCleanup,
+  EXPORT_CLEANUP_INTERVAL_MS
+);
+exportCleanupTimer.unref?.();
+
 function shutdown(): void {
   server.close();
+  clearInterval(exportCleanupTimer);
   void Promise.allSettled([closeBrowser(), db.$disconnect()]).then(() =>
     process.exit(0)
   );

@@ -20,6 +20,16 @@ const exportPdfSchema = z.object({
   pageSize: z.enum(["a4", "letter"]).optional().default("a4"),
 });
 
+// Guest (no-login) export: the CV lives only in the visitor's browser, so they
+// send the CV data inline instead of a server cvId. Only free templates are
+// allowed here — paid templates still require an account so credits can be charged.
+const guestExportPdfSchema = z.object({
+  cvData: cvDataSchema,
+  templateId: z.string().min(1),
+  pageSize: z.enum(["a4", "letter"]).optional().default("a4"),
+  title: z.string().trim().max(120).optional(),
+});
+
 function toFilename(title: string): string {
   const safe = title.replace(/[^a-zA-Z0-9-]+/g, "-").replace(/^-+|-+$/g, "");
   return `${safe || "cv"}.pdf`;
@@ -72,6 +82,61 @@ exportRoutes.post(
     c.header(
       "Content-Disposition",
       `attachment; filename="${toFilename(cv.title)}"`
+    );
+    if (shareToken) {
+      c.header("X-Share-Token", shareToken);
+    }
+    return c.body(pdfBuffer.buffer as ArrayBuffer);
+  }
+);
+
+/**
+ * Public guest export — no auth required. Renders the CV data the visitor sends
+ * inline and returns a PDF + a shareable link. Restricted to free templates so
+ * paid templates still go through the authenticated, credit-charged flow.
+ */
+exportRoutes.post(
+  "/public/pdf",
+  validate("json", guestExportPdfSchema),
+  async (c) => {
+    const { cvData, templateId, pageSize, title } = c.req.valid("json");
+
+    const creditCost = await templateService.getTemplateCreditCost(templateId);
+    if (creditCost > 0) {
+      return c.json(
+        {
+          error:
+            "Template ini berbayar. Masuk atau daftar untuk menggunakannya.",
+          code: "LOGIN_REQUIRED",
+        },
+        402
+      );
+    }
+
+    const data = cvDataSchema.parse(cvData);
+    const html = templateService.renderTemplate(templateId, data);
+    const format = pageSize === "letter" ? "Letter" : "A4";
+    const pdf = await pdfService.renderPdf(
+      html,
+      format,
+      templateService.isFullBleed(templateId)
+    );
+    const pdfBuffer = Buffer.from(pdf.buffer, pdf.byteOffset, pdf.byteLength);
+
+    const cvTitle = title?.trim() || data.personal.fullName.trim() || "CV";
+
+    // Create a shareable download link (fire-and-forget, don't fail export if this errors)
+    let shareToken: string | null = null;
+    try {
+      shareToken = await createExportLink(null, cvTitle, pdfBuffer);
+    } catch (err) {
+      console.error("Failed to create guest export share link:", err);
+    }
+
+    c.header("Content-Type", "application/pdf");
+    c.header(
+      "Content-Disposition",
+      `attachment; filename="${toFilename(cvTitle)}"`
     );
     if (shareToken) {
       c.header("X-Share-Token", shareToken);

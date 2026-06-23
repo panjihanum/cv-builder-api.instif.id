@@ -140,7 +140,11 @@ model ExportQuota {
 
 model ExportLink {
   id          String   @id @default(cuid())
-  userId      String
+  // Human-friendly public token built from the CV name + a short random code
+  // (e.g. "budi-santoso-7k4m"). Nullable for links created before this column
+  // existed; every new link sets it. userId is null for guest (no-login) exports.
+  slug        String?  @unique
+  userId      String?
   cvTitle     String
   expiresAt   DateTime
   accessCount Int      @default(0)
