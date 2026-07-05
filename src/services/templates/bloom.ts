@@ -7,6 +7,7 @@ import {
   renderDescription,
   renderSummary,
 } from "@/services/templates/shared.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 import {
   formatLinkText,
   linkIconSvg,
@@ -218,17 +219,18 @@ function renderEducation(data: CvData): string {
 
 function renderSkills(data: CvData): string {
   const t = getCvLabels(data.language);
-  const bars = data.skills
-    .filter((skill) => skill.name.trim().length > 0)
-    .map(
-      (skill) =>
-        `<div class="bar-row"><div class="lbl">${escapeHtml(
-          skill.name
-        )}</div><div class="bar"><span style="width:${
-          (clampLevel(skill.level) / 5) * 100
-        }%"></span></div></div>`
-    )
-    .join("");
+  const bars = renderSkillGroups(
+    data.skills,
+    (skill) =>
+      skill.name.trim().length > 0
+        ? `<div class="bar-row"><div class="lbl">${escapeHtml(
+            skill.name
+          )}</div><div class="bar"><span style="width:${
+            (clampLevel(skill.level) / 5) * 100
+          }%"></span></div></div>`
+        : "",
+    { groupTag: "div" }
+  );
   return section("skills", t.skills, "amber", bars);
 }
 

@@ -2,6 +2,7 @@ import type { CvData } from "@/lib/cvData.js";
 import { escapeHtml, joinNonEmpty } from "@/services/templates/shared.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
 import { renderPhoto } from "@/services/templates/photo.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 function sidebarBlock(title: string, items: string): string {
   if (!items) return "";
@@ -32,13 +33,14 @@ export function renderAuroraSidebar(data: CvData): string {
       joinNonEmpty([link.label, link.url].map(escapeHtml), ": ")
     )
   );
-  const skills = data.skills
-    .filter((skill) => skill.name.trim().length > 0)
-    .map(
-      (skill) =>
-        `<li class="skill-row"><span>${escapeHtml(skill.name)}</span><span class="dots">${renderSkillDots(skill.level)}</span></li>`
-    )
-    .join("");
+  const skills = renderSkillGroups(
+    data.skills,
+    (skill) =>
+      skill.name.trim().length > 0
+        ? `<li class="skill-row"><span>${escapeHtml(skill.name)}</span><span class="dots">${renderSkillDots(skill.level)}</span></li>`
+        : "",
+    { groupTag: "ul" }
+  );
   const languages = toListItems(
     data.languages.map((language) =>
       joinNonEmpty(
@@ -52,7 +54,7 @@ export function renderAuroraSidebar(data: CvData): string {
     renderPhoto(data.personal.photoUrl),
     sidebarBlock(t.contact, contact),
     sidebarBlock("Tautan", links),
-    sidebarBlock(t.skills, skills),
+    skills ? `<h2>${escapeHtml(t.skills)}</h2>${skills}` : "",
     sidebarBlock(t.languages, languages),
     "</aside>",
   ].join("");

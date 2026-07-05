@@ -19,6 +19,7 @@ import {
 } from "@/services/templates/sectionIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -114,17 +115,18 @@ function renderSidebar(data: CvData): string {
     ? `${sideHeader("globe", "Portofolio Sosial")}<ul class="s-list">${contactRows}</ul>`
     : "";
 
-  const skills = data.skills
-    .filter((skill) => skill.name.trim().length > 0)
-    .map(
-      (skill) =>
-        `<div class="bar-row"><div class="lbl">${escapeHtml(
-          skill.name
-        )}</div><div class="bar"><span style="width:${
-          (clampLevel(skill.level) / 5) * 100
-        }%"></span></div></div>`
-    )
-    .join("");
+  const skills = renderSkillGroups(
+    data.skills,
+    (skill) =>
+      skill.name.trim().length > 0
+        ? `<div class="bar-row"><div class="lbl">${escapeHtml(
+            skill.name
+          )}</div><div class="bar"><span style="width:${
+            (clampLevel(skill.level) / 5) * 100
+          }%"></span></div></div>`
+        : "",
+    { groupTag: "div" }
+  );
   const skillsBlock = skills
     ? `${sideHeader("skills", t.skills)}${skills}`
     : "";

@@ -150,7 +150,7 @@ describe("routes/ai improve-section", () => {
 
   it("menolak section di luar enum", async () => {
     const res = await postJson("/ai/improve-section", {
-      section: "skills",
+      section: "personal",
       data: [],
     });
     expect(res.status).toBe(400);

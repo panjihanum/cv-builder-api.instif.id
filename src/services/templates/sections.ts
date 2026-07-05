@@ -7,6 +7,7 @@ import {
   renderSummary,
 } from "@/services/templates/shared.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 function section(title: string, content: string, className = ""): string {
   if (!content) return "";
@@ -110,21 +111,17 @@ export function renderEducationSection(data: CvData): string {
   return section(getCvLabels(data.language).education, entries);
 }
 
-export function renderSkillItems(data: CvData): string {
-  return data.skills
-    .map(
-      (skill) =>
-        `<li>${escapeHtml(skill.name)} <span class="level">(${skill.level}/5)</span></li>`
-    )
-    .join("");
+function renderSkillItem(skill: CvData["skills"][number]): string {
+  const name = escapeHtml(skill.name);
+  if (!name) return "";
+  return `<li>${name} <span class="level">(${skill.level}/5)</span></li>`;
 }
 
 export function renderSkillsSection(data: CvData): string {
-  const items = renderSkillItems(data);
-  return section(
-    getCvLabels(data.language).skills,
-    items ? `<ul class="inline-list">${items}</ul>` : ""
-  );
+  const content = renderSkillGroups(data.skills, renderSkillItem, {
+    groupClass: "inline-list",
+  });
+  return section(getCvLabels(data.language).skills, content);
 }
 
 export function renderProjectsSection(data: CvData): string {

@@ -14,6 +14,7 @@ import {
 } from "@/services/templates/linkIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const CHIP_BG = ["#ffe4e6", "#ede9fe", "#dbeafe"];
 const CHIP_TEXT = ["#be123c", "#6d28d9", "#1d4ed8"];
@@ -101,15 +102,19 @@ export function renderPrism(data: CvData): string {
     data.personal.fullName
   )}</h1>${role}<div class="contact">${contactParts}</div></div></div>`;
 
+  let chipIndex = 0;
   const skills = data.skills.filter((s) => s.name.trim()).length
-    ? `<p class="s-h-dark">${escapeHtml(t.skills)}</p><div class="chip-wrap">${data.skills
-        .filter((s) => s.name.trim())
-        .map((s, i) => {
-          const bg = CHIP_BG[i % 3];
-          const text = CHIP_TEXT[i % 3];
-          return `<span class="chip" style="background:${bg};color:${text}">${escapeHtml(s.name)}</span>`;
-        })
-        .join("")}</div>`
+    ? `<p class="s-h-dark">${escapeHtml(t.skills)}</p>${renderSkillGroups(
+        data.skills,
+        (skill) => {
+          if (!skill.name.trim()) return "";
+          const bg = CHIP_BG[chipIndex % 3];
+          const text = CHIP_TEXT[chipIndex % 3];
+          chipIndex += 1;
+          return `<span class="chip" style="background:${bg};color:${text}">${escapeHtml(skill.name)}</span>`;
+        },
+        { groupTag: "div", groupClass: "chip-wrap" }
+      )}`
     : "";
 
   const languages = data.languages.filter((l) => l.name.trim()).length

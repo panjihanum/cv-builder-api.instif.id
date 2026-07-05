@@ -99,7 +99,14 @@ export function formatDateRange(
 const PAGINATION_CSS = [
   // Section headings + entry sub-headings stay with the next line so they're
   // never orphaned at the foot of a page. .meta = company/date row inside .entry.
-  "h1,h2,h3,h4,h5,h6,.meta,.sec-h,.s-h{break-after:avoid;page-break-after:avoid;}",
+  "h1,h2,h3,h4,h5,h6,.meta,.sec-h,.s-h,.skill-cat{break-after:avoid;page-break-after:avoid;}",
+  // Skill category heading — shared default so every template gets a tasteful
+  // grouping label without per-template CSS. Templates may override .skill-cat
+  // (colour/size) in their own stylesheet; it inherits the surrounding colour.
+  ".skill-cat{margin:0 0 3px;font-size:0.82em;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;opacity:0.72;}",
+  ".skill-cat+ul,.skill-cat+ol{margin-top:0;}",
+  // A category block (heading + its skills) stays together where it can.
+  ".skill-group{break-inside:avoid;page-break-inside:avoid;margin-bottom:6px;}",
   "header,.header,.namehead,.head,.hero,.profile{break-inside:avoid;page-break-inside:avoid;}",
   // .entry and article are NOT kept together — their bullets may flow across
   // pages. Individual li items stay intact, headers stay with their .meta row.

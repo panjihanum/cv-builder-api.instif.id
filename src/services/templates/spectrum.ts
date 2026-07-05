@@ -14,6 +14,7 @@ import {
 } from "@/services/templates/linkIcons.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const ACCENT_BG = ["#ffe4e6", "#ede9fe", "#dbeafe", "#ccfbf1", "#fef3c7"];
 const ACCENT_TEXT = ["#be123c", "#6d28d9", "#1d4ed8", "#0f766e", "#92400e"];
@@ -97,19 +98,23 @@ export function renderSpectrum(data: CvData): string {
     ? section(t.summary, renderSummary(data.summary))
     : "";
 
+  let skillChipIndex = 0;
   const skills = data.skills.filter((s) => s.name.trim()).length
     ? section(
         t.skills,
-        `<div class="chip-wrap">${data.skills
-          .filter((s) => s.name.trim())
-          .map((s, i) => {
-            const bg = ACCENT_BG[i % ACCENT_BG.length];
-            const text = ACCENT_TEXT[i % ACCENT_TEXT.length];
+        renderSkillGroups(
+          data.skills,
+          (skill) => {
+            if (!skill.name.trim()) return "";
+            const bg = ACCENT_BG[skillChipIndex % ACCENT_BG.length];
+            const text = ACCENT_TEXT[skillChipIndex % ACCENT_TEXT.length];
+            skillChipIndex += 1;
             return `<span class="chip" style="background:${bg};color:${text}">${escapeHtml(
-              s.name
+              skill.name
             )}</span>`;
-          })
-          .join("")}</div>`
+          },
+          { groupTag: "div", groupClass: "chip-wrap" }
+        )
       )
     : "";
 

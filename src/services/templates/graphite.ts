@@ -7,6 +7,7 @@ import {
   renderDescription,
   renderSummary,
 } from "@/services/templates/shared.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 import {
   formatLinkText,
   linkIconSvg,
@@ -114,17 +115,18 @@ function renderSidebar(data: CvData): string {
     ? `${sideHeader("summary", t.contact)}<ul class="s-list">${contactRows}</ul>`
     : "";
 
-  const skills = data.skills
-    .filter((skill) => skill.name.trim().length > 0)
-    .map(
-      (skill) =>
-        `<div class="bar-row"><div class="lbl">${escapeHtml(
-          skill.name
-        )}</div><div class="bar"><span style="width:${
-          (clampLevel(skill.level) / 5) * 100
-        }%"></span></div></div>`
-    )
-    .join("");
+  const skills = renderSkillGroups(
+    data.skills,
+    (skill) =>
+      skill.name.trim().length > 0
+        ? `<div class="bar-row"><div class="lbl">${escapeHtml(
+            skill.name
+          )}</div><div class="bar"><span style="width:${
+            (clampLevel(skill.level) / 5) * 100
+          }%"></span></div></div>`
+        : "",
+    { groupTag: "div" }
+  );
   const skillsBlock = skills
     ? `${sideHeader("skills", t.skills)}${skills}`
     : "";
@@ -211,18 +213,15 @@ function renderEducation(data: CvData): string {
 
 function renderSkillsGrid(data: CvData): string {
   const t = getCvLabels(data.language);
-  const items = data.skills
-    .filter((skill) => skill.name.trim().length > 0)
-    .map(
-      (skill) =>
-        `<div class="si"><span class="pt"></span>${escapeHtml(skill.name)}</div>`
-    )
-    .join("");
-  return mainSection(
-    "strengths",
-    t.skills,
-    items ? `<div class="skill-grid">${items}</div>` : ""
+  const items = renderSkillGroups(
+    data.skills,
+    (skill) =>
+      skill.name.trim().length > 0
+        ? `<div class="si"><span class="pt"></span>${escapeHtml(skill.name)}</div>`
+        : "",
+    { groupTag: "div", groupClass: "skill-grid" }
   );
+  return mainSection("strengths", t.skills, items);
 }
 
 function renderProjects(data: CvData): string {

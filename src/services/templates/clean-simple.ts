@@ -8,6 +8,7 @@ import {
   renderSummary,
 } from "@/services/templates/shared.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -114,10 +115,12 @@ export function renderCleanSimple(data: CvData): string {
   }
 
   if (data.skills.length > 0) {
-    const items = data.skills
-      .map((s) => `<span class="inline">${escapeHtml(s.name)}</span>`)
-      .join("");
-    sections.push(`<section><h2>${t.skills}</h2><div>${items}</div></section>`);
+    const items = renderSkillGroups(
+      data.skills,
+      (s) => `<span class="inline">${escapeHtml(s.name)}</span>`,
+      { groupTag: "div" }
+    );
+    sections.push(`<section><h2>${t.skills}</h2>${items}</section>`);
   }
 
   if (data.projects.length > 0) {

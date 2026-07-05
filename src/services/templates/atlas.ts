@@ -7,6 +7,7 @@ import {
   renderDescription,
   renderSummary,
 } from "@/services/templates/shared.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 import {
   formatLinkText,
   linkIconSvg,
@@ -105,15 +106,15 @@ function renderSidebar(data: CvData): string {
     ? `${sideHeader(t.contact)}<ul class="s-list">${contactRows}</ul>`
     : "";
 
-  const skills = data.skills.filter((s) => s.name.trim()).length
-    ? `${sideHeader(t.skills)}${data.skills
-        .filter((s) => s.name.trim())
-        .map(
-          (s) =>
-            `<div class="si"><span class="dot"></span>${escapeHtml(s.name)}</div>`
-        )
-        .join("")}`
-    : "";
+  const skillGroups = renderSkillGroups(
+    data.skills,
+    (s) =>
+      s.name.trim()
+        ? `<div class="si"><span class="dot"></span>${escapeHtml(s.name)}</div>`
+        : "",
+    { groupTag: "div" }
+  );
+  const skills = skillGroups ? `${sideHeader(t.skills)}${skillGroups}` : "";
 
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? `${sideHeader(t.languages)}<ul class="s-list">${data.languages

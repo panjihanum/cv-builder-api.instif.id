@@ -13,6 +13,7 @@ import {
   linkIconSvg,
 } from "@/services/templates/linkIcons.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -158,10 +159,11 @@ export function renderPrestige(data: CvData): string {
   const skills = data.skills.filter((s) => s.name.trim()).length
     ? section(
         t.skills,
-        `<p class="skill-line">${data.skills
-          .filter((s) => s.name.trim())
-          .map((s) => escapeHtml(s.name))
-          .join(" &middot; ")}</p>`
+        renderSkillGroups(
+          data.skills,
+          (skill) => (skill.name.trim() ? escapeHtml(skill.name) : ""),
+          { groupTag: "p", groupClass: "skill-line", separator: " &middot; " }
+        )
       )
     : "";
 

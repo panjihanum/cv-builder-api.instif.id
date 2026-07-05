@@ -18,6 +18,7 @@ const SYSTEM_PROMPT = [
   "- Tebalkan istilah, nama perusahaan/produk, atau metrik penting dengan <strong>, beri penekanan dengan <em>, dan gunakan <u> hanya bila dokumen aslinya memang menggarisbawahi.",
   "- Hanya gunakan tag <p>, <ul>, <ol>, <li>, <strong>, <em>, <u>. Jangan pakai heading, tabel, gambar, style, atau script.",
   "- Jangan menambah atau mengubah fakta; hanya rapikan struktur dan formatnya.",
+  "Untuk keahlian (skills): bila dokumen mengelompokkan skill (mis. 'Bahasa Pemrograman: ...', 'Tools: ...'), pakai judul kelompok itu sebagai `category` tiap skill. Bila tidak ada pengelompokan eksplisit tapi skill banyak & beragam, kelompokkan sendiri secara logis (mis. 'Bahasa Pemrograman', 'Framework', 'Tools', 'Soft Skills'). Skill sejenis harus punya `category` yang sama persis; kosongkan `category` bila memang tidak ada pengelompokan yang wajar.",
 ].join(" ");
 
 export function buildCvDataJsonSchema(): Anthropic.Tool.InputSchema {

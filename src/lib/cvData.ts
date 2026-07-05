@@ -45,6 +45,12 @@ const educationSchema = z.object({
 const skillSchema = z.object({
   id: z.string().default(""),
   name: z.string().default(""),
+  category: z
+    .string()
+    .default("")
+    .describe(
+      "Kategori/kelompok skill (mis. 'Bahasa Pemrograman', 'Framework', 'Tools', 'Soft Skills'). Kosongkan bila tidak ada pengelompokan. Skill dengan kategori sama akan ditampilkan bersama."
+    ),
   level: z.number().min(1).max(5).default(3),
 });
 

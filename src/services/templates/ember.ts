@@ -14,6 +14,7 @@ import {
 } from "@/services/templates/linkIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -166,13 +167,14 @@ export function renderEmber(data: CvData): string {
   const skills = data.skills.filter((s) => s.name.trim()).length
     ? section(
         t.skills,
-        `<div class="skill-grid">${data.skills
-          .filter((s) => s.name.trim())
-          .map(
-            (s) =>
-              `<div class="si"><span class="dot"></span>${escapeHtml(s.name)}</div>`
-          )
-          .join("")}</div>`
+        renderSkillGroups(
+          data.skills,
+          (s) =>
+            s.name.trim()
+              ? `<div class="si"><span class="dot"></span>${escapeHtml(s.name)}</div>`
+              : "",
+          { groupTag: "div", groupClass: "skill-grid" }
+        )
       )
     : "";
 

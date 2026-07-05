@@ -7,6 +7,7 @@ import {
   renderDescription,
   renderSummary,
 } from "@/services/templates/shared.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 import {
   formatLinkText,
   linkIconSvg,
@@ -141,15 +142,16 @@ function renderEducation(data: CvData): string {
 
 function renderSkills(data: CvData): string {
   const t = getCvLabels(data.language);
-  const tags = data.skills
-    .filter((skill) => skill.name.trim().length > 0)
-    .map((skill) => `<span class="tag">${escapeHtml(skill.name)}</span>`)
-    .join("");
+  const tags = renderSkillGroups(
+    data.skills,
+    (skill) =>
+      skill.name.trim().length > 0
+        ? `<span class="tag">${escapeHtml(skill.name)}</span>`
+        : "",
+    { groupTag: "div", groupClass: "tags" }
+  );
   if (!tags) return "";
-  return `<section>${sectionTitle(
-    "skills",
-    t.skills
-  )}<div class="tags">${tags}</div></section>`;
+  return `<section>${sectionTitle("skills", t.skills)}${tags}</section>`;
 }
 
 function renderProjects(data: CvData): string {

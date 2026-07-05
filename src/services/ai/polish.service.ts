@@ -15,6 +15,7 @@ const SYSTEM_PROMPT = [
   "- Sisipkan kata kunci industri yang relevan secara natural agar lolos ATS.",
   "- Konsisten lintas bagian: istilah, nama peran, gaya, dan tense seragam (past untuk selesai, present untuk berjalan); pola gramatikal paralel per blok.",
   "- Summary: buka dengan jabatan + tahun pengalaman + keahlian inti, tutup dengan nilai yang bisa diberikan.",
+  "- Keahlian: kelompokkan skill ke kategori logis lewat field `category` (mis. 'Bahasa Pemrograman', 'Framework', 'Tools', 'Soft Skills') — skill sejenis pakai `category` sama persis; rapikan ejaan nama skill & buang duplikat. Jangan ubah `level` atau `id`, jangan tambah/hapus skill.",
   "- Buang duplikasi: bila poin sama muncul dua kali, simpan yang terkuat.",
   "",
   "WAJIB DIPATUHI (pelanggaran membatalkan hasil):",

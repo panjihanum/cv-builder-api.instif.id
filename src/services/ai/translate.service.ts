@@ -20,7 +20,7 @@ function buildSystemPrompt(targetLocale: TranslatableLocale): string {
     `Kamu penerjemah CV/resume profesional. Terjemahkan seluruh isi CV ke ${langName} dengan natural dan profesional, bukan terjemahan harfiah.`,
     "",
     "ATURAN:",
-    "1. Terjemahkan semua teks: summary, jabatan, deskripsi pengalaman/pendidikan/proyek, nama skill generik, nama sertifikasi (bila ada padanan), dan isi custom section.",
+    "1. Terjemahkan semua teks: summary, jabatan, deskripsi pengalaman/pendidikan/proyek, nama skill generik, kategori skill (field `category`, mis. 'Bahasa Pemrograman' → 'Programming Languages'), nama sertifikasi (bila ada padanan), dan isi custom section.",
     "2. Jangan terjemahkan proper noun: nama perusahaan, produk/framework/tools (React, PostgreSQL, Figma, dll), universitas, dan orang.",
     "3. Jabatan: pakai padanan paling natural; bila istilah Inggris sudah lazim di industri (mis. 'Software Engineer', 'Product Manager'), boleh dipertahankan.",
     "4. Pertahankan persis: id, tanggal, email, telepon, URL/link, dan tag HTML deskripsi (<ul>, <li>, <p>, <strong>, <em>, <u>) — hanya ubah teks di dalam tag.",

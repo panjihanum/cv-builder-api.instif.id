@@ -14,6 +14,7 @@ import {
 } from "@/services/templates/linkIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -163,10 +164,14 @@ export function renderPortrait(data: CvData): string {
   const skills = data.skills.filter((s) => s.name.trim()).length
     ? section(
         t.skills,
-        `<div class="skill-chips">${data.skills
-          .filter((s) => s.name.trim())
-          .map((s) => `<span class="chip">${escapeHtml(s.name)}</span>`)
-          .join("")}</div>`
+        renderSkillGroups(
+          data.skills,
+          (s) =>
+            s.name.trim()
+              ? `<span class="chip">${escapeHtml(s.name)}</span>`
+              : "",
+          { groupTag: "div", groupClass: "skill-chips" }
+        )
       )
     : "";
 

@@ -12,6 +12,7 @@ export const IMPROVABLE_SECTIONS = [
   "summary",
   "experience",
   "education",
+  "skills",
   "projects",
   "certifications",
   "languages",
@@ -19,6 +20,19 @@ export const IMPROVABLE_SECTIONS = [
 ] as const;
 
 export type ImprovableSection = (typeof IMPROVABLE_SECTIONS)[number];
+
+// Extra, section-specific guidance appended to the base prompt.
+const SECTION_HINTS: Partial<Record<ImprovableSection, string>> = {
+  skills: [
+    "",
+    "KHUSUS SECTION KEAHLIAN (skills):",
+    "- Kelompokkan skill ke dalam kategori yang logis dengan mengisi field `category` tiap skill (mis. 'Bahasa Pemrograman', 'Framework & Library', 'Tools', 'Database', 'Soft Skills', 'Bahasa'). Skill sejenis harus punya `category` yang sama persis.",
+    "- Gunakan 2–5 kategori yang rapi; jangan buat kategori berisi satu skill kalau bisa digabung. Bila skill terlalu sedikit/umum, boleh biarkan `category` kosong.",
+    "- Urutkan skill sehingga yang satu kategori berdekatan, dan taruh kategori/skill terpenting lebih dulu.",
+    "- Rapikan penulisan nama skill (kapitalisasi & ejaan resmi, mis. 'nodejs' → 'Node.js'), buang duplikat.",
+    "- JANGAN menambah skill baru, menghapus skill yang ada, atau mengubah `level` dan `id`.",
+  ].join("\n"),
+};
 
 const SYSTEM_PROMPT = [
   "Kamu konsultan CV profesional yang membantu kandidat lolos screening HRD dan ATS. HRD memindai tiap CV hanya 6–10 detik, jadi bagian ini harus langsung meyakinkan.",
@@ -50,8 +64,9 @@ export async function improveSection(
   if (!parsed.success) {
     throw new HttpError(400, `data tidak sesuai bentuk section ${section}`);
   }
+  const sectionHint = SECTION_HINTS[section] ?? "";
   const result = await requestStructured({
-    system: `${SYSTEM_PROMPT} ${languageInstruction(language)}`,
+    system: `${SYSTEM_PROMPT}${sectionHint} ${languageInstruction(language)}`,
     userContent: JSON.stringify({ section, data: parsed.data }),
     toolName: "improve_cv_section",
     toolDescription: `Simpan hasil perbaikan wording bagian ${section}`,

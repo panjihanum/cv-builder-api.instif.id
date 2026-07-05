@@ -14,6 +14,7 @@ import {
 } from "@/services/templates/linkIcons.js";
 import { photoToDataUrl } from "@/services/templates/photo.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
+import { renderSkillGroups } from "@/services/templates/skills.js";
 
 const css = `
 * { box-sizing: border-box; }
@@ -95,10 +96,14 @@ export function renderSilhouette(data: CvData): string {
     .filter(Boolean)
     .join("");
 
-  const skillItems = data.skills
-    .filter((s) => s.name.trim())
-    .map((s) => `<li><span class="dot"></span>${escapeHtml(s.name)}</li>`)
-    .join("");
+  const skillItems = renderSkillGroups(
+    data.skills,
+    (skill) =>
+      skill.name.trim()
+        ? `<li><span class="dot"></span>${escapeHtml(skill.name)}</li>`
+        : "",
+    { groupTag: "ul" }
+  );
 
   const langItems = data.languages
     .filter((l) => l.name.trim())
@@ -126,7 +131,7 @@ export function renderSilhouette(data: CvData): string {
       ${role}
     </div>
     ${contactItems ? `<h2>${escapeHtml(t.contact)}</h2><ul>${contactItems}</ul>` : ""}
-    ${skillItems ? `<h2>${escapeHtml(t.skills)}</h2><ul>${skillItems}</ul>` : ""}
+    ${skillItems ? `<h2>${escapeHtml(t.skills)}</h2>${skillItems}` : ""}
     ${langItems ? `<h2>${escapeHtml(t.languages)}</h2><ul>${langItems}</ul>` : ""}
     ${certItems ? `<h2>${escapeHtml(t.certifications)}</h2><ul>${certItems}</ul>` : ""}
   </div>`;
