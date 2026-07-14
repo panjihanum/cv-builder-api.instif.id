@@ -76,7 +76,7 @@ export async function createHubCheckout(
   const amount = packs * packPrice;
   const user = await db.user.findUnique({
     where: { id: userId },
-    select: { name: true, email: true },
+    select: { name: true, email: true, phone: true },
   });
 
   const order = await db.order.create({
@@ -90,6 +90,8 @@ export async function createHubCheckout(
     select: orderSelect,
   });
 
+  // Email may be empty (phone-OTP accounts) — the hub falls back to its
+  // central contact email when creating the gateway invoice.
   const payload = JSON.stringify({
     app: APP_ID,
     externalRef: order.id,
@@ -97,6 +99,7 @@ export async function createHubCheckout(
     productName: `${packs} paket kredit`,
     customerName: user?.name ?? "Pelanggan",
     email: user?.email ?? "",
+    phone: user?.phone ?? "",
     returnUrl: context.returnUrl,
     callbackUrl: `${context.callbackBaseUrl}/billing/hub-callback`,
   });
@@ -117,16 +120,20 @@ export async function createHubCheckout(
       error?: string;
     };
     if (!res.ok || !json.data?.paymentUrl) {
+      // 503, not 502: Cloudflare swallows origin 502/504 responses, so a 502
+      // here would reach the browser as Cloudflare's page instead of this
+      // message. Include the hub's status to make failures diagnosable.
       throw new HttpError(
-        502,
-        json.error ?? "Gagal membuat pembayaran di gateway instif.id"
+        503,
+        json.error ??
+          `Gagal membuat pembayaran di gateway instif.id (HTTP ${res.status})`
       );
     }
     paymentUrl = json.data.paymentUrl;
     reference = json.data.reference ?? "";
   } catch (err) {
     if (err instanceof HttpError) throw err;
-    throw new HttpError(502, "Tidak dapat terhubung ke gateway instif.id");
+    throw new HttpError(503, "Tidak dapat terhubung ke gateway instif.id");
   }
 
   const updated = await db.order.update({

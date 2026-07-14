@@ -54,6 +54,7 @@ describe("hub.service createHubCheckout", () => {
     vi.mocked(db.user.findUnique).mockResolvedValue({
       name: "Budi",
       email: "budi@instif.id",
+      phone: "0812345678",
     } as never);
     vi.mocked(db.order.create).mockResolvedValue({
       id: "order-1",
@@ -99,6 +100,8 @@ describe("hub.service createHubCheckout", () => {
       app: "cv-builder",
       externalRef: "order-1",
       amount: 20000,
+      email: "budi@instif.id",
+      phone: "0812345678",
       callbackUrl: "https://api.example.com/billing/hub-callback",
     });
     // signed with the shared secret over the exact raw body
@@ -109,11 +112,12 @@ describe("hub.service createHubCheckout", () => {
     });
   });
 
-  it("throws 502 when the hub rejects the checkout", async () => {
+  it("throws 503 with the hub's message when the hub rejects the checkout", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn().mockResolvedValue({
         ok: false,
+        status: 400,
         json: async () => ({ error: "Gateway down" }),
       })
     );
@@ -122,7 +126,39 @@ describe("hub.service createHubCheckout", () => {
         callbackBaseUrl: "https://api.example.com",
         returnUrl: "https://app.example.com",
       })
-    ).rejects.toMatchObject({ status: 502 });
+    ).rejects.toMatchObject({ status: 503, message: "Gateway down" });
+  });
+
+  it("sends an empty email for phone-OTP accounts and surfaces the hub status when the body is not JSON", async () => {
+    vi.mocked(db.user.findUnique).mockResolvedValue({
+      name: "Budi",
+      email: null,
+      phone: "0812345678",
+    } as never);
+    const fetchMock = vi.fn().mockResolvedValue({
+      ok: false,
+      status: 502,
+      json: async () => {
+        throw new Error("not json");
+      },
+    });
+    vi.stubGlobal("fetch", fetchMock);
+
+    await expect(
+      hubService.createHubCheckout("user-1", 1, {
+        callbackBaseUrl: "https://api.example.com",
+        returnUrl: "https://app.example.com",
+      })
+    ).rejects.toMatchObject({
+      status: 503,
+      message: "Gagal membuat pembayaran di gateway instif.id (HTTP 502)",
+    });
+
+    const [, init] = fetchMock.mock.calls[0];
+    expect(JSON.parse(init.body as string)).toMatchObject({
+      email: "",
+      phone: "0812345678",
+    });
   });
 });
 
