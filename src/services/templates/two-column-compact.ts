@@ -4,11 +4,10 @@ import {
   escapeHtml,
   formatDateRange,
   joinNonEmpty,
+  renderDescription,
 } from "@/services/templates/shared.js";
 import {
   renderCustomSections,
-  renderEducationSection,
-  renderExperienceSection,
   renderProjectsSection,
   renderSummarySection,
 } from "@/services/templates/sections.js";
@@ -130,12 +129,69 @@ function renderSidebar(data: CvData): string {
   )}</h1>${role}${contactBlock}${skillsBlock}${langBlock}${certBlock}</aside>`;
 }
 
+// Experience/education render inline (company · location · date on one meta
+// line, no right-aligned date column) to match this template's compact main
+// column in the preview. Education intentionally omits the description here.
+function renderExperience(data: CvData): string {
+  if (!data.experience.length) return "";
+  const t = getCvLabels(data.language);
+  const entries = data.experience
+    .map((exp) => {
+      const meta = joinNonEmpty(
+        [
+          escapeHtml(exp.company),
+          escapeHtml(exp.location),
+          escapeHtml(
+            formatDateRange(
+              exp.startDate,
+              exp.endDate,
+              exp.current,
+              data.language
+            )
+          ),
+        ],
+        " &middot; "
+      );
+      const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
+      return `<div class="entry"><h3>${escapeHtml(exp.position)}</h3>${metaLine}${renderDescription(exp.description)}</div>`;
+    })
+    .join("");
+  return `<section class="section"><h2>${escapeHtml(t.experience)}</h2>${entries}</section>`;
+}
+
+function renderEducation(data: CvData): string {
+  if (!data.education.length) return "";
+  const t = getCvLabels(data.language);
+  const entries = data.education
+    .map((edu) => {
+      const degreeField = joinNonEmpty(
+        [escapeHtml(edu.degree), escapeHtml(edu.field)],
+        " "
+      );
+      const gpa = edu.gpa.trim() ? `${t.gpa} ${escapeHtml(edu.gpa)}` : "";
+      const meta = joinNonEmpty(
+        [
+          degreeField,
+          gpa,
+          escapeHtml(
+            formatDateRange(edu.startDate, edu.endDate, false, data.language)
+          ),
+        ],
+        " &middot; "
+      );
+      const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
+      return `<div class="entry"><h3>${escapeHtml(edu.institution)}</h3>${metaLine}</div>`;
+    })
+    .join("");
+  return `<section class="section"><h2>${escapeHtml(t.education)}</h2>${entries}</section>`;
+}
+
 function renderMain(data: CvData): string {
   return [
     '<div class="main">',
     renderSummarySection(data),
-    renderExperienceSection(data),
-    renderEducationSection(data),
+    renderExperience(data),
+    renderEducation(data),
     renderProjectsSection(data),
     renderCustomSections(data),
     "</div>",

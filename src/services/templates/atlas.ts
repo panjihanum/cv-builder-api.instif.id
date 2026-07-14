@@ -202,7 +202,7 @@ export function renderAtlas(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")

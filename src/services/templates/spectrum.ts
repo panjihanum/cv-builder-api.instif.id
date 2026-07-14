@@ -174,7 +174,7 @@ export function renderSpectrum(data: CvData): string {
               item.institution
             )}</h3><span style="font-size:7.5pt;color:#8b5cf6;white-space:nowrap;flex-shrink:0">${date}</span></div>${
               meta ? `<p class="meta">${meta}</p>` : ""
-            }</div>`;
+            }${renderDescription(item.description)}</div>`;
           })
           .join("")
       )

@@ -30,7 +30,8 @@ h1 { font-size: 21pt; font-weight: 800; letter-spacing: -0.5px; color: #0f172a; 
 .sec-h { display: flex; align-items: center; gap: 8px; margin: 18px 0 8px; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: #0f766e; }
 .sec-h::before { content: ""; display: inline-block; width: 2px; height: 13px; border-radius: 99px; background: #14b8a6; flex-shrink: 0; }
 .sec-h::after { content: ""; display: block; flex: 1; height: 1px; background: #ccfbf1; }
-.entry { border-left: 2px solid #ccfbf1; padding-left: 12px; margin-bottom: 12px; }
+.entry { margin-bottom: 12px; }
+.entry.exp { border-left: 2px solid #ccfbf1; padding-left: 12px; }
 .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .entry h3 { margin: 0; font-size: 9.5pt; font-weight: 700; color: #0f172a; }
 .entry .date { font-size: 7.5pt; font-weight: 600; color: #0d9488; white-space: nowrap; flex-shrink: 0; }
@@ -42,6 +43,9 @@ h1 { font-size: 21pt; font-weight: 800; letter-spacing: -0.5px; color: #0f172a; 
 .si .dot { width: 6px; height: 6px; border-radius: 50%; background: #2dd4bf; flex-shrink: 0; }
 .blk { margin-bottom: 6px; }
 .blk h3 { margin: 0; font-size: 9pt; font-weight: 600; color: #0f172a; }
+.lang-row { display: flex; flex-wrap: wrap; gap: 16px; font-size: 8.5pt; }
+.lang-row .lang-name { font-weight: 500; }
+.lang-row .lang-prof { color: #64748b; }
 ul { list-style: disc; }
 p { margin: 0; }
 `;
@@ -55,11 +59,13 @@ function entry(
   date: string,
   heading: string,
   meta: string,
-  body: string
+  body: string,
+  cls = ""
 ): string {
   const dateLine = date ? `<span class="date">${date}</span>` : "";
   const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
-  return `<div class="entry"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
+  const entryClass = cls ? `entry ${cls}` : "entry";
+  return `<div class="${entryClass}"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
 }
 
 export function renderMeridian(data: CvData): string {
@@ -125,7 +131,8 @@ export function renderMeridian(data: CvData): string {
                 [item.company, item.location].map(escapeHtml),
                 " · "
               ),
-              renderDescription(item.description)
+              renderDescription(item.description),
+              "exp"
             )
           )
           .join("")
@@ -157,7 +164,7 @@ export function renderMeridian(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")
@@ -212,15 +219,17 @@ export function renderMeridian(data: CvData): string {
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
         t.languages,
-        data.languages
+        `<div class="lang-row">${data.languages
           .filter((l) => l.name.trim())
           .map(
             (l) =>
-              `<div class="blk"><h3>${escapeHtml(l.name)}${
-                l.proficiency ? ` &mdash; ${escapeHtml(l.proficiency)}` : ""
-              }</h3></div>`
+              `<span><span class="lang-name">${escapeHtml(l.name)}</span>${
+                l.proficiency
+                  ? ` <span class="lang-prof">&mdash; ${escapeHtml(l.proficiency)}</span>`
+                  : ""
+              }</span>`
           )
-          .join("")
+          .join("")}</div>`
       )
     : "";
 

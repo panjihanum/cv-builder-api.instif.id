@@ -5,7 +5,8 @@ import {
   renderSummary,
 } from "@/services/templates/shared.js";
 import {
-  renderContactLine,
+  renderContactBase,
+  renderLinksLine,
   renderExperienceSection,
   renderEducationSection,
   renderSkillsSection,
@@ -47,14 +48,19 @@ export function renderAtsLedger(data: CvData): string {
   const role = personal.jobTitle.trim()
     ? `<p class="role">${escapeHtml(personal.jobTitle)}</p>`
     : "";
-  const contact = renderContactLine(data);
-  const contactLine = contact ? `<p class="contact">${contact}</p>` : "";
+  const contactBase = renderContactBase(data);
+  const links = renderLinksLine(data);
+  const contactLine = contactBase
+    ? `<p class="contact">${contactBase}</p>`
+    : "";
+  const linksLine = links ? `<p class="contact links">${links}</p>` : "";
 
   const header = `<header class="header">
     <h1>${name}</h1>
     ${role}
     <hr class="double-rule" />
     ${contactLine}
+    ${linksLine}
   </header>`;
 
   const summarySection = data.summary.trim()

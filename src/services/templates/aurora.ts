@@ -5,7 +5,6 @@ import {
   formatDateRange,
   joinNonEmpty,
   renderDescription,
-  renderMultiline,
   renderSummary,
 } from "@/services/templates/shared.js";
 import { renderAuroraSidebar } from "@/services/templates/aurora-sidebar.js";
@@ -18,9 +17,10 @@ const css = `
 body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5pt; line-height: 1.5; margin: 0; background: linear-gradient(90deg, #6d28d9 0, #6d28d9 34%, #ffffff 34%, #ffffff 100%); }
 .layout { display: grid; grid-template-columns: 34% 66%; min-height: 100vh; }
 .sidebar { background: linear-gradient(160deg, #4338ca 0%, #6d28d9 55%, #7c3aed 100%); color: #ffffff; padding: 24px 18px; }
-.sidebar .photo { width: 96px; height: 96px; border-radius: 50%; object-fit: cover; display: block; margin: 0 auto 16px; border: 3px solid rgba(255, 255, 255, 0.35); }
-.sidebar h2 { font-size: 8pt; text-transform: uppercase; letter-spacing: 2px; margin: 16px 0 7px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.18); color: #ddd6fe; font-weight: 700; }
-.sidebar h2:first-of-type { margin-top: 0; }
+.sidebar .photo { width: 104px; height: 104px; border-radius: 50%; object-fit: cover; display: block; margin: 0 0 14px; border: 4px solid rgba(255, 255, 255, 0.25); }
+.sidebar .s-name { font-size: 19pt; font-weight: 800; letter-spacing: -0.3px; line-height: 1.15; margin: 0 0 2px; color: #ffffff; }
+.sidebar .s-role { margin: 0 0 4px; font-size: 10.5pt; font-weight: 500; color: #ede9fe; }
+.sidebar h2 { font-size: 8pt; text-transform: uppercase; letter-spacing: 2px; margin: 18px 0 7px; padding-bottom: 5px; border-bottom: 1px solid rgba(255,255,255,0.18); color: #ddd6fe; font-weight: 700; }
 .sidebar ul { list-style: none; margin: 0; padding: 0; }
 .sidebar li { margin-bottom: 5px; word-break: break-word; }
 .skill-row { display: flex; justify-content: space-between; gap: 6px; }
@@ -40,6 +40,9 @@ body { font-family: Helvetica, Arial, sans-serif; color: #334155; font-size: 9.5
 .entry .meta { margin: 1px 0 2px; font-size: 8.5pt; color: #64748b; }
 .entry p { margin: 0; }
 .entry ul, .entry ol { margin: 3px 0 0; padding-left: 16px; color: #475569; }
+.edu-head { display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.edu-head h3 { margin: 0; }
+.edu-date { flex-shrink: 0; font-size: 8pt; font-weight: 600; color: #7c3aed; }
 `;
 
 function section(title: string, content: string): string {
@@ -72,11 +75,11 @@ function renderExperienceSection(data: CvData): string {
             data.language
           )
         ),
+        escapeHtml(experience.position),
         joinNonEmpty(
-          [experience.position, experience.company].map(escapeHtml),
-          " &mdash; "
+          [experience.company, experience.location].map(escapeHtml),
+          ", "
         ),
-        escapeHtml(experience.location),
         renderDescription(experience.description)
       )
     )
@@ -91,33 +94,30 @@ function renderEducationSection(data: CvData): string {
   const t = getCvLabels(data.language);
   const entries = data.education
     .map((education) => {
+      const date = escapeHtml(
+        formatDateRange(
+          education.startDate,
+          education.endDate,
+          false,
+          data.language
+        )
+      );
+      const dateEl = date ? `<span class="edu-date">${date}</span>` : "";
+      const degreeField = joinNonEmpty(
+        [education.degree, education.field].map(escapeHtml),
+        " "
+      );
       const gpa = education.gpa.trim()
         ? `${t.gpa} ${escapeHtml(education.gpa)}`
         : "";
-      return entry(
-        escapeHtml(
-          formatDateRange(
-            education.startDate,
-            education.endDate,
-            false,
-            data.language
-          )
-        ),
-        escapeHtml(education.institution),
-        joinNonEmpty(
-          [
-            joinNonEmpty(
-              [education.degree, education.field].map(escapeHtml),
-              ", "
-            ),
-            gpa,
-          ],
-          " &middot; "
-        ),
-        education.description.trim()
-          ? `<p>${renderMultiline(education.description)}</p>`
-          : ""
+      const meta = joinNonEmpty(
+        [degreeField, gpa, escapeHtml(education.description)],
+        ", "
       );
+      const metaEl = meta ? `<p class="meta">${meta}</p>` : "";
+      return `<article class="entry"><div class="edu-head"><h3>${escapeHtml(
+        education.institution
+      )}</h3>${dateEl}</div>${metaEl}</article>`;
     })
     .join("");
   return section(t.education, entries);
@@ -138,23 +138,6 @@ function renderProjectsSection(data: CvData): string {
   return section(t.projects, entries);
 }
 
-function renderCertificationsSection(data: CvData): string {
-  const t = getCvLabels(data.language);
-  const entries = data.certifications
-    .map((certification) =>
-      joinNonEmpty(
-        [certification.name, certification.issuer, certification.date].map(
-          escapeHtml
-        ),
-        " &middot; "
-      )
-    )
-    .filter((item) => item.length > 0)
-    .map((item) => `<article class="entry"><h3>${item}</h3></article>`)
-    .join("");
-  return section(t.certifications, entries);
-}
-
 function renderCustomSections(data: CvData): string {
   const t = getCvLabels(data.language);
   return data.customSections
@@ -171,20 +154,15 @@ function renderCustomSections(data: CvData): string {
 
 function renderMain(data: CvData): string {
   const t = getCvLabels(data.language);
-  const role = data.personal.jobTitle.trim()
-    ? `<p class="role">${escapeHtml(data.personal.jobTitle)}</p>`
-    : "";
   const summary = data.summary.trim()
     ? section(t.summary, renderSummary(data.summary))
     : "";
   return [
-    `<div class="main"><h1>${escapeHtml(data.personal.fullName)}</h1>`,
-    role,
+    '<div class="main">',
     summary,
     renderExperienceSection(data),
     renderEducationSection(data),
     renderProjectsSection(data),
-    renderCertificationsSection(data),
     renderCustomSections(data),
     "</div>",
   ].join("");

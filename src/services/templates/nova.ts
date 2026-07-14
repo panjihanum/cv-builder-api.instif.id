@@ -39,6 +39,9 @@ body { font-family: Helvetica, Arial, sans-serif; color: #262626; font-size: 9.5
 .entry p { margin: 0; color: #404040; }
 .skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { background: #eef2ff; color: #4338ca; font-size: 7.5pt; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+.lang-row { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 8pt; }
+.lang-name { font-weight: 600; }
+.lang-prof { color: #9ca3af; }
 .blk { margin-bottom: 6px; }
 .blk h3 { margin: 0; font-size: 9pt; font-weight: 600; color: #111; }
 ul { list-style: disc; }
@@ -151,7 +154,7 @@ export function renderNova(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")
@@ -206,15 +209,19 @@ export function renderNova(data: CvData): string {
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
         t.languages,
-        data.languages
+        `<div class="lang-row">${data.languages
           .filter((l) => l.name.trim())
           .map(
             (l) =>
-              `<div class="blk"><h3>${escapeHtml(l.name)}${
-                l.proficiency ? ` (${escapeHtml(l.proficiency)})` : ""
-              }</h3></div>`
+              `<span><span class="lang-name">${escapeHtml(l.name)}</span>${
+                l.proficiency
+                  ? ` <span class="lang-prof">(${escapeHtml(
+                      l.proficiency
+                    )})</span>`
+                  : ""
+              }</span>`
           )
-          .join("")
+          .join("")}</div>`
       )
     : "";
 

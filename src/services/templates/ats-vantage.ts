@@ -5,7 +5,6 @@ import {
   renderSummary,
 } from "@/services/templates/shared.js";
 import {
-  renderContactLine,
   renderExperienceSection,
   renderEducationSection,
   renderSkillsSection,
@@ -50,7 +49,11 @@ export function renderAtsVantage(data: CvData): string {
     ? `<p class="role">${escapeHtml(personal.jobTitle)}</p>`
     : "";
 
-  const contactLine = renderContactLine(data);
+  // Right column: each contact part and each link on its own line, matching the
+  // preview's stacked layout. (Base parts and links are listed once — no merge.)
+  const baseParts = [personal.email, personal.phone, personal.address]
+    .filter((part) => part.trim().length > 0)
+    .map(escapeHtml);
   const linkParts = personal.links
     .map((l) =>
       l.label && l.url
@@ -59,7 +62,7 @@ export function renderAtsVantage(data: CvData): string {
     )
     .filter(Boolean);
 
-  const contactItems = [...(contactLine ? [contactLine] : []), ...linkParts]
+  const contactItems = [...baseParts, ...linkParts]
     .map((item) => `<p class="contact-item">${item}</p>`)
     .join("");
 

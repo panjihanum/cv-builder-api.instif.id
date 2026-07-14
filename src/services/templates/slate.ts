@@ -40,6 +40,9 @@ h1 { font-size: 22pt; font-weight: 800; letter-spacing: -0.5px; color: #0a0a0a; 
 .chip { background: #eff6ff; color: #1d4ed8; font-size: 7.5pt; font-weight: 600; padding: 3px 9px; border-radius: 4px; }
 .lang-list, .cert-list { font-size: 8.5pt; color: #404040; }
 .lang-list li, .cert-list li { margin-bottom: 4px; }
+.lang-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 8.5pt; }
+.lang-row .lang-name { font-weight: 500; }
+.lang-row .lang-prof { color: #6b7280; }
 ul { list-style: disc; }
 p { margin: 0; }
 `;
@@ -156,7 +159,7 @@ export function renderSlate(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")
@@ -211,15 +214,17 @@ export function renderSlate(data: CvData): string {
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
         t.languages,
-        `<ul class="lang-list">${data.languages
+        `<div class="lang-row">${data.languages
           .filter((l) => l.name.trim())
           .map(
             (l) =>
-              `<li><strong>${escapeHtml(l.name)}</strong>${
-                l.proficiency ? ` (${escapeHtml(l.proficiency)})` : ""
-              }</li>`
+              `<span><span class="lang-name">${escapeHtml(l.name)}</span>${
+                l.proficiency
+                  ? ` <span class="lang-prof">(${escapeHtml(l.proficiency)})</span>`
+                  : ""
+              }</span>`
           )
-          .join("")}</ul>`
+          .join("")}</div>`
       )
     : "";
 

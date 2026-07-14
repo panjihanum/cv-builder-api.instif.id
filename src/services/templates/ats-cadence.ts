@@ -8,7 +8,8 @@ import {
   renderSummary,
 } from "@/services/templates/shared.js";
 import {
-  renderContactLine,
+  renderContactBase,
+  renderLinksLine,
   renderSkillsSection,
   renderProjectsSection,
   renderCertificationsSection,
@@ -117,13 +118,16 @@ export function renderAtsCadence(data: CvData): string {
   const role = personal.jobTitle.trim()
     ? `<p class="role">${escapeHtml(personal.jobTitle)}</p>`
     : "";
-  const contactLine = renderContactLine(data);
-  const contact = contactLine ? `<p class="contact">${contactLine}</p>` : "";
+  const contactBase = renderContactBase(data);
+  const links = renderLinksLine(data);
+  const contact = contactBase ? `<p class="contact">${contactBase}</p>` : "";
+  const linksLine = links ? `<p class="contact links">${links}</p>` : "";
 
   const header = `<header class="header">
     <h1>${name}</h1>
     ${role}
     ${contact}
+    ${linksLine}
   </header>`;
 
   const summarySection = data.summary.trim()

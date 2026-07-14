@@ -30,7 +30,8 @@ body { font-family: Helvetica, Arial, sans-serif; color: #262626; font-size: 9.5
 .sec-h { display: flex; align-items: center; gap: 8px; margin: 18px 0 8px; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: #9f1239; }
 .sec-h::before { content: ""; display: inline-block; width: 6px; height: 6px; min-width: 6px; background: #e11d48; transform: rotate(45deg); }
 .sec-h::after { content: ""; display: block; flex: 1; height: 1px; background: #fce7f3; }
-.entry { border-left: 2px solid #fce7f3; padding-left: 11px; margin-bottom: 12px; }
+.entry { margin-bottom: 12px; }
+.entry.exp { border-left: 2px solid #fce7f3; padding-left: 11px; }
 .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .entry h3 { margin: 0; font-size: 9.5pt; font-weight: 700; color: #111; }
 .entry .date { font-size: 7.5pt; font-weight: 600; color: #be123c; white-space: nowrap; flex-shrink: 0; }
@@ -39,6 +40,9 @@ body { font-family: Helvetica, Arial, sans-serif; color: #262626; font-size: 9.5
 .entry p { margin: 0; color: #404040; }
 .skill-chips { display: flex; flex-wrap: wrap; gap: 6px; }
 .chip { background: #fff1f2; color: #be123c; font-size: 7.5pt; font-weight: 600; padding: 3px 10px; border-radius: 999px; }
+.lang-row { display: flex; flex-wrap: wrap; gap: 4px 12px; font-size: 8pt; }
+.lang-name { font-weight: 600; }
+.lang-prof { color: #9ca3af; }
 .blk { margin-bottom: 6px; }
 .blk h3 { margin: 0; font-size: 9pt; font-weight: 600; color: #111; }
 ul { list-style: disc; }
@@ -54,11 +58,13 @@ function entry(
   date: string,
   heading: string,
   meta: string,
-  body: string
+  body: string,
+  extraClass = ""
 ): string {
+  const cls = extraClass ? `entry ${extraClass}` : "entry";
   const dateLine = date ? `<span class="date">${date}</span>` : "";
   const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
-  return `<div class="entry"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
+  return `<div class="${cls}"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
 }
 
 export function renderPortrait(data: CvData): string {
@@ -122,7 +128,8 @@ export function renderPortrait(data: CvData): string {
                 [item.company, item.location].map(escapeHtml),
                 " · "
               ),
-              renderDescription(item.description)
+              renderDescription(item.description),
+              "exp"
             )
           )
           .join("")
@@ -154,7 +161,7 @@ export function renderPortrait(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")
@@ -209,15 +216,19 @@ export function renderPortrait(data: CvData): string {
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
         t.languages,
-        data.languages
+        `<div class="lang-row">${data.languages
           .filter((l) => l.name.trim())
           .map(
             (l) =>
-              `<div class="blk"><h3>${escapeHtml(l.name)}${
-                l.proficiency ? ` (${escapeHtml(l.proficiency)})` : ""
-              }</h3></div>`
+              `<span><span class="lang-name">${escapeHtml(l.name)}</span>${
+                l.proficiency
+                  ? ` <span class="lang-prof">(${escapeHtml(
+                      l.proficiency
+                    )})</span>`
+                  : ""
+              }</span>`
           )
-          .join("")
+          .join("")}</div>`
       )
     : "";
 

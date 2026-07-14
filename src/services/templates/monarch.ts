@@ -202,7 +202,7 @@ export function renderMonarch(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")

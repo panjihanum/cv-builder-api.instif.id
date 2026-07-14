@@ -29,7 +29,8 @@ h1 { font-size: 22pt; font-weight: 800; letter-spacing: -0.5px; color: #0a0a0a; 
 .contact span { display: flex; align-items: center; gap: 4px; }
 .divider { height: 2px; background: linear-gradient(90deg, #f97316, #fbbf24, #fed7aa); margin: 16px 0 0; }
 .sec-h { margin: 18px 0 8px; padding-bottom: 4px; border-bottom: 2px solid #f97316; font-size: 7.5pt; font-weight: 700; text-transform: uppercase; letter-spacing: 2.5px; color: #c2410c; }
-.entry { border-left: 2px solid #fed7aa; padding-left: 11px; margin-bottom: 12px; }
+.entry { margin-bottom: 12px; }
+.entry.exp { border-left: 2px solid #fed7aa; padding-left: 11px; }
 .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .entry h3 { margin: 0; font-size: 9.5pt; font-weight: 700; color: #0a0a0a; }
 .entry .date { font-size: 7.5pt; font-weight: 600; color: #ea580c; white-space: nowrap; flex-shrink: 0; }
@@ -41,6 +42,9 @@ h1 { font-size: 22pt; font-weight: 800; letter-spacing: -0.5px; color: #0a0a0a; 
 .si .dot { width: 6px; height: 6px; border-radius: 50%; background: #fb923c; flex-shrink: 0; }
 .blk { margin-bottom: 8px; }
 .blk h3 { margin: 0; font-size: 9pt; font-weight: 600; color: #0a0a0a; }
+.lang-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 8.5pt; }
+.lang-row .lang-name { font-weight: 500; }
+.lang-row .lang-prof { color: #737373; }
 ul { list-style: disc; }
 p { margin: 0; }
 `;
@@ -54,11 +58,13 @@ function entry(
   date: string,
   heading: string,
   meta: string,
-  body: string
+  body: string,
+  cls = ""
 ): string {
   const dateLine = date ? `<span class="date">${date}</span>` : "";
   const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
-  return `<div class="entry"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
+  const entryClass = cls ? `entry ${cls}` : "entry";
+  return `<div class="${entryClass}"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
 }
 
 export function renderEmber(data: CvData): string {
@@ -125,7 +131,8 @@ export function renderEmber(data: CvData): string {
                 [item.company, item.location].map(escapeHtml),
                 " · "
               ),
-              renderDescription(item.description)
+              renderDescription(item.description),
+              "exp"
             )
           )
           .join("")
@@ -157,7 +164,7 @@ export function renderEmber(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")
@@ -212,15 +219,17 @@ export function renderEmber(data: CvData): string {
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
         t.languages,
-        data.languages
+        `<div class="lang-row">${data.languages
           .filter((l) => l.name.trim())
           .map(
             (l) =>
-              `<div class="blk"><h3>${escapeHtml(l.name)}${
-                l.proficiency ? ` (${escapeHtml(l.proficiency)})` : ""
-              }</h3></div>`
+              `<span><span class="lang-name">${escapeHtml(l.name)}</span>${
+                l.proficiency
+                  ? ` <span class="lang-prof">(${escapeHtml(l.proficiency)})</span>`
+                  : ""
+              }</span>`
           )
-          .join("")
+          .join("")}</div>`
       )
     : "";
 

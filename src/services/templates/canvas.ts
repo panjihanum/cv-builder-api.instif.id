@@ -28,7 +28,8 @@ h1 { font-size: 21pt; font-weight: 800; letter-spacing: -0.4px; color: #0a0a0a; 
 .contact { display: flex; flex-wrap: wrap; gap: 5px 12px; font-size: 7.5pt; color: #737373; }
 .contact span { display: flex; align-items: center; gap: 4px; }
 .label { display: inline-block; background: #171717; color: #fff; font-size: 7pt; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; padding: 3px 10px; border-radius: 4px; margin: 16px 0 9px; }
-.entry { border-left: 4px solid #e5e7eb; padding-left: 12px; margin-bottom: 12px; }
+.entry { margin-bottom: 12px; }
+.entry.exp { border-left: 4px solid #e5e7eb; padding-left: 12px; }
 .entry .top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .entry h3 { margin: 0; font-size: 9.5pt; font-weight: 700; color: #0a0a0a; }
 .entry .date { font-size: 7.5pt; color: #a3a3a3; white-space: nowrap; flex-shrink: 0; }
@@ -40,6 +41,9 @@ h1 { font-size: 21pt; font-weight: 800; letter-spacing: -0.4px; color: #0a0a0a; 
 .si .dot { width: 5px; height: 5px; border-radius: 50%; background: #a3a3a3; flex-shrink: 0; }
 .blk { margin-bottom: 6px; }
 .blk h3 { margin: 0; font-size: 9pt; font-weight: 600; color: #0a0a0a; }
+.lang-row { display: flex; flex-wrap: wrap; gap: 12px; font-size: 8.5pt; }
+.lang-row .lang-name { font-weight: 500; }
+.lang-row .lang-prof { color: #a3a3a3; }
 ul { list-style: disc; }
 p { margin: 0; }
 `;
@@ -53,11 +57,13 @@ function entry(
   date: string,
   heading: string,
   meta: string,
-  body: string
+  body: string,
+  cls = ""
 ): string {
   const dateLine = date ? `<span class="date">${date}</span>` : "";
   const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
-  return `<div class="entry"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
+  const entryClass = cls ? `entry ${cls}` : "entry";
+  return `<div class="${entryClass}"><div class="top"><h3>${heading}</h3>${dateLine}</div>${metaLine}${body}</div>`;
 }
 
 export function renderCanvas(data: CvData): string {
@@ -123,7 +129,8 @@ export function renderCanvas(data: CvData): string {
                 [item.company, item.location].map(escapeHtml),
                 " · "
               ),
-              renderDescription(item.description)
+              renderDescription(item.description),
+              "exp"
             )
           )
           .join("")
@@ -155,7 +162,7 @@ export function renderCanvas(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")
@@ -210,15 +217,17 @@ export function renderCanvas(data: CvData): string {
   const languages = data.languages.filter((l) => l.name.trim()).length
     ? section(
         t.languages,
-        data.languages
+        `<div class="lang-row">${data.languages
           .filter((l) => l.name.trim())
           .map(
             (l) =>
-              `<div class="blk"><h3>${escapeHtml(l.name)}${
-                l.proficiency ? ` (${escapeHtml(l.proficiency)})` : ""
-              }</h3></div>`
+              `<span><span class="lang-name">${escapeHtml(l.name)}</span>${
+                l.proficiency
+                  ? ` <span class="lang-prof">(${escapeHtml(l.proficiency)})</span>`
+                  : ""
+              }</span>`
           )
-          .join("")
+          .join("")}</div>`
       )
     : "";
 

@@ -7,6 +7,10 @@ import {
   renderDescription,
   renderSummary,
 } from "@/services/templates/shared.js";
+import {
+  renderContactBase,
+  renderLinksLine,
+} from "@/services/templates/sections.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
 import { renderSkillGroups } from "@/services/templates/skills.js";
 
@@ -34,28 +38,23 @@ u { text-decoration: underline; }
 .skill-item { font-size: 9.5pt; }
 .inline { display: inline; }
 .inline:not(:last-child)::after { content: " · "; color: #888; }
+.cert-list { list-style: none; padding-left: 0; margin: 3px 0 0; }
 `;
 
 export function renderCleanSimple(data: CvData): string {
   const { personal } = data;
   const t = getCvLabels(data.language);
 
-  const contact = [
-    personal.email,
-    personal.phone,
-    personal.address,
-    ...personal.links.map((l) =>
-      joinNonEmpty([l.label, l.url].map(escapeHtml), ": ")
-    ),
-  ]
-    .filter(Boolean)
-    .map(escapeHtml)
-    .join(" &middot; ");
+  // Contact (email/phone/address) and links go on two separate lines, matching
+  // the live preview's two rows.
+  const contactBase = renderContactBase(data);
+  const links = renderLinksLine(data);
 
   const header = `<header>
     <h1>${escapeHtml(personal.fullName)}</h1>
     ${personal.jobTitle ? `<p class="role">${escapeHtml(personal.jobTitle)}</p>` : ""}
-    ${contact ? `<p class="contact">${contact}</p>` : ""}
+    ${contactBase ? `<p class="contact">${contactBase}</p>` : ""}
+    ${links ? `<p class="contact links">${links}</p>` : ""}
   </header>`;
 
   const sections: string[] = [];
@@ -148,7 +147,7 @@ export function renderCleanSimple(data: CvData): string {
       })
       .join("");
     sections.push(
-      `<section><h2>${t.certifications}</h2><ul>${items}</ul></section>`
+      `<section><h2>${t.certifications}</h2><ul class="cert-list">${items}</ul></section>`
     );
   }
 

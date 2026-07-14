@@ -192,7 +192,7 @@ export function renderPrism(data: CvData): string {
               ],
               " · "
             ),
-            ""
+            renderDescription(item.description)
           )
         )
         .join("")}`

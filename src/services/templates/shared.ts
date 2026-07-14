@@ -99,7 +99,15 @@ export function formatDateRange(
 const PAGINATION_CSS = [
   // Section headings + entry sub-headings stay with the next line so they're
   // never orphaned at the foot of a page. .meta = company/date row inside .entry.
-  "h1,h2,h3,h4,h5,h6,.meta,.sec-h,.s-h,.skill-cat{break-after:avoid;page-break-after:avoid;}",
+  "h1,h2,h3,h4,h5,h6,.meta,.sec-h,.s-h,.skill-cat,.entry-head{break-after:avoid;page-break-after:avoid;}",
+  // Shared entry heading row used by the generic section renderers: the title
+  // (position/institution) on the left, the date range right-aligned on the same
+  // baseline — mirroring the live preview's [bold title | date] flex row. The
+  // date rules are scoped to `.entry-head` so templates with their own bespoke
+  // `.entry-date` (e.g. clean-simple) are untouched.
+  ".entry-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}",
+  ".entry-head h3{margin:0;}",
+  ".entry-head .entry-date{flex-shrink:0;font-weight:400;font-size:0.86em;}",
   // Skill category heading — shared default so every template gets a tasteful
   // grouping label without per-template CSS. Templates may override .skill-cat
   // (colour/size) in their own stylesheet; it inherits the surrounding colour.
@@ -110,7 +118,7 @@ const PAGINATION_CSS = [
   "header,.header,.namehead,.head,.hero,.profile{break-inside:avoid;page-break-inside:avoid;}",
   // .entry and article are NOT kept together — their bullets may flow across
   // pages. Individual li items stay intact, headers stay with their .meta row.
-  ".blk,.bar-row,.si,li,.skill-item,.skill-grid .si,.cert,.lang{break-inside:avoid;page-break-inside:avoid;}",
+  ".blk,.bar-row,.si,li,.skill-item,.skill-grid .si,.skill-line,.cert,.lang{break-inside:avoid;page-break-inside:avoid;}",
   "img{break-inside:avoid;page-break-inside:avoid;}",
   // Top/bottom whitespace is supplied per page by the PDF page margin (see
   // pdf.service), so the document itself must not add vertical body padding —

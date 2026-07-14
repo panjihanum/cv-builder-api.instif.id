@@ -15,14 +15,51 @@ function section(title: string, content: string, className = ""): string {
   return `<section class="${classes}"><h2>${escapeHtml(title)}</h2>${content}</section>`;
 }
 
-export function renderContactLine(data: CvData): string {
-  const links = data.personal.links.map((link) =>
-    joinNonEmpty([link.label, link.url].map(escapeHtml), ": ")
-  );
+/**
+ * Entry heading row shared by experience / education: the title (position or
+ * institution) on the left and the date range right-aligned on the same
+ * baseline — mirroring the live preview, where each entry is a
+ * `[bold title | date]` flex row. Both arguments are pre-escaped by the caller.
+ */
+function entryHead(title: string, date: string): string {
+  const titleEl = title ? `<h3>${title}</h3>` : "";
+  const dateEl = date ? `<span class="entry-date">${date}</span>` : "";
+  if (!titleEl && !dateEl) return "";
+  return `<div class="entry-head">${titleEl}${dateEl}</div>`;
+}
+
+/** email &middot; phone &middot; address — the first contact line (no links). */
+export function renderContactBase(data: CvData): string {
   const base = [data.personal.email, data.personal.phone, data.personal.address]
     .filter((part) => part.trim().length > 0)
     .map(escapeHtml);
-  return joinNonEmpty([...base, ...links], " &middot; ");
+  return joinNonEmpty(base, " &middot; ");
+}
+
+/**
+ * The links line ("Label: url" &middot; …). Matches the preview, which shows a
+ * link's `label: url` when both exist and just the url otherwise (label-only
+ * links are dropped).
+ */
+export function renderLinksLine(data: CvData): string {
+  const links = data.personal.links.map((link) =>
+    link.label && link.url
+      ? `${escapeHtml(link.label)}: ${escapeHtml(link.url)}`
+      : escapeHtml(link.url)
+  );
+  return joinNonEmpty(links, " &middot; ");
+}
+
+/**
+ * Single merged contact line (base + links). Kept for templates that render a
+ * one-line header themselves; the standard {@link renderHeader} uses the split
+ * base/links lines to match the live preview.
+ */
+export function renderContactLine(data: CvData): string {
+  return joinNonEmpty(
+    [renderContactBase(data), renderLinksLine(data)],
+    " &middot; "
+  );
 }
 
 export function renderHeader(data: CvData): string {
@@ -30,9 +67,13 @@ export function renderHeader(data: CvData): string {
   const role = data.personal.jobTitle.trim()
     ? `<p class="role">${escapeHtml(data.personal.jobTitle)}</p>`
     : "";
-  const contact = renderContactLine(data);
-  const contactLine = contact ? `<p class="contact">${contact}</p>` : "";
-  return `<header class="header"><h1>${name}</h1>${role}${contactLine}</header>`;
+  const base = renderContactBase(data);
+  const links = renderLinksLine(data);
+  const contactLine = base ? `<p class="contact">${base}</p>` : "";
+  // Links go on their own line (class "contact links") so per-template contact
+  // styling applies to both and the two lines match the preview's two rows.
+  const linksLine = links ? `<p class="contact links">${links}</p>` : "";
+  return `<header class="header"><h1>${name}</h1>${role}${contactLine}${linksLine}</header>`;
 }
 
 export function renderSummarySection(data: CvData): string {
@@ -46,28 +87,24 @@ export function renderSummarySection(data: CvData): string {
 export function renderExperienceSection(data: CvData): string {
   const entries = data.experience
     .map((experience) => {
-      const heading = joinNonEmpty(
-        [experience.position, experience.company].map(escapeHtml),
-        " &mdash; "
+      const head = entryHead(
+        escapeHtml(experience.position),
+        escapeHtml(
+          formatDateRange(
+            experience.startDate,
+            experience.endDate,
+            experience.current,
+            data.language
+          )
+        )
       );
       const meta = joinNonEmpty(
-        [
-          escapeHtml(experience.location),
-          escapeHtml(
-            formatDateRange(
-              experience.startDate,
-              experience.endDate,
-              experience.current,
-              data.language
-            )
-          ),
-        ],
-        " &middot; "
+        [experience.company, experience.location].map(escapeHtml),
+        ", "
       );
-      const descHtml = renderDescription(experience.description);
-      const description = descHtml ? descHtml : "";
       const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
-      return `<article class="entry"><h3>${heading}</h3>${metaLine}${description}</article>`;
+      const description = renderDescription(experience.description);
+      return `<article class="entry">${head}${metaLine}${description}</article>`;
     })
     .join("");
   return section(getCvLabels(data.language).experience, entries);
@@ -76,36 +113,30 @@ export function renderExperienceSection(data: CvData): string {
 export function renderEducationSection(data: CvData): string {
   const entries = data.education
     .map((education) => {
-      const heading = joinNonEmpty(
-        [education.institution].map(escapeHtml),
-        " "
+      const head = entryHead(
+        escapeHtml(education.institution),
+        escapeHtml(
+          formatDateRange(
+            education.startDate,
+            education.endDate,
+            false,
+            data.language
+          )
+        )
       );
-      const detail = joinNonEmpty(
+      const degreeField = joinNonEmpty(
         [education.degree, education.field].map(escapeHtml),
-        ", "
+        " "
       );
       const gpa = education.gpa.trim()
         ? `${getCvLabels(data.language).gpa} ${escapeHtml(education.gpa)}`
         : "";
       const meta = joinNonEmpty(
-        [
-          detail,
-          escapeHtml(
-            formatDateRange(
-              education.startDate,
-              education.endDate,
-              false,
-              data.language
-            )
-          ),
-          gpa,
-        ],
+        [degreeField, gpa, escapeHtml(education.description)],
         " &middot; "
       );
-      const descHtml = renderDescription(education.description);
-      const description = descHtml ? descHtml : "";
       const metaLine = meta ? `<p class="meta">${meta}</p>` : "";
-      return `<article class="entry"><h3>${heading}</h3>${metaLine}${description}</article>`;
+      return `<article class="entry">${head}${metaLine}</article>`;
     })
     .join("");
   return section(getCvLabels(data.language).education, entries);
@@ -114,7 +145,8 @@ export function renderEducationSection(data: CvData): string {
 function renderSkillItem(skill: CvData["skills"][number]): string {
   const name = escapeHtml(skill.name);
   if (!name) return "";
-  return `<li>${name} <span class="level">(${skill.level}/5)</span></li>`;
+  // No numeric level: the live preview lists only the skill name.
+  return `<li>${name}</li>`;
 }
 
 export function renderSkillsSection(data: CvData): string {
@@ -129,11 +161,12 @@ export function renderProjectsSection(data: CvData): string {
     .map((project) => {
       const heading = joinNonEmpty(
         [project.name, project.url].map(escapeHtml),
-        " &middot; "
+        " &mdash; "
       );
-      const descHtml = renderDescription(project.description);
-      const description = descHtml ? descHtml : "";
-      return `<article class="entry"><h3>${heading}</h3>${description}</article>`;
+      const description = renderDescription(project.description);
+      return heading || description
+        ? `<article class="entry"><h3>${heading}</h3>${description}</article>`
+        : "";
     })
     .join("");
   return section(getCvLabels(data.language).projects, entries);
@@ -141,16 +174,22 @@ export function renderProjectsSection(data: CvData): string {
 
 export function renderCertificationsSection(data: CvData): string {
   const items = data.certifications
-    .map((certification) =>
-      joinNonEmpty(
-        [certification.name, certification.issuer, certification.date].map(
-          escapeHtml
-        ),
-        " &middot; "
-      )
-    )
+    .map((certification) => {
+      const nameIssuer = joinNonEmpty(
+        [certification.name, certification.issuer].map(escapeHtml),
+        " &mdash; "
+      );
+      if (!nameIssuer) return "";
+      const date = formatDateRange(
+        certification.date,
+        "",
+        false,
+        data.language
+      );
+      const dateSuffix = date ? ` (${escapeHtml(date)})` : "";
+      return `<li>${nameIssuer}${dateSuffix}</li>`;
+    })
     .filter((item) => item.length > 0)
-    .map((item) => `<li>${item}</li>`)
     .join("");
   return section(
     getCvLabels(data.language).certifications,
@@ -158,24 +197,27 @@ export function renderCertificationsSection(data: CvData): string {
   );
 }
 
-export function renderLanguageItems(data: CvData): string {
+/** One "name (proficiency)" fragment per language, non-empty only. */
+export function renderLanguageItems(data: CvData): string[] {
   return data.languages
-    .map((language) =>
-      joinNonEmpty(
-        [language.name, language.proficiency].map(escapeHtml),
-        " &mdash; "
-      )
-    )
-    .filter((item) => item.length > 0)
-    .map((item) => `<li>${item}</li>`)
-    .join("");
+    .map((language) => {
+      const name = escapeHtml(language.name);
+      if (!name) return "";
+      const proficiency = language.proficiency.trim()
+        ? ` (${escapeHtml(language.proficiency)})`
+        : "";
+      return `${name}${proficiency}`;
+    })
+    .filter((item) => item.length > 0);
 }
 
 export function renderLanguagesSection(data: CvData): string {
   const items = renderLanguageItems(data);
+  // Inline, comma-free single line ("English (Native) · Spanish (Fluent)") —
+  // matches the preview, which joins languages on one line rather than a list.
   return section(
     getCvLabels(data.language).languages,
-    items ? `<ul>${items}</ul>` : ""
+    items.length ? `<p class="lang-line">${items.join(" &middot; ")}</p>` : ""
   );
 }
 
@@ -199,6 +241,7 @@ export function renderCustomSections(data: CvData): string {
     .join("");
 }
 
+/** Assemble the standard single-column body in the default section order. */
 export function renderBodySections(data: CvData): string {
   return [
     renderSummarySection(data),

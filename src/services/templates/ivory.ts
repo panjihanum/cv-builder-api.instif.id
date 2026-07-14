@@ -146,7 +146,7 @@ export function renderIvory(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")

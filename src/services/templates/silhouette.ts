@@ -191,7 +191,7 @@ export function renderSilhouette(data: CvData): string {
                 ],
                 " · "
               ),
-              ""
+              renderDescription(item.description)
             )
           )
           .join("")

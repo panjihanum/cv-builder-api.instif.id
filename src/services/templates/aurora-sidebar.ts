@@ -23,16 +23,20 @@ function renderSkillDots(level: number): string {
 
 export function renderAuroraSidebar(data: CvData): string {
   const t = getCvLabels(data.language);
-  const contact = toListItems(
-    [data.personal.email, data.personal.phone, data.personal.address].map(
-      escapeHtml
-    )
-  );
-  const links = toListItems(
-    data.personal.links.map((link) =>
-      joinNonEmpty([link.label, link.url].map(escapeHtml), ": ")
-    )
-  );
+  const { personal } = data;
+  const role = personal.jobTitle.trim()
+    ? `<p class="s-role">${escapeHtml(personal.jobTitle)}</p>`
+    : "";
+  // Contact and links live in a single list (as in the preview), not a separate
+  // "Tautan" block.
+  const contact = toListItems([
+    ...[personal.email, personal.phone, personal.address].map(escapeHtml),
+    ...personal.links.map((link) =>
+      link.label && link.url
+        ? `${escapeHtml(link.label)}: ${escapeHtml(link.url)}`
+        : escapeHtml(link.url)
+    ),
+  ]);
   const skills = renderSkillGroups(
     data.skills,
     (skill) =>
@@ -42,20 +46,31 @@ export function renderAuroraSidebar(data: CvData): string {
     { groupTag: "ul" }
   );
   const languages = toListItems(
-    data.languages.map((language) =>
+    data.languages.map((language) => {
+      const name = escapeHtml(language.name);
+      if (!name) return "";
+      return language.proficiency.trim()
+        ? `${name} (${escapeHtml(language.proficiency)})`
+        : name;
+    })
+  );
+  const certifications = toListItems(
+    data.certifications.map((certification) =>
       joinNonEmpty(
-        [language.name, language.proficiency].map(escapeHtml),
+        [certification.name, certification.issuer].map(escapeHtml),
         " &mdash; "
       )
     )
   );
   return [
     '<aside class="sidebar">',
-    renderPhoto(data.personal.photoUrl),
+    renderPhoto(personal.photoUrl),
+    `<h1 class="s-name">${escapeHtml(personal.fullName)}</h1>`,
+    role,
     sidebarBlock(t.contact, contact),
-    sidebarBlock("Tautan", links),
     skills ? `<h2>${escapeHtml(t.skills)}</h2>${skills}` : "",
     sidebarBlock(t.languages, languages),
+    sidebarBlock(t.certifications, certifications),
     "</aside>",
   ].join("");
 }
