@@ -1,0 +1,57 @@
+# Production runs on our own server. Public traffic arrives through the
+# cloudflared container on `my_network`, which reaches this API by service name:
+#   http://ph_instif_cv_builder_api:3011
+# The published port below is bound to 127.0.0.1 for on-server debugging only and
+# is never reachable from the internet.
+#
+# Postgres is NOT defined here — it is external to this compose project and is
+# reached via DATABASE_URL in .env.
+#
+# This service is stateful and must stay a single persistent instance: it holds
+# the Puppeteer browser (PDF export) and the WhatsApp session. Do not scale it.
+#
+# Deploy:  git pull && docker compose up -d --build
+services:
+  ph_instif_cv_builder_api:
+    build:
+      context: .
+      target: production
+    ports:
+      - "127.0.0.1:3011:3011"
+    env_file:
+      - .env
+    restart: unless-stopped
+    volumes:
+      # Locally-stored user uploads (photos, imported CVs).
+      - cv_uploads:/app/uploads
+      # whatsapp-web.js session. Losing this forces a fresh QR scan.
+      - cv_wwebjs_auth:/app/.wwebjs_auth
+      - cv_wwebjs_cache:/app/.wwebjs_cache
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "node",
+          "-e",
+          "fetch('http://127.0.0.1:3011/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))",
+        ]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+    networks:
+      - my_network
+
+networks:
+  my_network:
+    external: true
+
+volumes:
+  cv_uploads:
+  cv_wwebjs_auth:
+  cv_wwebjs_cache:

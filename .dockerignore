@@ -1,0 +1,16 @@
+node_modules
+dist
+.git
+.github
+coverage
+*.md
+.env
+.env.*
+!.env.example
+uploads
+.wwebjs_auth
+.wwebjs_cache
+*.db
+.vscode
+.idea
+npm-debug.log*

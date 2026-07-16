@@ -39,6 +39,59 @@ Aturan commit:
 - Pre-commit menjalankan: `eslint`, `prettier --check`, `tsc --noEmit` (type-check), dan `vitest` terkait.
 - Jika hook gagal → perbaiki dulu akar masalahnya, lalu commit ulang. Jangan bypass.
 - Pastikan `lefthook.yml` ada dan `lefthook install` sudah jalan (`npm run prepare`).
+- **Lefthook sekarang satu-satunya gerbang kualitas.** Repo ini tidak punya CI/CD
+  sama sekali — tidak ada GitHub Actions. Kalau lefthook dilewati, tidak ada
+  apa pun lagi di belakang yang akan menangkap error.
+
+## Deploy — Docker di server sendiri (push TIDAK men-deploy)
+
+Repo ini **tidak punya CI/CD**. `git push` hanya mengirim kode ke remote dan
+**tidak men-deploy apa pun**. Production jalan di server sendiri pakai Docker
+Compose, dan deploy adalah langkah manual yang dilakukan di server.
+
+Public traffic masuk lewat **Cloudflare Tunnel** (container `cloudflared`) yang
+menjangkau service ini lewat Docker network eksternal `my_network` memakai nama
+service. Tidak ada port yang terbuka ke internet; port yang dipublish di-bind ke
+`127.0.0.1` hanya untuk debugging di server.
+
+| | |
+| --- | --- |
+| Service compose | `ph_instif_cv_builder_api` |
+| Port | `3011` |
+| Origin tunnel | `http://ph_instif_cv_builder_api:3011` |
+| Health check | `GET /health` |
+
+Deploy (dijalankan manusia, di server):
+
+```sh
+cd /home/instif/apps/cv-builder-api.instif.id
+git pull
+docker compose up -d --build
+docker compose logs -f --tail=50   # verifikasi
+```
+
+- **Jangan pernah menjalankan deploy atas inisiatif sendiri** — itu menyentuh
+  production. Aturan auto-push di atas tetap berlaku, tapi berhenti sampai push
+  saja; deploy diserahkan ke user kecuali user meminta eksplisit.
+- `.env` hanya ada di server dan tidak pernah di-commit. Sisa konfigurasi
+  (Duitku, Anthropic, WhatsApp, harga) tersimpan terenkripsi di database dan
+  diatur lewat dashboard admin — bukan lewat env.
+- Postgres **di luar** compose ini — `DATABASE_URL` di `.env` menunjuk ke
+  database yang sudah ada di server.
+- Migrasi jalan otomatis saat start lewat `prisma migrate deploy`. **Jangan**
+  ganti ke `prisma db push` — perintah itu menyamakan schema dengan cara
+  men-drop kolom tanpa konfirmasi, dan repo ini punya migrasi asli di
+  `prisma/migrations/`.
+- Service ini **stateful dan harus tetap satu instance**: memegang browser
+  Puppeteer (export PDF) dan session WhatsApp. Jangan di-scale.
+- Chromium diinstall di image dan dipakai lewat `PUPPETEER_EXECUTABLE_PATH`.
+  Puppeteer sudah jalan dengan `--no-sandbox` + `--disable-dev-shm-usage`, jadi
+  tidak butuh `shm_size` atau capability tambahan.
+- Volume `cv_uploads`, `cv_wwebjs_auth`, `cv_wwebjs_cache` menyimpan data user
+  dan session WhatsApp. Menghapusnya = user logout dari WhatsApp dan file hilang.
+  Hindari `docker compose down -v`.
+- Nama service, port, dan network adalah kontrak dengan config tunnel. Mengubah
+  salah satunya membuat API mati sampai tunnel ikut diupdate.
 
 ## Kualitas Kode (WAJIB)
 
