@@ -37,4 +37,14 @@ const envSchema = z.object({
     .default("change-this-secret-in-production"),
 });
 
-export const env = envSchema.parse(process.env);
+/**
+ * An unset var and a var set to "" mean the same thing in a .env file, but zod
+ * sees "" as a present value and rejects it against `.min(1)` instead of falling
+ * back to `.default(...)`. Dropping the empty keys makes `VAR=` behave as "not
+ * set", so commenting a value out and blanking it are equivalent.
+ */
+const presentEnv = Object.fromEntries(
+  Object.entries(process.env).filter(([, value]) => value !== "")
+);
+
+export const env = envSchema.parse(presentEnv);
