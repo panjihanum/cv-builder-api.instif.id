@@ -17,7 +17,7 @@ services:
       context: .
       target: production
     ports:
-      - "127.0.0.1:3011:3011"
+      - "127.0.0.1:39011:3011"
     env_file:
       - .env
     restart: unless-stopped
