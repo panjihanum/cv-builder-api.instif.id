@@ -15,6 +15,7 @@ import * as polishService from "@/services/ai/polish.service.js";
 import * as translateService from "@/services/ai/translate.service.js";
 import { logAiUsage } from "@/services/ai-log.service.js";
 import { scrapeLinkedInProfile } from "@/services/ai/linkedin.service.js";
+import * as urlParseService from "@/services/ai/url-parse.service.js";
 
 const cvFileRule = {
   mimeTypes: [
@@ -45,6 +46,10 @@ const translateCvSchema = z.object({
 const parseLinkedinSchema = z.object({
   url: z.string().url().optional(),
   text: z.string().optional(),
+});
+
+const parseUrlSchema = z.object({
+  url: z.string().url({ message: "URL tidak valid" }),
 });
 
 export const aiRoutes = new Hono<AuthEnv>();
@@ -315,5 +320,70 @@ aiRoutes.post(
     await cvService.updateCv(userId, cvId, { data: translated });
     const credits = await creditService.consumeCredits(userId, cost);
     return c.json({ data: translated, credits });
+  }
+);
+
+aiRoutes.post(
+  "/parse-url",
+  requireAuth,
+  validate("json", parseUrlSchema),
+  async (c) => {
+    const userId = c.get("user").sub;
+    const { url } = c.req.valid("json");
+
+    // User harus punya minimal kredit untuk biaya validasi (1 kredit)
+    const costs = await getCreditCosts();
+    const invalidCost = costs.aiUrlParseInvalid;
+    const validCost = costs.aiUrlParse;
+    await creditService.assertCreditBalance(userId, invalidCost);
+
+    const start = Date.now();
+
+    try {
+      const result = await urlParseService.parseUrlForCv(url);
+
+      const creditsUsed = result.isValid ? validCost : invalidCost;
+
+      void logAiUsage({
+        userId,
+        endpoint: "parse-url",
+        model: result.model,
+        inputTokens: result.inputTokens,
+        outputTokens: result.outputTokens,
+        durationMs: Date.now() - start,
+        creditsUsed,
+        success: result.isValid,
+        errorMessage: result.isValid ? undefined : result.reason,
+      });
+
+      const credits = await creditService.consumeCredits(userId, creditsUsed);
+
+      if (!result.isValid) {
+        return c.json(
+          {
+            isValid: false,
+            reason: result.reason ?? "URL tidak dapat diproses",
+            credits,
+          },
+          200
+        );
+      }
+
+      return c.json({ isValid: true, data: result.data, credits });
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : String(err);
+      void logAiUsage({
+        userId,
+        endpoint: "parse-url",
+        model: "",
+        inputTokens: 0,
+        outputTokens: 0,
+        durationMs: Date.now() - start,
+        creditsUsed: 0,
+        success: false,
+        errorMessage,
+      });
+      throw err;
+    }
   }
 );

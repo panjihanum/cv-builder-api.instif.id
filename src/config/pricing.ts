@@ -18,6 +18,10 @@ export const CREDIT_COSTS = {
   aiSectionImprove: 1,
   aiPolish: 3,
   aiTranslate: 3,
+  /** Biaya jika URL berhasil diproses dan data CV berhasil diekstrak. */
+  aiUrlParse: 3,
+  /** Biaya validasi jika URL tidak valid / gagal diakses / konten tidak relevan. */
+  aiUrlParseInvalid: 1,
 } as const;
 
 /** Nama tier biaya template (urut termurah → termahal). */

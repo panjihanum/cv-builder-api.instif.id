@@ -50,7 +50,8 @@ function fillGeneratedIds(data: CvData): CvData {
 }
 
 export async function extractCvData(
-  documentText: string
+  documentText: string,
+  modelOverride?: string
 ): Promise<StructuredResult<CvData>> {
   const result = await requestStructured({
     system: SYSTEM_PROMPT,
@@ -59,6 +60,7 @@ export async function extractCvData(
     toolDescription:
       "Simpan data CV terstruktur hasil ekstraksi dari teks dokumen",
     schema: cvDataSchema,
+    modelOverride,
   });
   return { ...result, data: fillGeneratedIds(result.data) };
 }

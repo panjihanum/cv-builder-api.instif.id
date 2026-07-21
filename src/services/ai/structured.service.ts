@@ -16,6 +16,8 @@ export interface StructuredRequest<Output> {
   toolName: string;
   toolDescription: string;
   schema: z.ZodType<Output>;
+  /** Override model untuk request ini (mis. claude-haiku-4-5 untuk feature hemat). */
+  modelOverride?: string;
 }
 
 export interface StructuredResult<Output> {
@@ -77,7 +79,8 @@ async function requestToolInput<Output>(
 export async function requestStructured<Output>(
   request: StructuredRequest<Output>
 ): Promise<StructuredResult<Output>> {
-  const { client, model } = await createClaudeClient();
+  const { client, model: defaultModel } = await createClaudeClient();
+  const model = request.modelOverride ?? defaultModel;
   let totalInputTokens = 0;
   let totalOutputTokens = 0;
 
