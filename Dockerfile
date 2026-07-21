@@ -11,7 +11,7 @@ FROM base AS builder
 RUN apk add --no-cache openssl
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
-RUN npx prisma generate && npm run build
+RUN npx prisma generate && npm run build && npx --yes esbuild prisma/seed.ts --bundle --platform=node --outfile=prisma/seed.cjs --external:@prisma/client --external:bcryptjs
 
 FROM base AS prod-deps
 COPY package*.json ./
@@ -36,6 +36,7 @@ COPY --from=deps /app/node_modules/@prisma ./node_modules/@prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/dist ./dist
 COPY --from=builder /app/prisma ./prisma
+COPY --from=builder /app/prisma/seed.cjs ./prisma/seed.cjs
 COPY --from=builder /app/package*.json ./
 RUN addgroup --system --gid 1001 nodejs \
     && adduser --system --uid 1001 nodeapp \
@@ -44,4 +45,4 @@ RUN addgroup --system --gid 1001 nodejs \
 USER nodeapp
 EXPOSE 3011
 ENTRYPOINT ["dumb-init", "--"]
-CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node dist/index.js"]
+CMD ["sh", "-c", "node node_modules/prisma/build/index.js migrate deploy && node prisma/seed.cjs && node dist/index.js"]
