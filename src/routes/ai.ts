@@ -14,6 +14,7 @@ import * as improveService from "@/services/ai/improve.service.js";
 import * as polishService from "@/services/ai/polish.service.js";
 import * as translateService from "@/services/ai/translate.service.js";
 import { logAiUsage } from "@/services/ai-log.service.js";
+import { scrapeLinkedInProfile } from "@/services/ai/linkedin.service.js";
 
 const cvFileRule = {
   mimeTypes: [
@@ -39,6 +40,11 @@ const polishCvSchema = z.object({
 const translateCvSchema = z.object({
   cvId: z.string().min(1),
   targetLanguage: z.enum(["en", "id", "zh"]),
+});
+
+const parseLinkedinSchema = z.object({
+  url: z.string().url().optional(),
+  text: z.string().optional(),
 });
 
 export const aiRoutes = new Hono<AuthEnv>();
@@ -88,6 +94,80 @@ aiRoutes.post("/parse-cv", requireAuth, async (c) => {
   const credits = await creditService.consumeCredits(userId, cost);
   return c.json({ data, credits });
 });
+
+aiRoutes.post(
+  "/parse-linkedin",
+  requireAuth,
+  validate("json", parseLinkedinSchema),
+  async (c) => {
+    const userId = c.get("user").sub;
+    const { url, text } = c.req.valid("json");
+    if (!url && !text) {
+      throw new HttpError(
+        400,
+        "Masukkan URL profil atau salinan teks LinkedIn Anda"
+      );
+    }
+
+    const cost = (await getCreditCosts()).aiParse;
+    await creditService.assertCreditBalance(userId, cost);
+
+    let profileText = "";
+    if (text) {
+      profileText = text;
+    } else if (url) {
+      try {
+        profileText = await scrapeLinkedInProfile(url);
+      } catch (err) {
+        if (err instanceof Error && err.message === "AUTHWALL") {
+          throw new HttpError(
+            400,
+            "LinkedIn memblokir deteksi otomatis (authwall). Silakan salin teks profil Anda dan gunakan metode Copy-Paste di bawah.",
+            "AUTHWALL"
+          );
+        }
+        throw new HttpError(
+          502,
+          err instanceof Error ? err.message : "Gagal membaca profil LinkedIn"
+        );
+      }
+    }
+
+    const start = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let model = "";
+    let data;
+    try {
+      const result = await claudeService.extractCvData(profileText);
+      data = result.data;
+      inputTokens = result.inputTokens;
+      outputTokens = result.outputTokens;
+      model = result.model;
+    } catch (err) {
+      success = false;
+      errorMessage = err instanceof Error ? err.message : String(err);
+      throw err;
+    } finally {
+      void logAiUsage({
+        userId,
+        endpoint: "parse-linkedin",
+        model,
+        inputTokens,
+        outputTokens,
+        durationMs: Date.now() - start,
+        creditsUsed: success ? cost : 0,
+        success,
+        errorMessage,
+      });
+    }
+
+    const credits = await creditService.consumeCredits(userId, cost);
+    return c.json({ data, credits });
+  }
+);
 
 aiRoutes.post(
   "/improve-section",
