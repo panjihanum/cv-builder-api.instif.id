@@ -78,3 +78,45 @@ export function renderSkillGroups(
     })
     .join("");
 }
+
+type RenderSkillGroupsInlineOptions = {
+  /** Separator between skill names on a line (default " &middot; "). */
+  separator?: string;
+  /** Class for the wrapper <p> element. */
+  className?: string;
+  /** Class for the inline <strong> category label (default "font-bold"). */
+  labelClass?: string;
+};
+
+/**
+ * Render skills inline, matching SkillGroupsInline in frontend shared.tsx:
+ * Format for categorized group: <p><strong>Category:</strong> Skill1 · Skill2 · Skill3</p>
+ * Format for uncategorized group: <p>Skill1 · Skill2 · Skill3</p>
+ */
+export function renderSkillGroupsInline(
+  skills: Skill[],
+  options: RenderSkillGroupsInlineOptions = {}
+): string {
+  const groups = groupSkills(skills);
+  if (groups.length === 0) return "";
+  const separator = options.separator ?? " &middot; ";
+  const labelAttr = options.labelClass
+    ? ` class="${options.labelClass}"`
+    : ' class="font-bold"';
+  const lineAttr = options.className ? ` class="${options.className}"` : "";
+
+  return groups
+    .map((group) => {
+      const names = group.skills
+        .map((s) => escapeHtml(s.name.trim()))
+        .filter((n) => n.length > 0)
+        .join(separator);
+      if (!names) return "";
+      if (!group.category) return `<p${lineAttr}>${names}</p>`;
+      return `<p${lineAttr}><strong${labelAttr}>${escapeHtml(
+        group.category
+      )}:</strong> ${names}</p>`;
+    })
+    .filter((line) => line.length > 0)
+    .join("");
+}

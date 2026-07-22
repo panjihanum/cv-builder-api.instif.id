@@ -24,6 +24,6 @@ ul { margin: 3px 0 0; padding-left: 18px; }
 `;
 
 export function renderClassicAts(data: CvData): string {
-  const body = `<main>${renderHeader(data)}${renderBodySections(data)}</main>`;
+  const body = `<main>${renderHeader(data)}${renderBodySections(data, { skillsSeparator: ", " })}</main>`;
   return documentShell(data.personal.fullName, css, body, data.language);
 }

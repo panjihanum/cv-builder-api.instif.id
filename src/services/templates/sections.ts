@@ -7,7 +7,7 @@ import {
   renderSummary,
 } from "@/services/templates/shared.js";
 import { getCvLabels } from "@/services/templates/i18n.js";
-import { renderSkillGroups } from "@/services/templates/skills.js";
+import { renderSkillGroupsInline } from "@/services/templates/skills.js";
 
 function section(title: string, content: string, className = ""): string {
   if (!content) return "";
@@ -142,16 +142,12 @@ export function renderEducationSection(data: CvData): string {
   return section(getCvLabels(data.language).education, entries);
 }
 
-function renderSkillItem(skill: CvData["skills"][number]): string {
-  const name = escapeHtml(skill.name);
-  if (!name) return "";
-  // No numeric level: the live preview lists only the skill name.
-  return `<li>${name}</li>`;
-}
-
-export function renderSkillsSection(data: CvData): string {
-  const content = renderSkillGroups(data.skills, renderSkillItem, {
-    groupClass: "inline-list",
+export function renderSkillsSection(
+  data: CvData,
+  options: { separator?: string } = {}
+): string {
+  const content = renderSkillGroupsInline(data.skills, {
+    separator: options.separator,
   });
   return section(getCvLabels(data.language).skills, content);
 }
@@ -242,12 +238,15 @@ export function renderCustomSections(data: CvData): string {
 }
 
 /** Assemble the standard single-column body in the default section order. */
-export function renderBodySections(data: CvData): string {
+export function renderBodySections(
+  data: CvData,
+  options: { skillsSeparator?: string } = {}
+): string {
   return [
     renderSummarySection(data),
     renderExperienceSection(data),
     renderEducationSection(data),
-    renderSkillsSection(data),
+    renderSkillsSection(data, { separator: options.skillsSeparator }),
     renderProjectsSection(data),
     renderCertificationsSection(data),
     renderLanguagesSection(data),

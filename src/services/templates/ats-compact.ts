@@ -25,6 +25,6 @@ ul { margin: 2px 0 0; padding-left: 15px; color: #475569; }
 `;
 
 export function renderAtsCompact(data: CvData): string {
-  const body = `<main>${renderHeader(data)}${renderBodySections(data)}</main>`;
+  const body = `<main>${renderHeader(data)}${renderBodySections(data, { skillsSeparator: ", " })}</main>`;
   return documentShell(data.personal.fullName, css, body, data.language);
 }
