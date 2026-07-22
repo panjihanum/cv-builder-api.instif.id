@@ -5,10 +5,18 @@ import { getRequiredSetting, getSetting } from "@/services/settings.service.js";
 
 const CONFIG_MISSING_MESSAGE =
   "Anthropic API key belum dikonfigurasi, isi anthropic.apiKey di halaman admin settings";
-const DEFAULT_MODEL = "claude-3-5-sonnet-latest";
+const DEFAULT_MODEL = "claude-3-7-sonnet-20250219";
 const MAX_OUTPUT_TOKENS = 16000;
 const RETRY_HINT =
   "Output sebelumnya tidak valid terhadap schema. Ulangi dan pastikan setiap field mengikuti schema tool dengan tepat.";
+
+const CANDIDATE_MODELS = [
+  "claude-3-7-sonnet-20250219",
+  "claude-3-5-haiku-20241022",
+  "claude-3-5-sonnet-20240620",
+  "claude-3-haiku-20240307",
+  "claude-3-opus-20240229",
+];
 
 export interface StructuredRequest<Output> {
   system: string;
@@ -32,8 +40,7 @@ function resolveValidModel(configuredModel?: string | null): string {
     !configuredModel ||
     configuredModel.includes("opus-4") ||
     configuredModel.includes("sonnet-4") ||
-    configuredModel.includes("haiku-20241022") ||
-    configuredModel.includes("20241022")
+    configuredModel.includes("haiku-4")
   ) {
     return DEFAULT_MODEL;
   }
@@ -57,14 +64,18 @@ async function requestToolInput<Output>(
   client: Anthropic,
   model: string,
   request: StructuredRequest<Output>,
-  retryHint?: string
+  retryHint?: string,
+  attemptedModels: Set<string> = new Set()
 ): Promise<{
   input: unknown;
   usage: { input_tokens: number; output_tokens: number };
+  actualModel: string;
 }> {
+  attemptedModels.add(model);
   const content = retryHint
     ? `${request.userContent}\n\n${retryHint}`
     : request.userContent;
+
   try {
     const message = await client.messages.create({
       model,
@@ -88,17 +99,29 @@ async function requestToolInput<Output>(
     if (!toolUse) {
       throw new HttpError(502, "Claude tidak mengembalikan data terstruktur");
     }
-    return { input: toolUse.input, usage: message.usage };
-  } catch (err) {
-    // If model returned 404 (not found / deprecated), fallback to DEFAULT_MODEL once
-    if (
+    return { input: toolUse.input, usage: message.usage, actualModel: model };
+  } catch (err: unknown) {
+    const is404 =
       err &&
       typeof err === "object" &&
-      "status" in err &&
-      err.status === 404 &&
-      model !== DEFAULT_MODEL
-    ) {
-      return requestToolInput(client, DEFAULT_MODEL, request, retryHint);
+      (("status" in err && (err as { status?: number }).status === 404) ||
+        ("type" in err &&
+          (err as { type?: string }).type === "not_found_error"));
+
+    if (is404) {
+      const nextModel = CANDIDATE_MODELS.find((m) => !attemptedModels.has(m));
+      if (nextModel) {
+        console.warn(
+          `[Anthropic] Model '${model}' returned 404. Falling back to '${nextModel}'`
+        );
+        return requestToolInput(
+          client,
+          nextModel,
+          request,
+          retryHint,
+          attemptedModels
+        );
+      }
     }
     throw err;
   }
@@ -122,11 +145,16 @@ export async function requestStructured<Output>(
       data: firstParse.data,
       inputTokens: totalInputTokens,
       outputTokens: totalOutputTokens,
-      model,
+      model: first.actualModel,
     };
   }
 
-  const second = await requestToolInput(client, model, request, RETRY_HINT);
+  const second = await requestToolInput(
+    client,
+    first.actualModel,
+    request,
+    RETRY_HINT
+  );
   totalInputTokens += second.usage.input_tokens;
   totalOutputTokens += second.usage.output_tokens;
 
@@ -141,6 +169,6 @@ export async function requestStructured<Output>(
     data: secondParse.data,
     inputTokens: totalInputTokens,
     outputTokens: totalOutputTokens,
-    model,
+    model: second.actualModel,
   };
 }
