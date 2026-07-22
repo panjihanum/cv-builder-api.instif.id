@@ -55,14 +55,16 @@ export async function getLinkedInConfig(): Promise<LinkedInConfig> {
 }
 
 function resolveRedirectUri(configUri: string, clientUri?: string): string {
-  const base = (
-    configUri ||
-    clientUri ||
-    "https://cv-builder.instif.id/auth/linkedin/callback"
-  )
-    .trim()
-    .replace(/\/+$/, "");
-  return base;
+  const isInvalidOrWebhook = (url?: string) =>
+    !url || url.toLowerCase().includes("webhook");
+
+  if (clientUri && !isInvalidOrWebhook(clientUri)) {
+    return clientUri.trim().replace(/\/+$/, "");
+  }
+  if (configUri && !isInvalidOrWebhook(configUri)) {
+    return configUri.trim().replace(/\/+$/, "");
+  }
+  return "https://cv-builder.instif.id/auth/linkedin/callback";
 }
 
 /** Membikin parameter `state` ber-HMAC untuk cegah serangan CSRF. */
