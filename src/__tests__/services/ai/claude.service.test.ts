@@ -115,7 +115,7 @@ describe("claude.service extractCvData", () => {
     expect(result.data.experience[0].id).not.toBe("");
     expect(result.data.skills[0].id).not.toBe("");
     const request = createMock.mock.calls[0][0];
-    expect(request.model).toBe("claude-3-5-sonnet-20241022");
+    expect(request.model).toBe("claude-3-5-sonnet-latest");
     expect(request.tool_choice).toEqual({
       type: "tool",
       name: "extract_cv_data",
