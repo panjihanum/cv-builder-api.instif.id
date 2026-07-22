@@ -9,7 +9,7 @@ const DEV_ADMIN_PASSWORD = "admin123";
 const defaultSettings: Record<string, string> = {
   "pricing.packPrice": "12000",
   "pricing.creditsPerPack": "15",
-  "anthropic.model": "claude-opus-4-8",
+  "anthropic.model": "claude-haiku-4-5-20251001",
   "duitku.env": "sandbox",
 };
 

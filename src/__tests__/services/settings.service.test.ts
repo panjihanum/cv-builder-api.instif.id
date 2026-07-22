@@ -48,7 +48,7 @@ describe("settings.service getSetting", () => {
     vi.mocked(db.setting.findUnique).mockResolvedValue(null);
     expect(await settingsService.getSetting("pricing.packPrice")).toBe("12000");
     expect(await settingsService.getSetting("anthropic.model")).toBe(
-      "claude-opus-4-8"
+      "claude-haiku-4-5-20251001"
     );
   });
 

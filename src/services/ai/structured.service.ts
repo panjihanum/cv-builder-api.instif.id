@@ -5,17 +5,17 @@ import { getRequiredSetting, getSetting } from "@/services/settings.service.js";
 
 const CONFIG_MISSING_MESSAGE =
   "Anthropic API key belum dikonfigurasi, isi anthropic.apiKey di halaman admin settings";
-const DEFAULT_MODEL = "claude-3-7-sonnet-20250219";
+const DEFAULT_MODEL = "claude-haiku-4-5-20251001";
 const MAX_OUTPUT_TOKENS = 16000;
 const RETRY_HINT =
   "Output sebelumnya tidak valid terhadap schema. Ulangi dan pastikan setiap field mengikuti schema tool dengan tepat.";
 
 const CANDIDATE_MODELS = [
-  "claude-3-7-sonnet-20250219",
-  "claude-3-5-haiku-20241022",
-  "claude-3-5-sonnet-20240620",
-  "claude-3-haiku-20240307",
-  "claude-3-opus-20240229",
+  "claude-haiku-4-5-20251001",
+  "claude-haiku-4-5",
+  "claude-sonnet-4-5-20250929",
+  "claude-sonnet-4-5",
+  "claude-opus-4-5",
 ];
 
 export interface StructuredRequest<Output> {
@@ -36,15 +36,10 @@ export interface StructuredResult<Output> {
 }
 
 function resolveValidModel(configuredModel?: string | null): string {
-  if (
-    !configuredModel ||
-    configuredModel.includes("opus-4") ||
-    configuredModel.includes("sonnet-4") ||
-    configuredModel.includes("haiku-4")
-  ) {
+  if (!configuredModel || !configuredModel.trim()) {
     return DEFAULT_MODEL;
   }
-  return configuredModel;
+  return configuredModel.trim();
 }
 
 async function createClaudeClient(): Promise<{

@@ -105,7 +105,7 @@ const DEFAULT_SETTINGS: Record<string, string> = {
   [AI_COST_KEYS.aiTranslate]: String(CREDIT_COSTS.aiTranslate),
   [AI_COST_KEYS.aiUrlParse]: String(CREDIT_COSTS.aiUrlParse),
   [AI_COST_KEYS.aiUrlParseInvalid]: String(CREDIT_COSTS.aiUrlParseInvalid),
-  "anthropic.model": "claude-opus-4-8",
+  "anthropic.model": "claude-haiku-4-5-20251001",
   "duitku.env": "sandbox",
   "manual.methods": "[]",
   "bank.accounts": "[]",

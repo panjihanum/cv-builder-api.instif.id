@@ -38,7 +38,7 @@ function anthropicSettings() {
   mockSettings({
     "anthropic.apiKey": { value: encrypt("sk-ant-test"), encrypted: true },
     "anthropic.model": {
-      value: "claude-3-7-sonnet-20250219",
+      value: "claude-haiku-4-5-20251001",
       encrypted: false,
     },
   });
@@ -115,7 +115,7 @@ describe("claude.service extractCvData", () => {
     expect(result.data.experience[0].id).not.toBe("");
     expect(result.data.skills[0].id).not.toBe("");
     const request = createMock.mock.calls[0][0];
-    expect(request.model).toBe("claude-3-7-sonnet-20250219");
+    expect(request.model).toBe("claude-haiku-4-5-20251001");
     expect(request.tool_choice).toEqual({
       type: "tool",
       name: "extract_cv_data",
