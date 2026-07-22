@@ -15,6 +15,7 @@ import * as polishService from "@/services/ai/polish.service.js";
 import * as translateService from "@/services/ai/translate.service.js";
 import { logAiUsage } from "@/services/ai-log.service.js";
 import { scrapeLinkedInProfile } from "@/services/ai/linkedin.service.js";
+import * as linkedInOAuthService from "@/services/ai/linkedin-oauth.service.js";
 import * as urlParseService from "@/services/ai/url-parse.service.js";
 
 const cvFileRule = {
@@ -153,6 +154,78 @@ aiRoutes.post(
       void logAiUsage({
         userId,
         endpoint: "parse-linkedin",
+        model,
+        inputTokens,
+        outputTokens,
+        durationMs: Date.now() - start,
+        creditsUsed: success ? cost : 0,
+        success,
+        errorMessage,
+      });
+    }
+
+    const credits = await creditService.consumeCredits(userId, cost);
+    return c.json({ data, credits });
+  }
+);
+
+const linkedinCallbackSchema = z.object({
+  code: z.string().min(1, "Authorization code wajib ada"),
+  state: z.string().min(1, "State token wajib ada"),
+  redirectUri: z.string().url("Redirect URI tidak valid"),
+});
+
+aiRoutes.get("/linkedin/auth-url", requireAuth, async (c) => {
+  const userId = c.get("user").sub;
+  const redirectUri = c.req.query("redirectUri");
+  if (!redirectUri) {
+    throw new HttpError(400, "Query parameter redirectUri wajib diisi");
+  }
+  const authUrl = await linkedInOAuthService.getLinkedInAuthUrl(
+    userId,
+    redirectUri
+  );
+  return c.json({ authUrl });
+});
+
+aiRoutes.post(
+  "/linkedin/callback",
+  requireAuth,
+  validate("json", linkedinCallbackSchema),
+  async (c) => {
+    const userId = c.get("user").sub;
+    const { code, state, redirectUri } = c.req.valid("json");
+
+    const cost = (await getCreditCosts()).aiParse;
+    await creditService.assertCreditBalance(userId, cost);
+
+    const start = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let model = "";
+    let data;
+
+    try {
+      const result = await linkedInOAuthService.processLinkedInOAuth(
+        userId,
+        code,
+        state,
+        redirectUri
+      );
+      data = result.data;
+      inputTokens = result.inputTokens;
+      outputTokens = result.outputTokens;
+      model = result.model;
+    } catch (err) {
+      success = false;
+      errorMessage = err instanceof Error ? err.message : String(err);
+      throw err;
+    } finally {
+      void logAiUsage({
+        userId,
+        endpoint: "linkedin-oauth-callback",
         model,
         inputTokens,
         outputTokens,

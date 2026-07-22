@@ -5,7 +5,7 @@ import { getRequiredSetting, getSetting } from "@/services/settings.service.js";
 
 const CONFIG_MISSING_MESSAGE =
   "Anthropic API key belum dikonfigurasi, isi anthropic.apiKey di halaman admin settings";
-const DEFAULT_MODEL = "claude-opus-4-8";
+const DEFAULT_MODEL = "claude-3-5-sonnet-20241022";
 const MAX_OUTPUT_TOKENS = 16000;
 const RETRY_HINT =
   "Output sebelumnya tidak valid terhadap schema. Ulangi dan pastikan setiap field mengikuti schema tool dengan tepat.";
@@ -27,6 +27,17 @@ export interface StructuredResult<Output> {
   model: string;
 }
 
+function resolveValidModel(configuredModel?: string | null): string {
+  if (
+    !configuredModel ||
+    configuredModel.includes("opus-4") ||
+    configuredModel.includes("haiku-20241022")
+  ) {
+    return DEFAULT_MODEL;
+  }
+  return configuredModel;
+}
+
 async function createClaudeClient(): Promise<{
   client: Anthropic;
   model: string;
@@ -35,7 +46,8 @@ async function createClaudeClient(): Promise<{
     "anthropic.apiKey",
     CONFIG_MISSING_MESSAGE
   );
-  const model = (await getSetting("anthropic.model")) ?? DEFAULT_MODEL;
+  const rawModel = await getSetting("anthropic.model");
+  const model = resolveValidModel(rawModel);
   return { client: new Anthropic({ apiKey }), model };
 }
 
@@ -51,29 +63,43 @@ async function requestToolInput<Output>(
   const content = retryHint
     ? `${request.userContent}\n\n${retryHint}`
     : request.userContent;
-  const message = await client.messages.create({
-    model,
-    max_tokens: MAX_OUTPUT_TOKENS,
-    system: request.system,
-    messages: [{ role: "user", content }],
-    tools: [
-      {
-        name: request.toolName,
-        description: request.toolDescription,
-        input_schema: z.toJSONSchema(
-          request.schema
-        ) as Anthropic.Tool.InputSchema,
-      },
-    ],
-    tool_choice: { type: "tool", name: request.toolName },
-  });
-  const toolUse = message.content.find(
-    (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
-  );
-  if (!toolUse) {
-    throw new HttpError(502, "Claude tidak mengembalikan data terstruktur");
+  try {
+    const message = await client.messages.create({
+      model,
+      max_tokens: MAX_OUTPUT_TOKENS,
+      system: request.system,
+      messages: [{ role: "user", content }],
+      tools: [
+        {
+          name: request.toolName,
+          description: request.toolDescription,
+          input_schema: z.toJSONSchema(
+            request.schema
+          ) as Anthropic.Tool.InputSchema,
+        },
+      ],
+      tool_choice: { type: "tool", name: request.toolName },
+    });
+    const toolUse = message.content.find(
+      (block): block is Anthropic.ToolUseBlock => block.type === "tool_use"
+    );
+    if (!toolUse) {
+      throw new HttpError(502, "Claude tidak mengembalikan data terstruktur");
+    }
+    return { input: toolUse.input, usage: message.usage };
+  } catch (err) {
+    // If model returned 404 (not found / deprecated), fallback to DEFAULT_MODEL once
+    if (
+      err &&
+      typeof err === "object" &&
+      "status" in err &&
+      err.status === 404 &&
+      model !== DEFAULT_MODEL
+    ) {
+      return requestToolInput(client, DEFAULT_MODEL, request, retryHint);
+    }
+    throw err;
   }
-  return { input: toolUse.input, usage: message.usage };
 }
 
 export async function requestStructured<Output>(
