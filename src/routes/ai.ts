@@ -31,7 +31,8 @@ const cvFileRule = {
 
 const improveSectionSchema = z.object({
   section: z.enum(improveService.IMPROVABLE_SECTIONS),
-  data: z.unknown(),
+  data: z.unknown().optional(),
+  rawText: z.string().optional(),
   language: z.enum(["en", "id", "zh"]).optional(),
 });
 
@@ -257,53 +258,117 @@ aiRoutes.post(
   }
 );
 
-aiRoutes.post(
-  "/improve-section",
-  requireAuth,
-  validate("json", improveSectionSchema),
-  async (c) => {
-    const userId = c.get("user").sub;
-    const { section, data: sectionData, language } = c.req.valid("json");
-    const cost = (await getCreditCosts()).aiSectionImprove;
-    await creditService.assertCreditBalance(userId, cost);
-    const start = Date.now();
-    let success = true;
-    let errorMessage: string | undefined;
-    let inputTokens = 0;
-    let outputTokens = 0;
-    let model = "";
-    let improved;
-    try {
-      const result = await improveService.improveSection(
-        section,
-        sectionData,
-        language
-      );
-      improved = result.data;
-      inputTokens = result.inputTokens;
-      outputTokens = result.outputTokens;
-      model = result.model;
-    } catch (err) {
-      success = false;
-      errorMessage = err instanceof Error ? err.message : String(err);
-      throw err;
-    } finally {
-      void logAiUsage({
-        userId,
-        endpoint: "improve",
-        model,
-        inputTokens,
-        outputTokens,
-        durationMs: Date.now() - start,
-        creditsUsed: success ? cost : 0,
-        success,
-        errorMessage,
-      });
+const sectionFileRule = {
+  mimeTypes: [
+    "application/pdf",
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+    "text/csv",
+    "application/csv",
+    "text/plain",
+  ],
+  extensions: [".pdf", ".docx", ".csv", ".txt"],
+  label: "pdf, docx, csv, atau txt",
+};
+
+aiRoutes.post("/improve-section", requireAuth, async (c) => {
+  const userId = c.get("user").sub;
+  const contentType = c.req.header("content-type") || "";
+
+  let section: improveService.ImprovableSection;
+  let sectionData: unknown;
+  let rawText: string | undefined;
+  let language: "en" | "id" | "zh" | undefined;
+
+  if (contentType.includes("multipart/form-data")) {
+    const body = await c.req.parseBody();
+    const secVal = String(body.section || "");
+    if (
+      !improveService.IMPROVABLE_SECTIONS.includes(
+        secVal as improveService.ImprovableSection
+      )
+    ) {
+      throw new HttpError(400, "Section tidak valid");
     }
-    const credits = await creditService.consumeCredits(userId, cost);
-    return c.json({ data: improved, credits });
+    section = secVal as improveService.ImprovableSection;
+    if (body.data && typeof body.data === "string") {
+      try {
+        sectionData = JSON.parse(body.data);
+      } catch {
+        sectionData = undefined;
+      }
+    }
+    rawText = typeof body.rawText === "string" ? body.rawText : undefined;
+    language =
+      typeof body.language === "string" &&
+      ["en", "id", "zh"].includes(body.language)
+        ? (body.language as "en" | "id" | "zh")
+        : undefined;
+
+    if (body.file) {
+      const file = assertUploadedFile(body.file, sectionFileRule);
+      const buffer = Buffer.from(await file.arrayBuffer());
+      const fileText = await parserService.extractTextFromFile(
+        buffer,
+        file.name,
+        file.type
+      );
+      rawText = rawText ? `${rawText}\n\n${fileText}` : fileText;
+    }
+  } else {
+    const json = await c.req.json();
+    const parsedJson = improveSectionSchema.safeParse(json);
+    if (!parsedJson.success) {
+      throw new HttpError(
+        400,
+        `Input tidak valid: ${parsedJson.error.issues[0]?.message || "section tidak valid"}`
+      );
+    }
+    section = parsedJson.data.section;
+    sectionData = parsedJson.data.data;
+    rawText = parsedJson.data.rawText;
+    language = parsedJson.data.language;
   }
-);
+
+  const cost = (await getCreditCosts()).aiSectionImprove;
+  await creditService.assertCreditBalance(userId, cost);
+  const start = Date.now();
+  let success = true;
+  let errorMessage: string | undefined;
+  let inputTokens = 0;
+  let outputTokens = 0;
+  let model = "";
+  let improved;
+  try {
+    const result = await improveService.improveSection(
+      section,
+      sectionData,
+      language,
+      rawText
+    );
+    improved = result.data;
+    inputTokens = result.inputTokens;
+    outputTokens = result.outputTokens;
+    model = result.model;
+  } catch (err) {
+    success = false;
+    errorMessage = err instanceof Error ? err.message : String(err);
+    throw err;
+  } finally {
+    void logAiUsage({
+      userId,
+      endpoint: "improve",
+      model,
+      inputTokens,
+      outputTokens,
+      durationMs: Date.now() - start,
+      creditsUsed: success ? cost : 0,
+      success,
+      errorMessage,
+    });
+  }
+  const credits = await creditService.consumeCredits(userId, cost);
+  return c.json({ data: improved, credits });
+});
 
 aiRoutes.post(
   "/polish-cv",

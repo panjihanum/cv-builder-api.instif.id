@@ -142,6 +142,7 @@ describe("routes/ai improve-section", () => {
     expect(improveService.improveSection).toHaveBeenCalledWith(
       "summary",
       "ringkasan lama",
+      undefined,
       undefined
     );
     const args = vi.mocked(db.credit.updateMany).mock.calls[0][0];
@@ -150,7 +151,7 @@ describe("routes/ai improve-section", () => {
 
   it("menolak section di luar enum", async () => {
     const res = await postJson("/ai/improve-section", {
-      section: "personal",
+      section: "invalid_section",
       data: [],
     });
     expect(res.status).toBe(400);
