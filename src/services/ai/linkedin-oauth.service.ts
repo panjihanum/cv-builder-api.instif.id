@@ -254,3 +254,24 @@ ID LinkedIn: ${profile.sub}
   // Ekstrak data CV menggunakan Claude AI
   return await claudeService.extractCvData(profileSummaryText);
 }
+
+/** Memproses payload webhook yang diterima dari LinkedIn */
+export async function processLinkedInWebhookPayload(
+  body: unknown,
+  headers: Record<string, string | undefined>
+): Promise<{ status: string; received: boolean; timestamp: string }> {
+  console.log(
+    "[LinkedIn Webhook] Payload received:",
+    JSON.stringify(body, null, 2)
+  );
+  const signature =
+    headers["x-li-signature"] || headers["x-linkedin-signature"];
+  if (signature) {
+    console.log("[LinkedIn Webhook] Signature header:", signature);
+  }
+  return {
+    status: "ok",
+    received: true,
+    timestamp: new Date().toISOString(),
+  };
+}

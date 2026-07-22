@@ -241,6 +241,46 @@ aiRoutes.post(
   }
 );
 
+aiRoutes.get("/linkedin/webhook", async (c) => {
+  const challenge =
+    c.req.query("challenge") ||
+    c.req.query("challengeCode") ||
+    c.req.query("hub.challenge") ||
+    c.req.query("code");
+
+  if (challenge) {
+    return c.text(challenge, 200, {
+      "Content-Type": "text/plain",
+    });
+  }
+
+  return c.json({
+    status: "ok",
+    message: "LinkedIn Webhook Endpoint is active",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+aiRoutes.post("/linkedin/webhook", async (c) => {
+  let body: unknown;
+  try {
+    body = await c.req.json();
+  } catch {
+    body = await c.req.parseBody().catch(() => ({}));
+  }
+
+  const headers = {
+    "x-li-signature": c.req.header("x-li-signature"),
+    "x-linkedin-signature": c.req.header("x-linkedin-signature"),
+  };
+
+  const result = await linkedInOAuthService.processLinkedInWebhookPayload(
+    body,
+    headers
+  );
+  return c.json(result, 200);
+});
+
 aiRoutes.post(
   "/improve-section",
   requireAuth,
