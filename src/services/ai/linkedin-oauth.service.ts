@@ -12,6 +12,7 @@ const STATE_TTL_MS = 15 * 60 * 1000; // 15 menit
 export interface LinkedInConfig {
   clientId: string;
   clientSecret: string;
+  redirectUri: string;
   isConfigured: boolean;
 }
 
@@ -31,13 +32,37 @@ function getSecretKey(): string {
 }
 
 export async function getLinkedInConfig(): Promise<LinkedInConfig> {
-  const clientId = (await getSetting("linkedin.clientId")) || "";
-  const clientSecret = (await getSetting("linkedin.clientSecret")) || "";
+  const clientId =
+    (await getSetting("linkedin.clientId")) ||
+    (await getSetting("linkedin_client_id")) ||
+    "";
+  const clientSecret =
+    (await getSetting("linkedin.clientSecret")) ||
+    (await getSetting("linkedin_client_secret")) ||
+    "";
+  const redirectUri =
+    (await getSetting("linkedin.redirectUri")) ||
+    (await getSetting("linkedin_redirect_uri")) ||
+    (await getSetting("linkedin.callbackUrl")) ||
+    (await getSetting("linkedin_callback_url")) ||
+    "";
   return {
-    clientId,
-    clientSecret,
+    clientId: clientId.trim(),
+    clientSecret: clientSecret.trim(),
+    redirectUri: redirectUri.trim(),
     isConfigured: clientId.trim().length > 0 && clientSecret.trim().length > 0,
   };
+}
+
+function resolveRedirectUri(configUri: string, clientUri?: string): string {
+  const base = (
+    configUri ||
+    clientUri ||
+    "https://cv-builder.instif.id/auth/linkedin/callback"
+  )
+    .trim()
+    .replace(/\/+$/, "");
+  return base;
 }
 
 /** Membikin parameter `state` ber-HMAC untuk cegah serangan CSRF. */
@@ -95,11 +120,15 @@ export async function getLinkedInAuthUrl(
     );
   }
 
+  const effectiveRedirectUri = resolveRedirectUri(
+    config.redirectUri,
+    redirectUri
+  );
   const state = generateLinkedInState(userId);
   const params = new URLSearchParams({
     response_type: "code",
     client_id: config.clientId,
-    redirect_uri: redirectUri,
+    redirect_uri: effectiveRedirectUri,
     state,
     scope: "openid profile email",
   });
@@ -117,10 +146,14 @@ export async function exchangeCodeForAccessToken(
     throw new HttpError(503, "Kredensial LinkedIn OAuth belum dikonfigurasi");
   }
 
+  const effectiveRedirectUri = resolveRedirectUri(
+    config.redirectUri,
+    redirectUri
+  );
   const body = new URLSearchParams({
     grant_type: "authorization_code",
     code,
-    redirect_uri: redirectUri,
+    redirect_uri: effectiveRedirectUri,
     client_id: config.clientId,
     client_secret: config.clientSecret,
   });
