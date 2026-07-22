@@ -414,59 +414,45 @@ aiRoutes.post(
     const userId = c.get("user").sub;
     const { url } = c.req.valid("json");
 
-    // User harus punya minimal kredit untuk biaya validasi (1 kredit)
-    const costs = await getCreditCosts();
-    const invalidCost = costs.aiUrlParseInvalid;
-    const validCost = costs.aiUrlParse;
-    await creditService.assertCreditBalance(userId, invalidCost);
+    const cost = (await getCreditCosts()).aiUrlParse;
+    await creditService.assertCreditBalance(userId, cost);
 
     const start = Date.now();
+    let success = true;
+    let errorMessage: string | undefined;
+    let inputTokens = 0;
+    let outputTokens = 0;
+    let model = "";
+    let data;
 
     try {
       const result = await urlParseService.parseUrlForCv(url);
-
-      const creditsUsed = result.isValid ? validCost : invalidCost;
-
-      void logAiUsage({
-        userId,
-        endpoint: "parse-url",
-        model: result.model,
-        inputTokens: result.inputTokens,
-        outputTokens: result.outputTokens,
-        durationMs: Date.now() - start,
-        creditsUsed,
-        success: result.isValid,
-        errorMessage: result.isValid ? undefined : result.reason,
-      });
-
-      const credits = await creditService.consumeCredits(userId, creditsUsed);
-
-      if (!result.isValid) {
-        return c.json(
-          {
-            isValid: false,
-            reason: result.reason ?? "URL tidak dapat diproses",
-            credits,
-          },
-          200
-        );
-      }
-
-      return c.json({ isValid: true, data: result.data, credits });
+      data = result.data;
+      inputTokens = result.inputTokens;
+      outputTokens = result.outputTokens;
+      model = result.model;
     } catch (err) {
-      const errorMessage = err instanceof Error ? err.message : String(err);
+      success = false;
+      errorMessage = err instanceof Error ? err.message : String(err);
+      if (err instanceof HttpError) {
+        throw err;
+      }
+      throw new HttpError(400, `Gagal memproses URL: ${errorMessage}`);
+    } finally {
       void logAiUsage({
         userId,
         endpoint: "parse-url",
-        model: "",
-        inputTokens: 0,
-        outputTokens: 0,
+        model,
+        inputTokens,
+        outputTokens,
         durationMs: Date.now() - start,
-        creditsUsed: 0,
-        success: false,
+        creditsUsed: success ? cost : 0,
+        success,
         errorMessage,
       });
-      throw err;
     }
+
+    const credits = await creditService.consumeCredits(userId, cost);
+    return c.json({ isValid: true, data, credits });
   }
 );
