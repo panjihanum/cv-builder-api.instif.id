@@ -6,6 +6,10 @@ import * as claudeService from "@/services/ai/claude.service.js";
 
 const { createMock } = vi.hoisted(() => ({ createMock: vi.fn() }));
 
+vi.mock("@/services/hubSettings.service.js", () => ({
+  getHubSettings: vi.fn().mockResolvedValue({}),
+}));
+
 vi.mock("@anthropic-ai/sdk", () => ({
   default: class MockAnthropic {
     messages = { create: createMock };

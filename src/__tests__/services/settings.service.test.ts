@@ -3,6 +3,10 @@ import { db } from "@/lib/db.js";
 import { encrypt, decrypt } from "@/lib/crypto.js";
 import * as settingsService from "@/services/settings.service.js";
 
+vi.mock("@/services/hubSettings.service.js", () => ({
+  getHubSettings: vi.fn().mockResolvedValue({}),
+}));
+
 beforeEach(() => {
   vi.clearAllMocks();
   settingsService.invalidateSettingsCache();
