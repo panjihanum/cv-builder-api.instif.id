@@ -103,7 +103,9 @@ export function renderSkillGroupsInline(
   const labelAttr = options.labelClass
     ? ` class="${options.labelClass}"`
     : ' class="font-bold"';
-  const lineAttr = options.className ? ` class="${options.className}"` : "";
+  const lineAttr = options.className
+    ? ` class="${options.className}"`
+    : ' class="skill-line"';
 
   return groups
     .map((group) => {

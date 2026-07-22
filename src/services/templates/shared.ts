@@ -115,6 +115,7 @@ const PAGINATION_CSS = [
   ".skill-cat+ul,.skill-cat+ol{margin-top:0;}",
   // A category block (heading + its skills) stays together where it can.
   ".skill-group{break-inside:avoid;page-break-inside:avoid;margin-bottom:6px;}",
+  ".skill-line,.lang-line{margin:2px 0;line-height:1.55;}",
   "header,.header,.namehead,.head,.hero,.profile{break-inside:avoid;page-break-inside:avoid;}",
   // .entry and article are NOT kept together — their bullets may flow across
   // pages. Individual li items stay intact, headers stay with their .meta row.
