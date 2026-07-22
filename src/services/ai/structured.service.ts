@@ -77,6 +77,7 @@ async function requestToolInput<Output>(
     : request.userContent;
 
   try {
+    console.log(`[Anthropic AI] Requesting model '${model}'...`);
     const message = await client.messages.create({
       model,
       max_tokens: MAX_OUTPUT_TOKENS,
@@ -99,8 +100,15 @@ async function requestToolInput<Output>(
     if (!toolUse) {
       throw new HttpError(502, "Claude tidak mengembalikan data terstruktur");
     }
+    console.log(
+      `[Anthropic AI] Successfully got response from model '${model}'.`
+    );
     return { input: toolUse.input, usage: message.usage, actualModel: model };
   } catch (err: unknown) {
+    if (err instanceof HttpError) {
+      throw err;
+    }
+
     const is404 =
       err &&
       typeof err === "object" &&
@@ -112,7 +120,7 @@ async function requestToolInput<Output>(
       const nextModel = CANDIDATE_MODELS.find((m) => !attemptedModels.has(m));
       if (nextModel) {
         console.warn(
-          `[Anthropic] Model '${model}' returned 404. Falling back to '${nextModel}'`
+          `[Anthropic AI] Model '${model}' returned 404. Falling back to '${nextModel}'`
         );
         return requestToolInput(
           client,
@@ -122,8 +130,19 @@ async function requestToolInput<Output>(
           attemptedModels
         );
       }
+      console.error(
+        `[Anthropic AI Error] All candidate models returned 404 Not Found. Original error:`,
+        err
+      );
+      throw new HttpError(
+        502,
+        "Layanan Anthropic AI tidak dapat diakses (404 Not Found pada seluruh model). Mohon periksa API Key Anthropic dan saldo di Admin Settings."
+      );
     }
-    throw err;
+
+    const msg = err instanceof Error ? err.message : String(err);
+    console.error(`[Anthropic AI Error] Failed to complete request:`, err);
+    throw new HttpError(502, `Gagal memanggil Anthropic AI: ${msg}`);
   }
 }
 
@@ -149,6 +168,9 @@ export async function requestStructured<Output>(
     };
   }
 
+  console.warn(
+    `[Anthropic AI] First response failed schema validation. Retrying with hint...`
+  );
   const second = await requestToolInput(
     client,
     first.actualModel,

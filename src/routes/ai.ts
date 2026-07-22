@@ -208,6 +208,9 @@ aiRoutes.post(
     let data;
 
     try {
+      console.log(
+        `[POST /ai/linkedin/callback] Processing request for user ${userId}...`
+      );
       const result = await linkedInOAuthService.processLinkedInOAuth(
         userId,
         code,
@@ -218,10 +221,23 @@ aiRoutes.post(
       inputTokens = result.inputTokens;
       outputTokens = result.outputTokens;
       model = result.model;
+      console.log(
+        `[POST /ai/linkedin/callback] Success for user ${userId}. Model: ${model}`
+      );
     } catch (err) {
       success = false;
       errorMessage = err instanceof Error ? err.message : String(err);
-      throw err;
+      console.error(
+        `[POST /ai/linkedin/callback Error] User ${userId} failed:`,
+        err
+      );
+      if (err instanceof HttpError) {
+        throw err;
+      }
+      throw new HttpError(
+        500,
+        `Gagal memproses LinkedIn Callback: ${errorMessage}`
+      );
     } finally {
       void logAiUsage({
         userId,

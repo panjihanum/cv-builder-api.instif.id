@@ -235,15 +235,32 @@ export async function processLinkedInOAuth(
   outputTokens: number;
   model: string;
 }> {
+  console.log(
+    `[LinkedIn OAuth Step 1] Verifying state token for user ${userId}...`
+  );
   if (!verifyLinkedInState(state, userId)) {
+    console.warn(
+      `[LinkedIn OAuth Step 1 Failed] State token mismatch or expired. State: ${state}`
+    );
     throw new HttpError(
       400,
       "Sesi otorisasi LinkedIn tidak valid atau telah kadaluarsa (CSRF token mismatch). Silakan coba lagi."
     );
   }
 
+  console.log(
+    `[LinkedIn OAuth Step 2] Exchanging authorization code for access token...`
+  );
   const accessToken = await exchangeCodeForAccessToken(code, redirectUri);
+  console.log(`[LinkedIn OAuth Step 2 Done] Access token acquired.`);
+
+  console.log(
+    `[LinkedIn OAuth Step 3] Fetching user profile from LinkedIn API...`
+  );
   const profile = await fetchLinkedInProfile(accessToken);
+  console.log(
+    `[LinkedIn OAuth Step 3 Done] Profile fetched for: ${profile.name} (${profile.email || "no-email"}).`
+  );
 
   // Buat teks profil terstruktur dari API resmi LinkedIn
   const profileSummaryText = `
@@ -253,6 +270,12 @@ Foto Profil URL: ${profile.picture || "Belum diatur"}
 ID LinkedIn: ${profile.sub}
   `.trim();
 
-  // Ekstrak data CV menggunakan Claude AI
-  return await claudeService.extractCvData(profileSummaryText);
+  console.log(
+    `[LinkedIn OAuth Step 4] Calling Claude AI to extract CV data...`
+  );
+  const extracted = await claudeService.extractCvData(profileSummaryText);
+  console.log(
+    `[LinkedIn OAuth Step 4 Done] CV data successfully extracted using model '${extracted.model}'.`
+  );
+  return extracted;
 }
