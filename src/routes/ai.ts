@@ -123,17 +123,11 @@ aiRoutes.post(
     } else if (url) {
       try {
         profileText = await scrapeLinkedInProfile(url);
-      } catch (err) {
-        if (err instanceof Error && err.message === "AUTHWALL") {
-          throw new HttpError(
-            400,
-            "LinkedIn memblokir deteksi otomatis (authwall). Silakan salin teks profil Anda dan gunakan metode Copy-Paste di bawah.",
-            "AUTHWALL"
-          );
-        }
+      } catch {
         throw new HttpError(
-          502,
-          err instanceof Error ? err.message : "Gagal membaca profil LinkedIn"
+          400,
+          "LinkedIn memblokir deteksi otomatis (authwall). Silakan salin teks profil Anda dan gunakan metode Copy-Paste di bawah.",
+          "AUTHWALL"
         );
       }
     }

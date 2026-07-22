@@ -21,14 +21,18 @@ export class ScrapeError extends Error {
  * @throws {ScrapeError} FETCH_FAILED — error jaringan, timeout, atau halaman error (4xx/5xx)
  */
 export async function scrapeUrl(url: string): Promise<string> {
-  const browser = await puppeteer.launch({
+  const launchOptions: Parameters<typeof puppeteer.launch>[0] = {
     headless: true,
+    executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
     args: [
       "--no-sandbox",
       "--disable-setuid-sandbox",
       "--disable-dev-shm-usage",
+      "--disable-gpu",
     ],
-  });
+  };
+
+  const browser = await puppeteer.launch(launchOptions);
   try {
     const page = await browser.newPage();
     await page.setUserAgent(
@@ -48,13 +52,13 @@ export async function scrapeUrl(url: string): Promise<string> {
     const content = await page.evaluate(() => {
       const g = globalThis as Record<string, unknown>;
       const doc = g.document as { body: { innerText: string } };
-      return doc.body.innerText;
+      return doc.body ? doc.body.innerText : "";
     });
 
-    // Detect HTTP error pages
-    if (httpStatus >= 400) {
+    // Detect HTTP error pages or LinkedIn block (999/403/401)
+    if (httpStatus >= 400 || httpStatus === 999) {
       throw new ScrapeError(
-        "FETCH_FAILED",
+        "AUTHWALL",
         `Halaman mengembalikan status HTTP ${httpStatus}`
       );
     }
@@ -105,8 +109,7 @@ export async function scrapeLinkedInProfile(url: string): Promise<string> {
   try {
     return await scrapeUrl(url);
   } catch (err) {
-    if (err instanceof ScrapeError && err.code === "AUTHWALL") {
-      // Preserve original "AUTHWALL" string error for existing route handler
+    if (err instanceof ScrapeError) {
       throw new Error("AUTHWALL", { cause: err });
     }
     throw err;
