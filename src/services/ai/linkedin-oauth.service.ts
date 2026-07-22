@@ -262,20 +262,79 @@ export async function processLinkedInOAuth(
     `[LinkedIn OAuth Step 3 Done] Profile fetched for: ${profile.name} (${profile.email || "no-email"}).`
   );
 
-  // Buat teks profil terstruktur dari API resmi LinkedIn
-  const profileSummaryText = `
-Nama Lengkap: ${profile.name}
-Email: ${profile.email || "Belum diatur"}
-Foto Profil URL: ${profile.picture || "Belum diatur"}
-ID LinkedIn: ${profile.sub}
-  `.trim();
+  // Catatan: LinkedIn OpenID Connect (scope: openid profile email) hanya mengembalikan
+  // data dasar: nama, email, foto, dan locale. Data pengalaman kerja, pendidikan, dan
+  // keahlian TIDAK tersedia melalui endpoint ini karena memerlukan LinkedIn Partner Access.
+  //
+  // Jangan sertakan `profile.sub` (ID internal OAuth) ke teks AI karena akan
+  // diinterpretasikan sebagai public LinkedIn profile ID → URL yang salah.
+  const profileText = [
+    `Nama Lengkap: ${profile.name}`,
+    profile.givenName ? `Nama Depan: ${profile.givenName}` : "",
+    profile.familyName ? `Nama Belakang: ${profile.familyName}` : "",
+    profile.email ? `Email: ${profile.email}` : "",
+    profile.locale
+      ? `Preferensi Bahasa LinkedIn: ${JSON.stringify(profile.locale)}`
+      : "",
+    "",
+    "CATATAN PENTING: Data ini hanya berasal dari API dasar LinkedIn (OpenID Connect).",
+    "API ini hanya menyediakan nama, email, dan preferensi bahasa — BUKAN pengalaman kerja, pendidikan, atau keahlian.",
+    "Jangan mengarang data pengalaman, pendidikan, atau keahlian yang tidak ada.",
+    "Jangan membuat link LinkedIn dari data ini karena tidak ada URL profil publik yang tersedia.",
+    "Isi hanya field personal.fullName, personal.email, dan personal.language saja dari data di atas.",
+  ]
+    .filter(Boolean)
+    .join("\n");
 
   console.log(
     `[LinkedIn OAuth Step 4] Calling Claude AI to extract CV data...`
   );
-  const extracted = await claudeService.extractCvData(profileSummaryText);
+  const extracted = await claudeService.extractCvData(profileText);
   console.log(
-    `[LinkedIn OAuth Step 4 Done] CV data successfully extracted using model '${extracted.model}'.`
+    `[LinkedIn OAuth Step 4 Done] CV data extracted using model '${extracted.model}'.`
   );
-  return extracted;
+
+  // Override data personal langsung dari LinkedIn API (lebih akurat daripada hasil AI).
+  // AI hanya digunakan untuk mengisi field seperti language inference.
+  const mergedData: CvData = {
+    ...extracted.data,
+    personal: {
+      ...extracted.data.personal,
+      // Gunakan data resmi dari LinkedIn API, bukan tebakan AI
+      fullName: profile.name || extracted.data.personal.fullName,
+      email: profile.email || extracted.data.personal.email,
+      // Set foto profil langsung dari URL LinkedIn (bukan dari AI)
+      photoUrl: profile.picture || extracted.data.personal.photoUrl,
+      // Hapus semua link yang mungkin di-generate AI secara salah
+      // (tidak ada data URL profil LinkedIn publik dari OpenID endpoint)
+      links: extracted.data.personal.links.filter((link) => {
+        const url = link.url?.toLowerCase() ?? "";
+        // Buang link LinkedIn palsu yang dibuat dari ID internal OAuth
+        const isLinkedInLink = url.includes("linkedin.com");
+        if (!isLinkedInLink) return true;
+        // Pertahankan hanya jika URL-nya adalah format slug yang valid
+        // (bukan ID acak seperti HzoNCqauun yang berasal dari sub)
+        const linkedinPath = url
+          .replace(/^https?:\/\/[^/]+\/in\//, "")
+          .split("?")[0];
+        // LinkedIn vanity URL hanya berisi huruf, angka, dan tanda hubung, minimal 3 char
+        const isValidSlug = /^[a-z0-9-]{3,100}$/i.test(linkedinPath);
+        return isLinkedInLink && isValidSlug;
+      }),
+    },
+    // Pastikan section yang tidak ada dari API dibiarkan kosong (bukan dikarang AI)
+    experience: extracted.data.experience,
+    education: extracted.data.education,
+    skills: extracted.data.skills,
+    projects: extracted.data.projects,
+    certifications: extracted.data.certifications,
+    languages: extracted.data.languages,
+    customSections: extracted.data.customSections,
+  };
+
+  console.log(
+    `[LinkedIn OAuth Step 5] Personal data merged from LinkedIn API: name="${mergedData.personal.fullName}", email="${mergedData.personal.email}", photoUrl="${mergedData.personal.photoUrl ? "set" : "empty"}"`
+  );
+
+  return { ...extracted, data: mergedData };
 }
