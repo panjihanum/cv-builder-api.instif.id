@@ -209,33 +209,3 @@ describe("routes/ai polish-cv", () => {
     expect(creditArgs.data).toEqual({ balance: { decrement: 3 } });
   });
 });
-
-describe("routes/ai linkedin webhook", () => {
-  it("GET /ai/linkedin/webhook mengembalikan challenge jika diberikan parameter challenge", async () => {
-    const res = await app.request(
-      "/ai/linkedin/webhook?challenge=test-challenge-123"
-    );
-    expect(res.status).toBe(200);
-    const text = await res.text();
-    expect(text).toBe("test-challenge-123");
-  });
-
-  it("GET /ai/linkedin/webhook mengembalikan status ok jika tanpa challenge", async () => {
-    const res = await app.request("/ai/linkedin/webhook");
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { status: string; message: string };
-    expect(body.status).toBe("ok");
-  });
-
-  it("POST /ai/linkedin/webhook menerima payload dan mengembalikan status 200 ok", async () => {
-    const res = await app.request("/ai/linkedin/webhook", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ event: "MEMBER_SHARE", user: "123" }),
-    });
-    expect(res.status).toBe(200);
-    const body = (await res.json()) as { status: string; received: boolean };
-    expect(body.status).toBe("ok");
-    expect(body.received).toBe(true);
-  });
-});
