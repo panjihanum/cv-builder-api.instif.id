@@ -1,7 +1,8 @@
 import bcryptjs from "bcryptjs";
 import { db } from "@/lib/db.js";
 import { signToken } from "@/lib/jwt.js";
-import { verifySSOToken } from "@/lib/sso.js";
+import { SsoReplayGuard, verifySsoToken } from "@/lib/sso.js";
+import { env } from "@/lib/env.js";
 import { HttpError } from "@/lib/httpError.js";
 import { normalizePhone } from "@/lib/phone.js";
 import * as waGateway from "@/lib/waGateway.js";
@@ -183,15 +184,42 @@ export async function verifyPhoneOtp(input: {
  * signs tokens for its own ADMIN users, so a valid token grants access to the
  * first active local ADMIN account.
  */
+/**
+ * Single-use guard for hub SSO tokens, one per process. See `lib/sso.ts` for
+ * why redemption is capped at once and what changes if this API is ever run
+ * with more than one replica.
+ */
+const ssoReplayGuard = new SsoReplayGuard();
+
 export async function ssoLogin(ssoToken: string) {
-  const payload = verifySSOToken(ssoToken);
-  if (!payload) {
+  const verified = verifySsoToken(ssoToken, {
+    audience: "cv-builder",
+    secret: env.SSO_SECRET,
+    replayGuard: ssoReplayGuard,
+  });
+  if (!verified.ok) {
+    if (verified.reason === "not_configured") {
+      throw new HttpError(503, "SSO belum dikonfigurasi");
+    }
     throw new HttpError(401, "Token SSO tidak valid atau kadaluarsa");
   }
-  const admin = await db.user.findFirst({
-    where: { role: "ADMIN", status: "ACTIVE" },
-    orderBy: { createdAt: "asc" },
-  });
+
+  // Prefer the local admin whose email matches the hub identity; fall back to
+  // the oldest active admin so a mismatched local seed still lets the hub in.
+  const admin =
+    (verified.claims.email
+      ? await db.user.findFirst({
+          where: {
+            role: "ADMIN",
+            status: "ACTIVE",
+            email: verified.claims.email,
+          },
+        })
+      : null) ??
+    (await db.user.findFirst({
+      where: { role: "ADMIN", status: "ACTIVE" },
+      orderBy: { createdAt: "asc" },
+    }));
   if (!admin) {
     throw new HttpError(404, "Akun admin tidak ditemukan");
   }
