@@ -3,7 +3,7 @@ import { PrismaClient } from "@prisma/client";
 
 const db = new PrismaClient();
 
-const ADMIN_EMAIL = "admin@instif.id";
+const ADMIN_EMAIL = "panji.hanum@instif.id";
 const DEV_ADMIN_PASSWORD = "admin123";
 
 const defaultSettings: Record<string, string> = {
