@@ -55,6 +55,18 @@ else {
     docker compose up -d --build
 }
 
+# A redeploy script that does not check this reports "Deployed" after a FAILED
+# build: compose errors, the PREVIOUS container is left running, the health
+# check below finds it healthy, and the script declares success while the
+# service still serves the old image.
+if ($LASTEXITCODE -ne 0) {
+    Write-Host ""
+    Write-Host "ERROR: docker compose failed (exit $LASTEXITCODE). NOTHING WAS DEPLOYED." -ForegroundColor Red
+    Write-Host "ERROR: Whatever is running now is the PREVIOUS image — the service is unchanged." -ForegroundColor Red
+    Write-Host ""
+    exit 1
+}
+
 # --- verify ---------------------------------------------------------------
 Info "Waiting for ph_instif_cv_builder_api to become healthy…"
 $svc      = 'ph_instif_cv_builder_api'

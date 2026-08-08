@@ -4,6 +4,7 @@ import { Hono } from "hono";
 import { cors } from "hono/cors";
 import { logger } from "hono/logger";
 import { secureHeaders } from "hono/secure-headers";
+import { noIndex, ROBOTS_TXT } from "@/middleware/no-index.js";
 import { env } from "@/lib/env.js";
 import { db } from "@/lib/db.js";
 import { HttpError } from "@/lib/httpError.js";
@@ -41,6 +42,8 @@ app.use("/uploads/*", async (c, next) => {
 app.use("/uploads/*", serveStatic({ root: "./" }));
 
 app.use("*", secureHeaders());
+// This host must never appear in search results — see @/middleware/no-index.
+app.use("*", noIndex);
 app.use(
   "*",
   cors({
@@ -61,6 +64,7 @@ app.get("/", (c) =>
 );
 
 app.get("/health", (c) => c.json({ status: "ok" }));
+app.get("/robots.txt", (c) => c.text(ROBOTS_TXT));
 
 app.route("/auth", authRoutes);
 app.route("/cv", cvRoutes);
