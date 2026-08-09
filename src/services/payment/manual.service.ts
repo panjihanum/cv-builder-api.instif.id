@@ -169,6 +169,43 @@ export async function listPaymentsForAdmin(
   return paginate(items, total, page, pageSize);
 }
 
+export interface AdminPaymentStats {
+  pending: number;
+  paid: number;
+  rejected: number;
+  /** Rupiah yang tertahan di antrian verifikasi. */
+  pendingAmount: number;
+  /** Rupiah yang sudah disetujui, sepanjang waktu. */
+  paidAmount: number;
+}
+
+/**
+ * Ringkasan seluruh order, untuk kepala halaman verifikasi.
+ *
+ * Menjumlahkannya di klien mustahil benar: yang dipegang klien hanya satu
+ * halaman order berstatus PENDING, sehingga totalnya akan berubah setiap kali
+ * admin pindah halaman.
+ */
+export async function getPaymentStatsForAdmin(): Promise<AdminPaymentStats> {
+  const [pending, paid, rejected, pendingSum, paidSum] = await Promise.all([
+    db.order.count({ where: { status: "PENDING" } }),
+    db.order.count({ where: { status: "PAID" } }),
+    db.order.count({ where: { status: "REJECTED" } }),
+    db.order.aggregate({
+      where: { status: "PENDING" },
+      _sum: { amount: true },
+    }),
+    db.order.aggregate({ where: { status: "PAID" }, _sum: { amount: true } }),
+  ]);
+  return {
+    pending,
+    paid,
+    rejected,
+    pendingAmount: pendingSum._sum.amount ?? 0,
+    paidAmount: paidSum._sum.amount ?? 0,
+  };
+}
+
 export async function approvePayment(orderId: string) {
   await settleOrderPaid(orderId);
   return db.order.findUnique({ where: { id: orderId } });

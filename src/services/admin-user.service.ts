@@ -21,20 +21,48 @@ export interface ReferralStat {
   totalAmount: number;
 }
 
+export interface ListUsersFilters {
+  search?: string;
+  role?: string;
+  status?: string;
+  page?: number;
+  pageSize?: number;
+}
+
+/**
+ * Ringkasan seluruh tabel pengguna — bukan halaman yang sedang dibuka.
+ *
+ * Konsol admin tidak bisa menghitungnya sendiri dari daftar berhalaman: dua
+ * puluh baris pertama tidak tahu berapa admin yang ada di halaman ketujuh.
+ */
+export interface AdminUserStats {
+  total: number;
+  admins: number;
+  active: number;
+  inactive: number;
+  /** Jumlah kredit yang beredar di seluruh akun. */
+  totalCredit: number;
+}
+
+function buildUserWhere({ search, role, status }: ListUsersFilters) {
+  const where: Record<string, unknown> = {};
+  if (search) {
+    where.OR = [
+      { name: { contains: search, mode: "insensitive" as const } },
+      { email: { contains: search, mode: "insensitive" as const } },
+      { phone: { contains: search } },
+    ];
+  }
+  if (role) where.role = role;
+  if (status) where.status = status;
+  return where;
+}
+
 export async function listUsers(
-  search?: string,
-  page = 1,
-  pageSize = 20
+  filters: ListUsersFilters = {}
 ): Promise<Paginated<AdminUserView>> {
-  const where = search
-    ? {
-        OR: [
-          { name: { contains: search, mode: "insensitive" as const } },
-          { email: { contains: search, mode: "insensitive" as const } },
-          { phone: { contains: search } },
-        ],
-      }
-    : {};
+  const { page = 1, pageSize = 20 } = filters;
+  const where = buildUserWhere(filters);
   const [users, total] = await Promise.all([
     db.user.findMany({
       where,
@@ -66,6 +94,24 @@ export async function listUsers(
     createdAt: u.createdAt,
   }));
   return paginate(items, total, page, pageSize);
+}
+
+export async function getUserStats(): Promise<AdminUserStats> {
+  const [total, admins, active, credit] = await Promise.all([
+    db.user.count(),
+    db.user.count({ where: { role: "ADMIN" } }),
+    db.user.count({ where: { status: "ACTIVE" } }),
+    db.credit.aggregate({ _sum: { balance: true } }),
+  ]);
+  return {
+    total,
+    admins,
+    active,
+    // Diturunkan, bukan dihitung terpisah: "nonaktif" di sini berarti "apa pun
+    // selain ACTIVE", jadi INACTIVE dan BANNED tidak bisa saling menutupi.
+    inactive: total - active,
+    totalCredit: credit._sum.balance ?? 0,
+  };
 }
 
 export async function adjustCredit(

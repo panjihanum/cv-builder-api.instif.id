@@ -33,6 +33,10 @@ adminPaymentsRoutes.get(
   }
 );
 
+adminPaymentsRoutes.get("/stats", async (c) => {
+  return c.json(await manualService.getPaymentStatsForAdmin());
+});
+
 // Bulk routes registered before the `:id` routes so they are matched first.
 adminPaymentsRoutes.post(
   "/bulk/approve",

@@ -7,6 +7,11 @@ import * as adminUserService from "@/services/admin-user.service.js";
 
 const listSchema = paginationQuerySchema.extend({
   search: z.string().optional(),
+  // Enum, bukan string bebas: nilainya masuk langsung ke `where` Prisma, dan
+  // daftar tertutup inilah yang menjamin hanya kolom yang dimaksud yang bisa
+  // disaring.
+  role: z.enum(["USER", "ADMIN"]).optional(),
+  status: z.enum(["ACTIVE", "INACTIVE", "BANNED"]).optional(),
 });
 
 const creditSchema = z.object({
@@ -23,9 +28,13 @@ const updateSchema = z.object({
 export const adminUsersRoutes = new Hono<AuthEnv>();
 
 adminUsersRoutes.get("/", validate("query", listSchema), async (c) => {
-  const { search, page, pageSize } = c.req.valid("query");
-  const result = await adminUserService.listUsers(search, page, pageSize);
+  const result = await adminUserService.listUsers(c.req.valid("query"));
   return c.json(result);
+});
+
+// Terdaftar sebelum rute ber-`:id` agar "stats" tidak dibaca sebagai sebuah id.
+adminUsersRoutes.get("/stats", async (c) => {
+  return c.json(await adminUserService.getUserStats());
 });
 
 adminUsersRoutes.post(

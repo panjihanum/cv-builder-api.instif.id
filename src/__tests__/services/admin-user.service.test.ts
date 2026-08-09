@@ -32,19 +32,69 @@ describe("admin-user.service listUsers", () => {
   it("membuat filter OR saat ada search", async () => {
     vi.mocked(db.user.findMany).mockResolvedValue([] as never);
     vi.mocked(db.user.count).mockResolvedValue(0 as never);
-    await adminUserService.listUsers("budi");
+    await adminUserService.listUsers({ search: "budi" });
     const args = vi.mocked(db.user.findMany).mock.calls[0][0];
+    expect(args?.where).toHaveProperty("OR");
+  });
+
+  it("menggabungkan search dengan filter role dan status", async () => {
+    vi.mocked(db.user.findMany).mockResolvedValue([] as never);
+    vi.mocked(db.user.count).mockResolvedValue(0 as never);
+    await adminUserService.listUsers({
+      search: "budi",
+      role: "ADMIN",
+      status: "INACTIVE",
+    });
+    const args = vi.mocked(db.user.findMany).mock.calls[0][0];
+    // Ketiganya harus hidup bersamaan: filter yang saling menimpa akan
+    // menampilkan admin yang aktif saat admin meminta yang nonaktif.
+    expect(args?.where).toMatchObject({ role: "ADMIN", status: "INACTIVE" });
     expect(args?.where).toHaveProperty("OR");
   });
 
   it("menerapkan skip/take sesuai halaman", async () => {
     vi.mocked(db.user.findMany).mockResolvedValue([] as never);
     vi.mocked(db.user.count).mockResolvedValue(45 as never);
-    const result = await adminUserService.listUsers(undefined, 3, 20);
+    const result = await adminUserService.listUsers({ page: 3, pageSize: 20 });
     const args = vi.mocked(db.user.findMany).mock.calls[0][0];
     expect(args?.skip).toBe(40);
     expect(args?.take).toBe(20);
     expect(result.totalPages).toBe(3);
+  });
+});
+
+describe("admin-user.service getUserStats", () => {
+  it("menurunkan jumlah nonaktif dari total dikurangi aktif", async () => {
+    vi.mocked(db.user.count)
+      .mockResolvedValueOnce(10 as never) // total
+      .mockResolvedValueOnce(2 as never) // admin
+      .mockResolvedValueOnce(7 as never); // aktif
+    vi.mocked(db.credit.aggregate).mockResolvedValue({
+      _sum: { balance: 120 },
+    } as never);
+
+    const stats = await adminUserService.getUserStats();
+
+    // INACTIVE dan BANNED dihitung sekali sebagai "bukan aktif"; menghitung
+    // keduanya terpisah akan membuat salah satunya hilang dari ringkasan.
+    expect(stats).toEqual({
+      total: 10,
+      admins: 2,
+      active: 7,
+      inactive: 3,
+      totalCredit: 120,
+    });
+  });
+
+  it("membaca saldo kosong sebagai nol, bukan null", async () => {
+    vi.mocked(db.user.count).mockResolvedValue(0 as never);
+    vi.mocked(db.credit.aggregate).mockResolvedValue({
+      _sum: { balance: null },
+    } as never);
+
+    const stats = await adminUserService.getUserStats();
+
+    expect(stats.totalCredit).toBe(0);
   });
 });
 

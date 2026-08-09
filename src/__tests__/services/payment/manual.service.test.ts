@@ -265,3 +265,37 @@ describe("manual.service rejectPayment", () => {
     });
   });
 });
+
+describe("manual.service getPaymentStatsForAdmin", () => {
+  it("memisahkan jumlah dan nilai per status", async () => {
+    vi.mocked(db.order.count)
+      .mockResolvedValueOnce(3 as never) // PENDING
+      .mockResolvedValueOnce(12 as never) // PAID
+      .mockResolvedValueOnce(1 as never); // REJECTED
+    vi.mocked(db.order.aggregate)
+      .mockResolvedValueOnce({ _sum: { amount: 36000 } } as never)
+      .mockResolvedValueOnce({ _sum: { amount: 144000 } } as never);
+
+    const stats = await manualService.getPaymentStatsForAdmin();
+
+    expect(stats).toEqual({
+      pending: 3,
+      paid: 12,
+      rejected: 1,
+      pendingAmount: 36000,
+      paidAmount: 144000,
+    });
+  });
+
+  it("membaca antrian kosong sebagai nol rupiah, bukan null", async () => {
+    vi.mocked(db.order.count).mockResolvedValue(0 as never);
+    vi.mocked(db.order.aggregate).mockResolvedValue({
+      _sum: { amount: null },
+    } as never);
+
+    const stats = await manualService.getPaymentStatsForAdmin();
+
+    expect(stats.pendingAmount).toBe(0);
+    expect(stats.paidAmount).toBe(0);
+  });
+});
