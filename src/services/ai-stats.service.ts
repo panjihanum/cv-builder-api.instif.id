@@ -385,6 +385,14 @@ async function dailySeries(
         )`
     : Prisma.empty;
 
+  /*
+   * Disebut sekali saja, lalu dirujuk sebagai kolom ke-1 oleh GROUP BY dan
+   * ORDER BY. Menulis ekspresinya ulang di ketiga tempat justru ditolak
+   * Postgres dengan 42803: zonanya terikat sebagai parameter, jadi $2 di SELECT
+   * dan $4 di GROUP BY bukan ekspresi yang sama baginya sekalipun kita tahu
+   * nilainya identik. Ordinal 1 menunjuk teks 'YYYY-MM-DD', yang urutan
+   * leksikografisnya memang urutan kronologisnya.
+   */
   const localDay = Prisma.sql`DATE(("createdAt" AT TIME ZONE 'UTC') AT TIME ZONE ${REPORT_TIME_ZONE})`;
 
   /*
@@ -410,8 +418,8 @@ async function dailySeries(
       SUM("creditsUsed")  AS credits
     FROM ai_usage_logs
     WHERE "createdAt" >= ${since}${userMatch}
-    GROUP BY ${localDay}
-    ORDER BY ${localDay} ASC
+    GROUP BY 1
+    ORDER BY 1 ASC
   `;
 
   return rows.map((d) => ({
