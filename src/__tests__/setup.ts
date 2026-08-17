@@ -38,6 +38,9 @@ vi.mock("@/lib/db.js", () => {
     whatsAppSession: createModelMock(),
     aiUsageLog: createModelMock(),
     $transaction: vi.fn(),
+    // Dipakai agregat yang tidak bisa diungkapkan lewat `groupBy` — pemotongan
+    // timestamp jadi tanggal pada deret harian Monitoring AI.
+    $queryRaw: vi.fn(),
   };
   db.$transaction.mockImplementation(async (arg: unknown) => {
     if (typeof arg === "function") {
