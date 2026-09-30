@@ -230,6 +230,9 @@ describe("template.service full-bleed & padding halaman", () => {
     "ats-anchor",
     "ats-sterling",
     "ats-vantage",
+    "ats-ivy-league",
+    "ats-tech-focus",
+    "ats-executive-leadership",
   ];
 
   it.each(fullBleedIds)("menandai %s sebagai full-bleed", (id) => {
@@ -312,6 +315,9 @@ describe("template.service biaya kredit", () => {
     "ats-anchor": 2,
     "ats-sterling": 8,
     "ats-vantage": 5,
+    "ats-ivy-league": 2,
+    "ats-tech-focus": 2,
+    "ats-executive-leadership": 5,
   };
 
   it("memberi biaya berjenjang per template (free/basic gratis, lalu 2–10 kredit) dari default", async () => {

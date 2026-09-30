@@ -50,6 +50,9 @@ import { renderAtsBrevity } from "@/services/templates/ats-brevity.js";
 import { renderAtsAnchor } from "@/services/templates/ats-anchor.js";
 import { renderAtsSterling } from "@/services/templates/ats-sterling.js";
 import { renderAtsVantage } from "@/services/templates/ats-vantage.js";
+import { renderAtsIvyLeague } from "@/services/templates/ats-ivy-league.js";
+import { renderAtsTechFocus } from "@/services/templates/ats-tech-focus.js";
+import { renderAtsExecutiveLeadership } from "@/services/templates/ats-executive-leadership.js";
 
 export type TemplateRenderer = (data: CvData) => string;
 
@@ -131,4 +134,20 @@ export const templates: Record<string, TemplateEntry> = {
   "ats-anchor": { render: renderAtsAnchor, tier: "standard" },
   "ats-sterling": { render: renderAtsSterling, tier: "elite" },
   "ats-vantage": { render: renderAtsVantage, tier: "premium" },
+  "ats-ivy-league": {
+    render: renderAtsIvyLeague,
+    tier: "standard",
+    fullBleed: false,
+  },
+  "ats-tech-focus": {
+    render: renderAtsTechFocus,
+    tier: "standard",
+    fullBleed: false,
+  },
+  "ats-executive-leadership": {
+    render: renderAtsExecutiveLeadership,
+    tier: "premium",
+    fullBleed: false,
+  },
 };
+
