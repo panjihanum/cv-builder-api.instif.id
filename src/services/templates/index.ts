@@ -150,4 +150,3 @@ export const templates: Record<string, TemplateEntry> = {
     fullBleed: false,
   },
 };
-

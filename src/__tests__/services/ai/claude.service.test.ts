@@ -134,6 +134,17 @@ describe("claude.service extractCvData", () => {
     expect(system).toContain("<u>");
   });
 
+  it("menginstruksikan optimasi wording, action verbs, ringkasan profil, dan integritas fakta di system prompt", async () => {
+    anthropicSettings();
+    createMock.mockResolvedValue(toolUseResponse(validInput));
+    await claudeService.extractCvData("teks cv");
+    const system = createMock.mock.calls[0][0].system as string;
+    expect(system).toContain("kata kerja aksi");
+    expect(system).toContain("Ringkasan Profesional");
+    expect(system).toContain("ATS");
+    expect(system).toContain("KEAMANAN & INTEGRITAS FAKTA");
+  });
+
   it("mempertahankan deskripsi html rich text hasil parse apa adanya", async () => {
     anthropicSettings();
     const html =
