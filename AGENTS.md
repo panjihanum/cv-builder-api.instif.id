@@ -11,4 +11,5 @@ After completing ANY requested change, always do the following:
    - This does NOT mean push is forbidden; IF the user instructs or commands to push (e.g. "push", "tolong push", "push ke main"), the agent MUST execute `git push origin <branch>`.
    - Without an explicit command to push, keep commits stored cleanly in the local repository.
 
-Deploy is strictly manual. Agents must never run deploy or redeploy scripts automatically.
+4. **Auto-Redeploy on Push (MANDATORY)**:
+   - Setiap kali `git push` dijalankan atas perintah user, agent WAJIB otomatis melakukan redeploy container docker aplikasi tersebut dan memastikan Cloudflare Tunnel tersinkronisasi / berjalan (`pwsh -File c:\Users\panha\Documents\GitHub\INSTIF\www.instif.id\scripts\redeploy-all.ps1 -Only cv-builder-api` atau script redeploy terkait). Tanpa perintah push, deploy tidak dijalankan.
