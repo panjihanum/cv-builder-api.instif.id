@@ -2,16 +2,19 @@
 
 Aturan ini WAJIB dipatuhi setiap kali bekerja di repo ini. Spesifikasi fitur ada di `task.md`.
 
-## Auto-commit & Auto-push (WAJIB)
+## Auto-commit (WAJIB) & Push Policy
 
-Setelah **setiap** unit pekerjaan selesai (satu perintah / satu task tuntas), **langsung buat commit**, lalu **langsung push** ke remote. Jangan menumpuk banyak perubahan dalam satu commit.
+Setelah **setiap** unit pekerjaan selesai (satu perintah / satu task tuntas), **langsung buat commit** (WAJIB). Jangan menumpuk banyak perubahan dalam satu commit.
 
 Urutan wajib tiap selesai perintah:
 
 1. Pastikan lint/format/type-check/test hijau (lefthook akan memverifikasi).
 2. `git add` + `git commit` dengan format di bawah.
-3. `git push origin main` — otomatis, tanpa menunggu diminta.
-4. Jika push ditolak (remote lebih baru): `git pull --rebase origin main` lalu push ulang. **Dilarang** `git push --force`.
+3. **Push Policy (Tergantung Perintah)**:
+   - Jangan auto-push ke remote tanpa instruksi user.
+   - Bukan berarti dilarang push; JIKA user memerintahkan untuk push (mis. "push", "tolong push", "push ke main"), agent WAJIB menjalankan `git push origin main`.
+   - Tanpa perintah eksplisit untuk push, simpan commit dengan rapi di repository lokal.
+4. Jika push dijalankan dan ditolak (remote lebih baru): `git pull --rebase origin main` lalu push ulang. **Dilarang** `git push --force`.
 
 Format pesan commit — selalu persis seperti ini:
 
@@ -20,6 +23,7 @@ Format pesan commit — selalu persis seperti ini:
 ```
 
 Contoh:
+
 - `[feat] tambah endpoint parse-cv dengan claude structured output`
 - `[fix] perbaiki verifikasi signature callback duitku`
 - `[test] tambah unit test untuk credit.service`
@@ -29,9 +33,10 @@ Contoh:
 Tipe Pekerjaan yang dipakai: `feat` · `fix` · `refactor` · `test` · `chore` · `docs` · `style`.
 
 Aturan commit:
+
 - Deskripsi singkat, jelas, bahasa Indonesia, huruf kecil di awal kata pertama.
 - Satu commit = satu perubahan logis.
-- Commit langsung di branch `main` lalu **push otomatis** setiap selesai perintah — ini instruksi tetap dari user, tidak perlu konfirmasi ulang.
+- Commit langsung di branch `main` (WAJIB setiap selesai unit pekerjaan). Push ke remote dilakukan tergantung perintah user (jangan auto-push tanpa instruksi).
 
 ## Lefthook & Linter (WAJIB lolos sebelum commit)
 
@@ -54,12 +59,12 @@ menjangkau service ini lewat Docker network eksternal `my_network` memakai nama
 service. Tidak ada port yang terbuka ke internet; port yang dipublish di-bind ke
 `127.0.0.1` hanya untuk debugging di server.
 
-| | |
-| --- | --- |
-| Service compose | `ph_instif_cv_builder_api` |
-| Port | `3011` |
-| Origin tunnel | `http://ph_instif_cv_builder_api:3011` |
-| Health check | `GET /health` |
+|                 |                                        |
+| --------------- | -------------------------------------- |
+| Service compose | `ph_instif_cv_builder_api`             |
+| Port            | `3011`                                 |
+| Origin tunnel   | `http://ph_instif_cv_builder_api:3011` |
+| Health check    | `GET /health`                          |
 
 Deploy (dijalankan manusia, di server):
 
@@ -71,8 +76,7 @@ docker compose logs -f --tail=50   # verifikasi
 ```
 
 - **Jangan pernah menjalankan deploy atas inisiatif sendiri** — itu menyentuh
-  production. Aturan auto-push di atas tetap berlaku, tapi berhenti sampai push
-  saja; deploy diserahkan ke user kecuali user meminta eksplisit.
+  production. Deploy diserahkan ke user kecuali user meminta eksplisit.
 - `.env` hanya ada di server dan tidak pernah di-commit. Sisa konfigurasi
   (Duitku, Anthropic, WhatsApp, harga) tersimpan terenkripsi di database dan
   diatur lewat dashboard admin — bukan lewat env.
