@@ -22,3 +22,10 @@ After completing ANY requested change, always do the following:
 - **File Rapi & Terstruktur**: 1 file = 1 tanggung jawab utama. Controller/route tipis, logic di service/lib, validasi Zod inline, target file tipis (< 200 baris).
 - **Desain & Icon Natural (Bukan 'AI')**: Jika API/metadata menyajikan data icon/visual ke consumer, gunakan icon standar (Lucide) non-cliché AI (tanpa sparkles ✨, wand 🪄, robot 🤖).
 - **Komponen Global (@instif/ui)**: UI components are **not built here**. If a screen is ever added, it comes from `@instif/ui` (`instif-fe-component`). Wajib gunakan komponen existing/global, tiap buat tampilan harus ada komponennya (modular), dan refactor temuan non-global (Boy Scout Rule).
+
+## Komponen Global, Reusable Backend & Standar Endpoint (MANDATORY)
+
+1. **Komponen Reusable Backend**: Wajib gunakan helper di src/common/ atau shared core package (guards, decorators, filters, pipes, utils). Dilarang membuat logika atau helper duplikat. Controller/route tipis, logika di service/lib, validasi DTO/Zod terpisah.
+2. **UI Components (Jika Ada Tampilan)**: UI components are **not built here**. Jika suatu saat ada view/layar yang ditambahkan, seluruh komponen dan container WAJIB berasal dari @instif/ui (instif-fe-component) dengan container konsisten (Container, PageBody, DashboardShell). Dilarang membuat komponen atau container lokal ad-hoc.
+3. **Standar Endpoint List & Tabel (Search + Filter + Urutkan)**: Setiap endpoint yang mengembalikan data list/tabel wajib mendukung paginasi (page, limit), pencarian (q), filter kustom, dan pengurutan (sort) secara terpadu.
+4. **Refactor Temuan Non-Global (Boy Scout Rule)**: Setiap pengerjaan, jika menemukan elemen atau kode yang belum memakai komponen/helper global yang ada, WAJIB langsung diperbaiki dan direfactor saat itu juga.
